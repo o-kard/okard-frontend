@@ -65,21 +65,25 @@ export default function PostList({ posts, onEdit, onDelete }: Props) {
               </Typography>
 
               <Box display="flex" justifyContent="center" gap={1} mr={1}>
-                <Link href={`/post/show/${post.id}`}>
-                  <Tooltip title="View">
-                    <IconButton color="success">
-                      <VisibilityIcon />
-                    </IconButton>
-                  </Tooltip>
-                </Link>
+                <Tooltip title="View">
+                  <IconButton
+                    component={Link}
+                    href={`/post/show/${post.id}`}
+                    color="success"
+                  >
+                    <VisibilityIcon />
+                  </IconButton>
+                </Tooltip>
 
-                <Link href={`/post/edit/${post.id}`}>
-                  <Tooltip title="Edit">
-                    <IconButton color="primary">
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                </Link>
+                <Tooltip title="Edit">
+                  <IconButton
+                    component={Link}
+                    href={`/post/edit/${post.id}`}
+                    color="primary"
+                  >
+                    <EditIcon />
+                  </IconButton>
+                </Tooltip>
 
                 <Tooltip title="Delete">
                   <IconButton color="error" onClick={() => onDelete(post.id)}>
