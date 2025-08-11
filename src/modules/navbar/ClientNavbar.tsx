@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs";
+import { SignedIn, SignedOut, UserButton, useClerk } from "@clerk/nextjs";
 import NextLink from "next/link";
 import {
   AppBar,
@@ -17,9 +11,10 @@ import {
   Button,
   Grid,
 } from "@mui/material";
-import { usePathname } from "next/navigation";
 
 export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
+  const { openSignIn, openSignUp } = useClerk();
+
   return (
     <AppBar
       position="absolute"
@@ -61,7 +56,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
           </Grid>
 
           <Grid
-            size={{ xs: 12, md: 9 }}
+            size={{ xs: 12, md: 8 }}
             sx={{
               display: "flex",
               justifyContent: "center",
@@ -72,7 +67,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
           >
             <Button
               component={NextLink}
-              href="/explore"
+              href="/post"
               color="inherit"
               sx={{ color: "black" }}
             >
@@ -100,7 +95,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
           </Grid>
 
           <Grid
-            size={{ xs: 12, md: 2 }}
+            size={{ xs: 12, md: 3 }}
             sx={{
               display: "flex",
               justifyContent: "flex-end",
@@ -120,16 +115,20 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
 
             <SignedOut>
               <Box display="flex" gap={1}>
-                <SignInButton mode="modal">
-                  <Button variant="text" sx={{ color: "black" }}>
-                    Login
-                  </Button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <Button variant="text" sx={{ color: "white" }}>
-                    Sign Up
-                  </Button>
-                </SignUpButton>
+                <Button
+                  variant="text"
+                  sx={{ color: "black" }}
+                  onClick={() => openSignIn({})}
+                >
+                  Login
+                </Button>
+                <Button
+                  variant="text"
+                  sx={{ color: "white" }}
+                  onClick={() => openSignUp({})}
+                >
+                  Sign Up
+                </Button>
               </Box>
             </SignedOut>
 
