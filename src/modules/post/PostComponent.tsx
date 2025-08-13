@@ -1,93 +1,158 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { Post } from "./types/post";
 import {
-  fetchPosts,
-  deletePost,
-  createPostWithImages,
-  updatePostWithImages,
-} from "./api/api";
-import PostList from "./components/PostList";
+  Box,
+  Button,
+  Container,
+  IconButton,
+  Typography,
+  Drawer,
+} from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
 import Link from "next/link";
-import { Box, Button, Container, Typography } from "@mui/material";
+import { useMediaQuery } from "@mui/material";
+import PostList from "./components/PostList";
+import { Post } from "./types/post";
+import { fetchPosts, deletePost } from "./api/api";
+import SideFilters from "./components/SideFilters";
 
-type Mode = "show" | "create" | "edit";
+type Timing = "all" | "draft" | "published" | "archived";
 
 export default function PostComponent() {
   const { user } = useUser();
   const [posts, setPosts] = useState<Post[]>([]);
-  const [editItem, setEditItem] = useState<Post | null>(null);
-  const [mode, setMode] = useState<Mode>("show");
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  const load = async () => {
-    const data = await fetchPosts();
-    setPosts(data);
-  };
+  const [category, setCategory] = useState<string>("all");
+  const [timing, setTiming] = useState<Timing>("all");
+  const [includeClosed, setIncludeClosed] = useState(false);
+
+  const isMdUp = useMediaQuery("(min-width:900px)");
+
+  const categories = [
+    { value: "tech", label: "Technology" },
+    { value: "education", label: "Education" },
+    { value: "health", label: "Health & Wellness" },
+    { value: "other", label: "Other" },
+  ];
 
   useEffect(() => {
-    load();
+    (async () => setPosts(await fetchPosts()))();
   }, []);
 
-  const handleSubmit = async (
-    data: Omit<Post, "id" | "user_id" | "images">,
-    editId?: string,
-    files?: File[]
-  ) => {
-    if (!user) return;
-
-    const clerkId = user.id;
-
-    const payload = {
-      ...data,
-      category: "tech",
-      status: "active",
-      state: "draft",
-      effective_start_from: new Date().toISOString(),
-      effective_end_date: new Date().toISOString(),
-      create_at: new Date().toISOString(),
-      post_description: data.post_description ?? "",
-    } as const;
-
-    const ok = editId
-      ? await updatePostWithImages(editId, payload, clerkId, files || [])
-      : await createPostWithImages(payload, clerkId, files || []);
-
-    if (ok) {
-      setEditItem(null);
-      setMode("show");
-      load();
+  const filtered = useMemo(() => {
+    let data = [...posts];
+    if (category !== "all")
+      data = data.filter(
+        (p) => p.category?.toLowerCase() === category.toLowerCase()
+      );
+    if (!includeClosed) data = data.filter((p) => p.status === "active");
+    if (timing === "draft") {
+      data = data.filter((p) => p.state === "draft");
     }
-  };
+    if (timing === "published") {
+      data = data.filter((p) => p.state === "published");
+    }
+    if (timing === "archived") {
+      data = data.filter((p) => p.state === "archived");
+    }
+    return data;
+  }, [posts, category, includeClosed, timing]);
 
   const handleDelete = async (id: string) => {
     if (!user) return;
     const ok = await deletePost(id, user.id);
-    if (ok) load();
-  };
-
-  const handleEdit = (post: Post) => {
-    setEditItem(post);
-    setMode("edit");
+    if (ok) setPosts(await fetchPosts());
   };
 
   return (
-    <Container maxWidth="md">
-      <Box mt={4} mb={4}>
-        <Typography variant="h4" fontWeight="bold" gutterBottom>
-          Post Management
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 6 }}>
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+        mb={2}
+      >
+        <Typography variant="h4" fontWeight={800}>
+          Explore a Campaign
         </Typography>
-
-        <Box mb={2}>
-          <Link href="/post/create">
-            <Button variant="contained" color="primary">
-              Create New Post
-            </Button>
-          </Link>
-        </Box>
-
-        <PostList posts={posts} onEdit={handleEdit} onDelete={handleDelete} />
+        {!isMdUp && (
+          <IconButton onClick={() => setMobileOpen(true)}>
+            <MenuIcon />
+          </IconButton>
+        )}
+        <Link href="/post/create">
+          <Button variant="contained">Create New Post</Button>
+        </Link>
       </Box>
+
+      <Box
+        display="grid"
+        gridTemplateColumns={{ xs: "1fr", md: "280px 1fr" }}
+        gap={3}
+        alignItems="start"
+      >
+        {isMdUp && (
+          <SideFilters
+            categories={categories}
+            selectedCategory={category}
+            onSelectCategory={setCategory}
+            timing={timing}
+            onTimingChange={setTiming}
+            includeClosed={includeClosed}
+            onToggleClosed={setIncludeClosed}
+            onClear={() => {
+              setCategory("all");
+              setTiming("all");
+              setIncludeClosed(false);
+            }}
+          />
+        )}
+
+        <Box>
+          <Typography variant="body2" color="text.secondary" mb={2}>
+            Found : {filtered.length} Campaigns
+          </Typography>
+          <PostList
+            posts={filtered}
+            onEdit={() => {}}
+            onDelete={handleDelete}
+          />
+        </Box>
+      </Box>
+
+      {/* Sidebar (mobile Drawer) */}
+      {!isMdUp && (
+        <Drawer
+          anchor="left"
+          open={mobileOpen}
+          onClose={() => setMobileOpen(false)}
+        >
+          <Box sx={{ width: 300 }}>
+            <SideFilters
+              categories={categories}
+              selectedCategory={category}
+              onSelectCategory={(v) => {
+                setCategory(v);
+                setMobileOpen(false);
+              }}
+              timing={timing}
+              onTimingChange={(v) => {
+                setTiming(v);
+                setMobileOpen(false);
+              }}
+              includeClosed={includeClosed}
+              onToggleClosed={setIncludeClosed}
+              onClear={() => {
+                setCategory("all");
+                setTiming("all");
+                setIncludeClosed(false);
+              }}
+            />
+          </Box>
+        </Drawer>
+      )}
     </Container>
   );
 }

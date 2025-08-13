@@ -13,14 +13,35 @@ type Props = {
   onCancel: () => void;
 };
 
+const categoryOptions = [
+  { value: "tech", label: "Technology" },
+  { value: "education", label: "Education" },
+  { value: "health", label: "Health & Wellness" },
+  { value: "other", label: "Other" },
+];
+
+const toLocalInputValue = (iso?: string | null): string => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+};
+
+const toIso = (local: string): string | null => {
+  return local ? new Date(local).toISOString() : null;
+};
+
 export default function PostForm({ editItem, onSubmit, onCancel }: Props) {
   const [header, setHeader] = useState("");
   const [desc, setDesc] = useState("");
-  const [goal, setGoal] = useState(0);
+  const [goal, setGoal] = useState<number | "">("");
   const [files, setFiles] = useState<File[]>([]);
   const [state, setState] = useState<Post["state"] | "">("");
   const [status, setStatus] = useState<Post["status"] | "">("");
   const [category, setCategory] = useState<Post["category"] | "">("");
+  const [startAt, setStartAt] = useState("");
+  const [endAt, setEndAt] = useState("");
 
   useEffect(() => {
     if (editItem) {
@@ -30,6 +51,8 @@ export default function PostForm({ editItem, onSubmit, onCancel }: Props) {
       setState(editItem.state);
       setStatus(editItem.status);
       setCategory(editItem.category);
+      setStartAt(toLocalInputValue(editItem?.effective_start_from));
+      setEndAt(toLocalInputValue(editItem?.effective_end_date));
     }
   }, [editItem]);
 
@@ -37,12 +60,11 @@ export default function PostForm({ editItem, onSubmit, onCancel }: Props) {
     const payload: Omit<Post, "id" | "user_id" | "images"> = {
       post_header: header,
       post_description: desc,
-      goal_amount: goal,
+      goal_amount: goal === "" ? 0 : Number(goal),
       current_amount: editItem?.current_amount ?? 0,
       supporter: editItem?.supporter ?? 0,
-      create_at: new Date().toISOString(),
-      effective_start_from: new Date().toISOString(),
-      effective_end_date: new Date().toISOString(),
+      effective_start_from: toIso(startAt),
+      effective_end_date: toIso(endAt),
       state: state as Post["state"],
       status: status as Post["status"],
       category: category as Post["category"],
@@ -57,6 +79,8 @@ export default function PostForm({ editItem, onSubmit, onCancel }: Props) {
     setState("draft");
     setStatus("active");
     setCategory("tech");
+    setStartAt("");
+    setEndAt("");
   };
 
   return (
@@ -120,6 +144,32 @@ export default function PostForm({ editItem, onSubmit, onCancel }: Props) {
 
       <Grid size={{ xs: 12, md: 12 }}>
         <TextField
+          label="Start (effective_start_from)"
+          type="datetime-local"
+          fullWidth
+          value={startAt}
+          onChange={(e) => setStartAt(e.target.value)}
+          slotProps={{
+            inputLabel: { shrink: true },
+          }}
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 12 }}>
+        <TextField
+          label="End (effective_end_date)"
+          type="datetime-local"
+          fullWidth
+          value={endAt}
+          onChange={(e) => setEndAt(e.target.value)}
+          slotProps={{
+            inputLabel: { shrink: true },
+          }}
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 12 }}>
+        <TextField
           select
           label="Category"
           fullWidth
@@ -129,10 +179,11 @@ export default function PostForm({ editItem, onSubmit, onCancel }: Props) {
           <MenuItem value="" disabled>
             Select category
           </MenuItem>
-          <MenuItem value="tech">Tech</MenuItem>
-          <MenuItem value="education">Education</MenuItem>
-          <MenuItem value="health">Health</MenuItem>
-          <MenuItem value="other">Other</MenuItem>
+          {categoryOptions.map((opt) => (
+            <MenuItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </MenuItem>
+          ))}
         </TextField>
       </Grid>
 

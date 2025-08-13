@@ -14,3 +14,12 @@
     transform: scale(1);
   }
 }
+
+html {
+  scrollbar-gutter: stable;
+}
+@supports not (scrollbar-gutter: stable) {
+  html {
+    overflow-y: scroll;
+  }
+}

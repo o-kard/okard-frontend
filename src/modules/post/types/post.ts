@@ -5,9 +5,9 @@ type PostStateType = "draft" | "published" | "archived";
 export type Post = {
   id: string;
   user_id: string;
-  create_at: string;
-  effective_start_from: string;
-  effective_end_date: string;
+  create_at?: string;
+  effective_start_from: string | null;
+  effective_end_date: string | null;
   state: PostStateType;
   status: PostStatusType;
   category: PostCategoryType;
