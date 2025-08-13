@@ -4,6 +4,7 @@ import { useUser } from "@clerk/nextjs";
 import {
   Box,
   Button,
+  Grid,
   Container,
   IconButton,
   Typography,
@@ -11,6 +12,7 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import Link from "next/link";
+import ExploreHeader from "./components/ExploreHeader";
 import { useMediaQuery } from "@mui/material";
 import PostList from "./components/PostList";
 import { Post } from "./types/post";
@@ -67,92 +69,86 @@ export default function PostComponent() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 6 }}>
-      <Box
-        display="flex"
-        alignItems="center"
-        justifyContent="space-between"
-        mb={2}
-      >
-        <Typography variant="h4" fontWeight={800}>
-          Explore a Campaign
-        </Typography>
-        {!isMdUp && (
-          <IconButton onClick={() => setMobileOpen(true)}>
-            <MenuIcon />
-          </IconButton>
-        )}
-        <Link href="/post/create">
-          <Button variant="contained">Create New Post</Button>
-        </Link>
-      </Box>
+    <>
+      <ExploreHeader />
+      <Container maxWidth={false} sx={{ mt: 4, mb: 6 }}>
+        <Grid container spacing={3} alignItems="start">
+          <Grid size={{ xs: 12, md: 12 }}>
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between"
+            >
+              {!isMdUp && (
+                <IconButton onClick={() => setMobileOpen(true)}>
+                  <MenuIcon />
+                </IconButton>
+              )}
+            </Box>
+          </Grid>
 
-      <Box
-        display="grid"
-        gridTemplateColumns={{ xs: "1fr", md: "280px 1fr" }}
-        gap={3}
-        alignItems="start"
-      >
-        {isMdUp && (
-          <SideFilters
-            categories={categories}
-            selectedCategory={category}
-            onSelectCategory={setCategory}
-            timing={timing}
-            onTimingChange={setTiming}
-            includeClosed={includeClosed}
-            onToggleClosed={setIncludeClosed}
-            onClear={() => {
-              setCategory("all");
-              setTiming("all");
-              setIncludeClosed(false);
-            }}
-          />
-        )}
+          {isMdUp && (
+            <Grid size={{ xs: 12, md: 3 }}>
+              <SideFilters
+                categories={categories}
+                selectedCategory={category}
+                onSelectCategory={setCategory}
+                timing={timing}
+                onTimingChange={setTiming}
+                includeClosed={includeClosed}
+                onToggleClosed={setIncludeClosed}
+                onClear={() => {
+                  setCategory("all");
+                  setTiming("all");
+                  setIncludeClosed(false);
+                }}
+              />
+            </Grid>
+          )}
 
-        <Box>
-          <Typography variant="body2" color="text.secondary" mb={2}>
-            Found : {filtered.length} Campaigns
-          </Typography>
-          <PostList
-            posts={filtered}
-            onEdit={() => {}}
-            onDelete={handleDelete}
-          />
-        </Box>
-      </Box>
-
-      {/* Sidebar (mobile Drawer) */}
-      {!isMdUp && (
-        <Drawer
-          anchor="left"
-          open={mobileOpen}
-          onClose={() => setMobileOpen(false)}
-        >
-          <Box sx={{ width: 300 }}>
-            <SideFilters
-              categories={categories}
-              selectedCategory={category}
-              onSelectCategory={(v) => {
-                setCategory(v);
-                setMobileOpen(false);
-              }}
-              timing={timing}
-              onTimingChange={(v) => {
-                setTiming(v);
-                setMobileOpen(false);
-              }}
-              includeClosed={includeClosed}
-              onToggleClosed={setIncludeClosed}
-              onClear={() => {
-                setCategory("all");
-                setTiming("all");
-                setIncludeClosed(false);
-              }}
+          <Grid size={{ xs: 12, md: isMdUp ? 9 : 12 }} sx={{ pt: 2 }}>
+            <Typography variant="body2" color="text.secondary" mb={2}>
+              Found : {filtered.length} Campaigns
+            </Typography>
+            <PostList
+              posts={filtered}
+              onEdit={() => {}}
+              onDelete={handleDelete}
             />
-          </Box>
-        </Drawer>
-      )}
-    </Container>
+          </Grid>
+        </Grid>
+
+        {!isMdUp && (
+          <Drawer
+            anchor="left"
+            open={mobileOpen}
+            onClose={() => setMobileOpen(false)}
+          >
+            <Box sx={{ width: 300 }}>
+              <SideFilters
+                categories={categories}
+                selectedCategory={category}
+                onSelectCategory={(v) => {
+                  setCategory(v);
+                  setMobileOpen(false);
+                }}
+                timing={timing}
+                onTimingChange={(v) => {
+                  setTiming(v);
+                  setMobileOpen(false);
+                }}
+                includeClosed={includeClosed}
+                onToggleClosed={setIncludeClosed}
+                onClear={() => {
+                  setCategory("all");
+                  setTiming("all");
+                  setIncludeClosed(false);
+                }}
+              />
+            </Box>
+          </Drawer>
+        )}
+      </Container>
+    </>
   );
 }

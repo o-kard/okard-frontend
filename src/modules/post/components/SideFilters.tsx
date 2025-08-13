@@ -42,10 +42,10 @@ export default function SideFilters({
     <Box
       sx={{
         p: 2,
-        width: "100%",
         position: { md: "sticky" },
-        top: { md: 88 },
-        alignSelf: "start",
+        // width: "100%",
+        // top: { md: 88 },
+        // alignSelf: "start",
       }}
     >
       <Typography variant="subtitle1" fontWeight={700} gutterBottom>
