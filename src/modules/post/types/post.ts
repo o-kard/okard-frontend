@@ -8,6 +8,7 @@ export type Post = {
   create_at?: string;
   effective_start_from: string | null;
   effective_end_date: string | null;
+  created_at?: string;
   state: PostStateType;
   status: PostStatusType;
   category: PostCategoryType;
