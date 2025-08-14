@@ -12,14 +12,20 @@ export default function UserComponent() {
   const handleSubmit = async (data: any) => {
     if (!user) return;
 
-    const ok = await createUser({
+    const payload = {
       ...data,
       clerk_id: user.id,
-      email: user.primaryEmailAddress?.emailAddress || "",
+      email:
+        user.primaryEmailAddress?.emailAddress ??
+        user.emailAddresses?.[0]?.emailAddress ??
+        null, // อย่าส่ง "" ให้ EmailStr
       username: user.username || user.id,
-    });
+    };
+    console.log("submit payload:", payload);
+    
+    const result = await createUser(payload);
 
-    if (ok) router.push("/about");
+    if (result) router.push("/about");
     else console.error("Create user failed");
   };
 

@@ -1,7 +1,7 @@
 export type User = {
   id: string;
   clerk_id: string;
-  email: string;
+  email: string | null;
   username: string;
   first_name: string;
   middle_name?: string | null;
