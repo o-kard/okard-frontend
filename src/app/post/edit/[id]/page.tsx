@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { Post } from "@/modules/post/types/post";
 import PostForm from "@/modules/post/components/PostForm";
-import { updatePostWithImages } from "@/modules/post/api/api";
+import { updatePostWithCampaigns } from "@/modules/post/api/api";
 import { Container, Typography, Box } from "@mui/material";
 
 export default function PostEditPage() {
@@ -20,16 +20,11 @@ export default function PostEditPage() {
       .then((data) => setPost(data));
   }, [id]);
 
-  const handleSubmit = async (
-    data: Omit<Post, "id" | "user_id" | "images">,
-    _editId?: string,
-    files?: File[]
-  ) => {
+  const handleSubmit = async (fd: FormData) => {
     if (!user || typeof id !== "string") return;
-    const ok = await updatePostWithImages(id, data, user.id, files || []);
+    const ok = await updatePostWithCampaigns(id, fd, user.id);
     if (ok) router.push("/post");
   };
-
   if (!post)
     return (
       <Container maxWidth="sm">

@@ -1,22 +1,17 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { createPostWithImages } from "@/modules/post/api/api";
+import { createPostWithCampaigns } from "@/modules/post/api/api";
 import PostForm from "@/modules/post/components/PostForm";
-import { Post } from "@/modules/post/types/post";
 import { Container, Typography, Box } from "@mui/material";
 
 export default function PostCreatePage() {
   const { user } = useUser();
   const router = useRouter();
 
-  const handleSubmit = async (
-    data: Omit<Post, "id" | "user_id" | "images">,
-    _editId?: string,
-    files?: File[]
-  ) => {
+  const handleSubmit = async (fd: FormData) => {
     if (!user) return;
-    const ok = await createPostWithImages(data, user.id, files || []);
+    const ok = await createPostWithCampaigns(fd, user.id);
     if (ok) router.push("/post");
   };
 
@@ -27,7 +22,6 @@ export default function PostCreatePage() {
           Create New Post
         </Typography>
         <PostForm
-          editItem={null}
           onSubmit={handleSubmit}
           onCancel={() => router.push("/post")}
         />

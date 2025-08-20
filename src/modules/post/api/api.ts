@@ -24,6 +24,15 @@ export async function createPostWithImages(
   return res.ok;
 }
 
+export async function createPostWithCampaigns(fd: FormData, clerkId: string) {
+  const res = await fetch(`${API_URL}/with-campaigns?clerk_id=${clerkId}`, {
+    method: "POST",
+    body: fd,
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 export async function updatePostWithImages(
   id: string,
   data: Omit<Post, "id" | "user_id">,
@@ -47,4 +56,22 @@ export async function deletePost(id: string, clerkId: string) {
     method: "DELETE",
   });
   return res.ok;
+}
+
+export async function updatePostWithCampaigns(
+  postId: string,
+  fd: FormData,
+  clerkId: string
+) {
+  const res = await fetch(
+    `${API_URL}/${postId}/with-campaigns?clerk_id=${encodeURIComponent(
+      clerkId
+    )}`,
+    {
+      method: "PUT",
+      body: fd,
+    }
+  );
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
 }

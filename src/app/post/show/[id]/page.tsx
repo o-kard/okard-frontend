@@ -22,6 +22,8 @@ import InstagramIcon from "@mui/icons-material/Instagram";
 import CloseIcon from "@mui/icons-material/Close";
 
 import { Post } from "@/modules/post/types/post";
+import PostDetailTabs from "@/modules/post/components/PostDetailTabs";
+import CampaignSections from "@/modules/post/components/CampaginSection";
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -314,7 +316,7 @@ export default function PostDetailPage() {
           <Box component="ul" sx={{ pl: 2, mt: 3, color: "text.secondary" }}>
             <li>
               Created at:{" "}
-              {formatDate((post as any).created_at ?? post.create_at)}
+              {formatDate((post as any).created_at ?? post.created_at)}
             </li>
             <li>End: {formatDate(post.effective_end_date)}</li>
             <li>Category: {post.category}</li>
@@ -323,6 +325,78 @@ export default function PostDetailPage() {
             </li>
           </Box>
         </Grid>
+        <PostDetailTabs
+          stickyTop={64}
+          sections={[
+            {
+              key: "campaign",
+              label: "Campaign",
+              content: (
+                <CampaignSections
+                  campaigns={post.campaigns}
+                  apiBaseUrl={process.env.NEXT_PUBLIC_API_URL}
+                  scrollMarginTop={100} // ใช้เฉพาะภายในแท็บนี้ (ซ้ายเป็น TOC เลื่อนไปหัวข้อย่อย)
+                  title="" // ไม่ต้องโชว์หัวเรื่องซ้ำ
+                />
+              ),
+            },
+            {
+              key: "rewards",
+              label: "Rewards",
+              content: (
+                <Box>
+                  {/* TODO: เนื้อหา Rewards ของคุณ */}
+                  <Typography variant="h5" fontWeight={900} sx={{ mb: 1.5 }}>
+                    Rewards
+                  </Typography>
+                  <Typography color="text.secondary">
+                    Reward tiers and perks will be shown here…
+                  </Typography>
+                </Box>
+              ),
+            },
+            {
+              key: "progress",
+              label: "Progress",
+              content: (
+                <Box>
+                  <Typography variant="h5" fontWeight={900} sx={{ mb: 1.5 }}>
+                    Progress
+                  </Typography>
+                  <Typography color="text.secondary">
+                    Updates or milestones go here…
+                  </Typography>
+                </Box>
+              ),
+            },
+            {
+              key: "comment",
+              label: "Comment",
+              content: (
+                <Box>
+                  <Typography variant="h5" fontWeight={900} sx={{ mb: 1.5 }}>
+                    Comment
+                  </Typography>
+                  {/* ฝังคอมเมนต์จริงได้ที่นี่ */}
+                </Box>
+              ),
+            },
+            {
+              key: "community",
+              label: "Community",
+              content: (
+                <Box>
+                  <Typography variant="h5" fontWeight={900} sx={{ mb: 1.5 }}>
+                    Community
+                  </Typography>
+                  <Typography color="text.secondary">
+                    Community posts / discussions…
+                  </Typography>
+                </Box>
+              ),
+            },
+          ]}
+        />
       </Grid>
     </Container>
   );
