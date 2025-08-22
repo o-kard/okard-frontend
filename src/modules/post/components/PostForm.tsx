@@ -18,7 +18,6 @@ import Grid from "@mui/material/Grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import type {
-  Campaign,
   Post,
   PostCategoryType,
   PostStateType,
@@ -31,6 +30,14 @@ type FormCampaign = {
   campaign_description?: string;
   order: number;
   file?: File | null;
+};
+
+type CampaignManifestItem = {
+  id?: string;
+  order: number;
+  campaign_header?: string;
+  campaign_description?: string;
+  fileIndex?: number;
 };
 
 type FormValues = {
@@ -70,14 +77,6 @@ type Props = {
   onSubmit?: (fd: FormData, editId?: string | null) => Promise<void> | void;
   onSuccess?: () => void;
   onCancel?: () => void;
-};
-
-type CampaignManifestItem = {
-  id?: string;
-  order: number;
-  campaign_header?: string;
-  campaign_description?: string;
-  fileIndex?: number;
 };
 
 export default function PostForm({
@@ -127,14 +126,14 @@ export default function PostForm({
         "effective_end_date",
         toLocalInputValue(editItem?.effective_end_date)
       );
-      const mapped = (editItem.campaigns || []).map((c, idx) => ({
+      const campaignMapped = (editItem.campaigns || []).map((c, idx) => ({
         id: c.id,
         campaign_header: c.campaign_header,
         campaign_description: c.campaign_description,
         order: c.order ?? idx + 1,
         file: null,
       }));
-      if (mapped.length > 0) setValue("campaigns", mapped);
+      if (campaignMapped.length > 0) setValue("campaigns", campaignMapped);
     }
   }, [editItem, setValue]);
 
@@ -154,7 +153,7 @@ export default function PostForm({
         item.campaign_description = c.campaign_description;
 
       if (c.file) {
-        item.fileIndex = next; // map ไปยังไฟล์ใหม่ตำแหน่งนี้
+        item.fileIndex = next;
         files.push(c.file);
         next++;
       }

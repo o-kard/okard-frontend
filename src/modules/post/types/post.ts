@@ -28,7 +28,6 @@ export type Campaign = {
   campaign_description: string;
   order: number;
   images?: Image[] | [];
-  fileIndex?: number;
 };
 
 export type Image = {

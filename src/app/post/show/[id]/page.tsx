@@ -73,14 +73,23 @@ export default function PostDetailPage() {
 
   if (!post) {
     return (
-      <Container maxWidth="lg">
+      <Container maxWidth={false}>
         <Box sx={{ py: 8 }}>Loading...</Box>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth={false} sx={{ py: 10, bgcolor: "#fff8de" }}>
+    <Container
+      maxWidth={false}
+      sx={{
+        py: 5,
+        bgcolor: "#fff8de",
+        padding: 0,
+        paddingLeft: { xs: 0, md: 0 },
+        paddingRight: { xs: 0, sm: 0 },
+      }}
+    >
       <Box sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
         <ArrowBackIosNewIcon fontSize="small" />
         <Typography
@@ -92,7 +101,12 @@ export default function PostDetailPage() {
         </Typography>
       </Box>
 
-      <Grid container spacing={4} alignItems="start">
+      <Grid
+        container
+        spacing={4}
+        alignItems="start"
+        sx={{ paddingLeft: 0, paddingRight: 0 }}
+      >
         {/* LEFT: card */}
         <Grid size={{ xs: 12, md: 7 }}>
           <Box
@@ -271,7 +285,6 @@ export default function PostDetailPage() {
             />
           </Stack>
 
-          {/* actions */}
           <Stack
             direction="row"
             spacing={1.2}
@@ -325,6 +338,13 @@ export default function PostDetailPage() {
             </li>
           </Box>
         </Grid>
+      </Grid>
+      <Box
+        sx={{
+          bgcolor: "white",
+          width: "100%",
+        }}
+      >
         <PostDetailTabs
           stickyTop={64}
           sections={[
@@ -335,8 +355,8 @@ export default function PostDetailPage() {
                 <CampaignSections
                   campaigns={post.campaigns}
                   apiBaseUrl={process.env.NEXT_PUBLIC_API_URL}
-                  scrollMarginTop={100} // ใช้เฉพาะภายในแท็บนี้ (ซ้ายเป็น TOC เลื่อนไปหัวข้อย่อย)
-                  title="" // ไม่ต้องโชว์หัวเรื่องซ้ำ
+                  scrollMarginTop={100}
+                  title=""
                 />
               ),
             },
@@ -345,7 +365,6 @@ export default function PostDetailPage() {
               label: "Rewards",
               content: (
                 <Box>
-                  {/* TODO: เนื้อหา Rewards ของคุณ */}
                   <Typography variant="h5" fontWeight={900} sx={{ mb: 1.5 }}>
                     Rewards
                   </Typography>
@@ -377,7 +396,6 @@ export default function PostDetailPage() {
                   <Typography variant="h5" fontWeight={900} sx={{ mb: 1.5 }}>
                     Comment
                   </Typography>
-                  {/* ฝังคอมเมนต์จริงได้ที่นี่ */}
                 </Box>
               ),
             },
@@ -397,7 +415,7 @@ export default function PostDetailPage() {
             },
           ]}
         />
-      </Grid>
+      </Box>
     </Container>
   );
 }
