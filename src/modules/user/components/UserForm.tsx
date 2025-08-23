@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Button, TextField } from "@mui/material";
+import { Grid, Box, Button, TextField, Typography } from "@mui/material";
 import { useCountryOptions } from "@/hooks/useCountryOptions";
 import { SubmitHandler, useForm } from "react-hook-form";
 
@@ -56,94 +56,107 @@ export default function UserForm({
     });
 
   const [submitting, setSubmitting] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const { countryOptions, countryLoading, countryError } = useCountryOptions();
 
   const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFile(e.target.files?.[0] ?? null);
-    setValue("user_image", e.target.files?.[0] ?? null);
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setValue("user_image", selectedFile);
+      setPreviewUrl(URL.createObjectURL(selectedFile));
+    }
   };
 
   const handleFormSubmit: SubmitHandler<FormValues> = async (values) => {
-    const fd = new FormData();
+    try {
+      const fd = new FormData();
 
-    const payload = {
-      clerk_id: clerk_id,
-      email: email || null,
-      username: username,
-      first_name: values.first_name,
-      middle_name: values.middle_name || null,
-      surname: values.surname,
-      tel: values.tel,
-      address: values.address,
-      user_description: values.user_description || null,
-      country: values.country || null,
-      birth_date: values.birth_date! || null,
-    };
-    fd.append("data", JSON.stringify(payload));
-    console.log("image file:", values.user_image);
-    if (values.user_image) {
-      fd.append("image", values.user_image);
+      const payload = {
+        clerk_id: clerk_id,
+        email: email || null,
+        username: username,
+        first_name: values.first_name,
+        middle_name: values.middle_name || null,
+        surname: values.surname,
+        tel: values.tel,
+        address: values.address,
+        user_description: values.user_description || null,
+        country: values.country || null,
+        birth_date: values.birth_date! || null,
+      };
+      fd.append("data", JSON.stringify(payload));
+      if (values.user_image) {
+        fd.append("image", values.user_image);
+      }
+
+      await onSubmit?.(fd);
+      onSuccess?.();
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+    } finally {
+      setSubmitting(false);
     }
-
-    await onSubmit?.(fd);
-    onSuccess?.();
   };
 
   return (
-    <form
+    <Box
+      component="form"
       onSubmit={handleSubmit(handleFormSubmit)}
-      className="space-y-4 max-w-xl"
+      sx={{
+        maxWidth: 600,
+        mx: "auto",
+        p: 4,
+        borderRadius: 3,
+        boxShadow: 2,
+        bgcolor: "background.paper",
+      }}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <label className="flex flex-col text-sm">
-          <span className="mb-1 font-medium">
-            ชื่อ (First name) <span className="text-red-500">*</span>
-          </span>
-          <TextField
-            fullWidth
-            {...register("first_name", { required: true })}
-          />
-        </label>
-        <label className="flex flex-col text-sm">
-          <span className="mb-1 font-medium">ชื่อกลาง (Middle name)</span>
-          <TextField fullWidth {...register("middle_name")} />
-        </label>
-        <label className="flex flex-col text-sm md:col-span-2">
-          <span className="mb-1 font-medium">
-            นามสกุล (Surname) <span className="text-red-500">*</span>
-          </span>
-          <TextField fullWidth {...register("surname", { required: true })} />
-        </label>
-      </div>
+      <Typography variant="h4" fontWeight={700} mb={3} textAlign="center">
+        Set Up Your Profile
+      </Typography>
 
-      <label className="flex flex-col text-sm">
-        <span className="mb-1 font-medium">
-          ที่อยู่ (Address) <span className="text-red-500">*</span>
-        </span>
-        <TextField fullWidth {...register("address", { required: true })} />
-      </label>
+      {/* Name Fields */}
+      <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
+        <TextField
+          label="First Name"
+          fullWidth
+          {...register("first_name", { required: true })}
+        />
+        <TextField label="Middle Name" fullWidth {...register("middle_name")} />
+        <TextField
+          label="Surname"
+          fullWidth
+          {...register("surname", { required: true })}
+        />
+      </Box>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <label className="flex flex-col text-sm">
-          <span className="mb-1 font-medium">
-            เบอร์โทร (Tel) <span className="text-red-500">*</span>
-          </span>
-          <TextField fullWidth {...register("tel", { required: true })} />
-        </label>
-        <label className="flex flex-col text-sm">
-          <span className="mb-1 font-medium">
-            ประเทศ (Country) <span className="text-red-500">*</span>
-          </span>
+      {/* Address and Tel */}
+      <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
+        <TextField
+          label="Address"
+          fullWidth
+          {...register("address", { required: true })}
+        />
+        <TextField
+          label="Tel"
+          fullWidth
+          {...register("tel", { required: true })}
+        />
+      </Box>
 
+      {/* Country and Birth Date */}
+      <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
+        <Box flex={1}>
+          <Typography mb={1}>Country</Typography>
           <select
-            {...register("country", { required: "กรุณาเลือกประเทศ" })}
-            className="border rounded px-3 py-2"
+            {...register("country", { required: "Please select country" })}
+            className="border rounded px-3 py-2 w-full"
             disabled={countryLoading}
           >
             <option value="">
-              {countryLoading ? "กำลังโหลดประเทศ..." : "— เลือกประเทศ —"}
+              {countryLoading ? "Loading..." : "— Select Country —"}
             </option>
             {countryOptions.map((c) => (
               <option key={c.value} value={c.value}>
@@ -151,80 +164,81 @@ export default function UserForm({
               </option>
             ))}
           </select>
-
           {countryError && (
-            <span className="text-red-500 text-sm">{countryError}</span>
+            <Typography color="error" variant="caption">
+              {countryError}
+            </Typography>
           )}
-        </label>
-      </div>
-
-      <label className="flex flex-col text-sm md:max-w-xs">
-        <span className="mb-1 font-medium">
-          วันเกิด (Birth date) <span className="text-red-500">*</span>
-        </span>
+        </Box>
         <TextField
+          label="Birth Date"
           type="date"
           fullWidth
-          defaultValue=""
+          InputLabelProps={{ shrink: true }}
           {...register("birth_date")}
-          slotProps={{ inputLabel: { shrink: true } }}
         />
-      </label>
+      </Box>
 
-      {/* <label className="flex flex-col text-sm">
-        <span className="mb-1 font-medium">รูปโปรไฟล์ (Image)</span>
-        <input
-          type="file"
-          name="image_id"
-          accept="image/*"
-          onChange={handleFilesChange}
-        />
-      </label> */}
-
-      {/* {imagePreviewUrl && (
-        <img
-          src={imagePreviewUrl}
-          alt="preview"
-          className="w-20 h-20 rounded object-cover border"
-        />
-      )} */}
-
-      {/* <div className="flex gap-2">
-        <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">
-        </button>
-        {onCancel && (
-          <button type="button" onClick={onCancel} className="border px-4 py-2 rounded">
-            Cancel
-          </button>
+      {/* Profile Image */}
+      <Box mb={2}>
+        <Typography mb={1}>Profile Image</Typography>
+        {imagePreviewUrl && (
+          <Box mb={1}>
+            <img
+              src={imagePreviewUrl}
+              alt="preview"
+              style={{
+                width: 200,
+                height: 200,
+                objectFit: "cover",
+                borderRadius: 8,
+                border: "1px solid #ccc",
+              }}
+            />
+          </Box>
         )}
-      </div> */}
+        <Box display="flex" gap={2}>
+          <Button
+            variant="outlined"
+            onClick={() => {
+              setPreviewUrl(null);
+              setValue("user_image", null);
+            }}
+          >
+            Clear Image
+          </Button>
+          <Button variant="outlined" component="label">
+            Upload Image
+            <input
+              type="file"
+              hidden
+              accept="image/*"
+              onChange={handleFilesChange}
+            />
+          </Button>
+        </Box>
+      </Box>
 
-      <label className="flex flex-col text-sm">
-        <span className="mb-1 font-medium">รูปโปรไฟล์ (Image)</span>
+      {/* Description */}
+      <TextField
+        label="Description"
+        fullWidth
+        multiline
+        rows={3}
+        {...register("user_description")}
+      />
 
-        <Button variant="outlined" component="label" fullWidth>
-          Upload Image
-          <input
-            type="file"
-            hidden
-            accept="image/*"
-            onChange={handleFilesChange}
-          />
+      {/* Buttons */}
+      <Box display="flex" justifyContent="flex-end" gap={2} mt={3}>
+        {onCancel && (
+          <Button variant="outlined" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
+        <Button type="submit" variant="contained" disabled={submitting}>
+          {submitting ? "Saving..." : "Save"}
         </Button>
-      </label>
-
-      <label className="flex flex-col text-sm">
-        <span className="mb-1 font-medium">แนะนำตัวเอง (Description)</span>
-        <TextField fullWidth {...register("user_description")} />
-      </label>
-
-      <button
-        type="submit"
-        disabled={submitting}
-        className="bg-blue-600 disabled:opacity-60 text-white px-4 py-2 rounded"
-      >
-        {submitting ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
-      </button>
-    </form>
+      </Box>
+    </Box>
   );
 }
