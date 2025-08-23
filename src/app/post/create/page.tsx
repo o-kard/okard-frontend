@@ -5,10 +5,16 @@ import { createPostWithImages } from "@/modules/post/api/api";
 import PostForm from "@/modules/post/components/PostForm";
 import { Post } from "@/modules/post/types/post";
 import { Container, Typography, Box } from "@mui/material";
+import { useRequireUserInDb } from "@/hooks/useRequireUserDb";
 
 export default function PostCreatePage() {
   const { user } = useUser();
   const router = useRouter();
+  const haveUserDb = useRequireUserInDb();
+
+  if (haveUserDb !== "ok") {
+    return <div>You need to set up profile first…</div>;
+  }
 
   const handleSubmit = async (
     data: Omit<Post, "id" | "user_id" | "images">,

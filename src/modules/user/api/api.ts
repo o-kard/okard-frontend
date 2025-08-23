@@ -10,6 +10,11 @@ export async function createUser(fd: FormData) {
   });
 }
 
-export async function getUserById(id: string): Promise<User | null> {
-  return request<User>(`/api/user/${id}`);
+export async function getUserById(clerk_id: string) {
+  return request<User>(`/api/user/${clerk_id}`);
+}
+
+export async function checkUserExists(clerk_id: string) {
+  const r = await request<{ exists: boolean }>(`/api/user/exists/${clerk_id}`)
+  return r.exists
 }
