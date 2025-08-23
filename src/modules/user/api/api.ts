@@ -1,13 +1,15 @@
 import { User } from "../types/user";
+import { request } from "../../../api/api";
 
 const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/user`;
 
-export async function createUser(user: Omit<User, "id">): Promise<boolean> {
-  const res = await fetch(API_URL, {
+export async function createUser(fd: FormData) {
+  return request<User>("/api/user", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(user),
+    body: fd,
   });
+}
 
-  return res.ok;
+export async function getUserById(id: string): Promise<User | null> {
+  return request<User>(`/api/user/${id}`);
 }

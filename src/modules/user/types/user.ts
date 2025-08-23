@@ -11,5 +11,4 @@ export type User = {
   user_description: string;
   country?: string | null;
   birth_date?: string | null;
-  image_id?: string | null;
 };
