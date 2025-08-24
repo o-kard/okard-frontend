@@ -18,6 +18,7 @@ export type Post = {
   supporter: number | null;
   images?: Image[] | [];
   campaigns?: Campaign[] | [];
+  rewards?: Reward[] | [];
 };
 
 export type Campaign = {
@@ -27,7 +28,19 @@ export type Campaign = {
   campaign_header: string;
   campaign_description: string;
   order: number;
-  images?: Image[] | [];
+  image?: Image[] | [];
+};
+
+export type Reward = {
+  id?: string;
+  post_id: string;
+  created_at?: string;
+  reward_header: string;
+  reward_description: string;
+  reward_amount: number;
+  backup_amount: number;
+  order: number;
+  image?: Image[] | [];
 };
 
 export type Image = {

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Button, Grid, Stack, Typography } from "@mui/material";
-import type { Campaign } from "@/modules/post/types/post";
+import type { Reward } from "@/modules/post/types/post";
 
 const slugify = (s?: string) =>
   (s || "")
@@ -13,22 +13,22 @@ const slugify = (s?: string) =>
     .slice(0, 60);
 
 type Props = {
-  campaigns?: Campaign[] | null;
+  rewards?: Reward[] | null;
   apiBaseUrl?: string;
   scrollMarginTop?: number;
   title?: string;
 };
 
-export default function CampaignSections({
-  campaigns,
+export default function RewardSections({
+  rewards,
   apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "",
   scrollMarginTop = 100,
-  title = "Campaign",
+  title = "Reward",
 }: Props) {
   const data = useMemo(
     () =>
-      (campaigns ?? []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
-    [campaigns]
+      (rewards ?? []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+    [rewards]
   );
 
   const sectionRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -95,7 +95,7 @@ export default function CampaignSections({
                       "&:hover": { bgcolor: "rgba(233,30,99,0.12)" },
                     }}
                   >
-                    {c.campaign_header || `Campaign #${i + 1}`}
+                    {c.reward_header || `Reward #${i + 1}`}
                   </Button>
                 );
               })}
@@ -110,7 +110,7 @@ export default function CampaignSections({
               const img = c.image?.[0]?.path
                 ? `${apiBaseUrl}${c.image[0].path}`
                 : undefined;
-              const anchorId = `${i + 1}-${slugify(c.campaign_header)}`;
+              const anchorId = `${i + 1}-${slugify(c.reward_header)}`;
 
               return (
                 <Box
@@ -123,10 +123,10 @@ export default function CampaignSections({
                   sx={{ scrollMarginTop }}
                 >
                   <Typography variant="h5" fontWeight={900} sx={{ mb: 1.2 }}>
-                    {c.campaign_header || `Campaign #${i + 1}`}
+                    {c.reward_header || `Reward #${i + 1}`}
                   </Typography>
 
-                  {c.campaign_description && (
+                  {c.reward_description && (
                     <Typography
                       sx={{
                         mb: 2,
@@ -134,7 +134,7 @@ export default function CampaignSections({
                         whiteSpace: "pre-line",
                       }}
                     >
-                      {c.campaign_description}
+                      {c.reward_description}
                     </Typography>
                   )}
 
@@ -142,7 +142,7 @@ export default function CampaignSections({
                     <Box
                       component="img"
                       src={img}
-                      alt={c.campaign_header || `Campaign #${i + 1}`}
+                      alt={c.reward_header || `Reward #${i + 1}`}
                       sx={{
                         width: "600px",
                         height: "600px",

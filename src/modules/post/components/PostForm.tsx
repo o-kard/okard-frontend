@@ -32,11 +32,31 @@ type FormCampaign = {
   file?: File | null;
 };
 
+type FormReward = {
+  id?: string;
+  reward_header?: string;
+  reward_description?: string;
+  order: number;
+  reward_amount: number;
+  backup_amount: number;
+  file?: File | null;
+};
+
 type CampaignManifestItem = {
   id?: string;
   order: number;
   campaign_header?: string;
   campaign_description?: string;
+  fileIndex?: number;
+};
+
+type RewardManifestItem = {
+  id?: string;
+  order: number;
+  reward_header?: string;
+  reward_description?: string;
+  reward_amount?: number;
+  backup_amount?: number;
   fileIndex?: number;
 };
 
@@ -53,6 +73,7 @@ type FormValues = {
   category: PostCategoryType;
   post_images: File[];
   campaigns: FormCampaign[];
+  rewards: FormReward[];
 };
 
 const categoryOptions = [
@@ -100,6 +121,7 @@ export default function PostForm({
         category: "tech",
         post_images: [],
         campaigns: [{ order: 1, file: null }],
+        rewards: [{ order: 1, file: null, reward_amount: 0, backup_amount: 0 }],
       },
     });
 
@@ -107,6 +129,12 @@ export default function PostForm({
     control,
     name: "campaigns",
   });
+
+  const {
+    fields: rewardFields,
+    append: appendReward,
+    remove: removeReward,
+  } = useFieldArray({ control, name: "rewards" });
 
   useEffect(() => {
     if (editItem) {
@@ -134,13 +162,23 @@ export default function PostForm({
         file: null,
       }));
       if (campaignMapped.length > 0) setValue("campaigns", campaignMapped);
+
+      const rewardMapped = (editItem.rewards || []).map((c, idx) => ({
+        id: c.id,
+        reward_header: c.reward_header,
+        reward_description: c.reward_description,
+        reward_amount: c.reward_amount ?? 0,
+        backup_amount: c.backup_amount ?? 0,
+        order: c.order ?? idx + 1,
+        file: null,
+      }));
+      if (rewardMapped.length > 0) setValue("rewards", rewardMapped);
     }
   }, [editItem, setValue]);
 
-  // สร้าง manifest + ดึงไฟล์ใหม่ให้ตรงกับ fileIndex
-  const buildManifestAndFiles = (items: FormCampaign[]) => {
-    const manifest: CampaignManifestItem[] = [];
-    const files: File[] = [];
+  const buildManifestAndFilesForCampaign = (items: FormCampaign[]) => {
+    const campaignManifest: CampaignManifestItem[] = [];
+    const campaignFiles: File[] = [];
     let next = 0;
 
     for (const c of items) {
@@ -154,12 +192,38 @@ export default function PostForm({
 
       if (c.file) {
         item.fileIndex = next;
-        files.push(c.file);
+        campaignFiles.push(c.file);
         next++;
       }
-      manifest.push(item);
+      campaignManifest.push(item);
     }
-    return { manifest, files };
+    return { campaignManifest, campaignFiles };
+  };
+
+  const buildManifestAndFilesForReward = (items: FormReward[]) => {
+    const rewardManifest: RewardManifestItem[] = [];
+    const rewardFiles: File[] = [];
+    let next = 0;
+
+    for (const c of items) {
+      const item: RewardManifestItem = {
+        ...(c.id ? { id: c.id } : {}),
+        order: Number(c.order ?? 0),
+      };
+      if (c.reward_header != null) item.reward_header = c.reward_header;
+      if (c.reward_description != null)
+        item.reward_description = c.reward_description;
+      if (c.reward_amount != null) item.reward_amount = Number(c.reward_amount);
+      if (c.backup_amount != null) item.backup_amount = Number(c.backup_amount);
+
+      if (c.file) {
+        item.fileIndex = next;
+        rewardFiles.push(c.file);
+        next++;
+      }
+      rewardManifest.push(item);
+    }
+    return { rewardManifest, rewardFiles };
   };
 
   const handleFormSubmit: SubmitHandler<FormValues> = async (values) => {
@@ -190,35 +254,53 @@ export default function PostForm({
     const isEdit = Boolean(editItem?.id);
 
     if (!isEdit) {
-      // -----------------------
-      // CREATE: campaigns = List<CampaignCreate> (ไม่มี id/fileIndex)
-      // campaign_images = 1:1 ตาม index
-      // -----------------------
-      const createList = values.campaigns.map((c) => ({
+      const createCampaignList = values.campaigns.map((c, idx) => ({
         campaign_header: c.campaign_header ?? "",
         campaign_description: c.campaign_description ?? "",
-        order: Number(c.order ?? 0),
+        order: Number(c.order ?? idx + 1),
       }));
 
-      // รวบรวมไฟล์ของแคมเปญแบบ 1:1
       const campFiles: File[] = [];
       values.campaigns.forEach((c, i) => {
-        // สมมติคุณเก็บไฟล์ไว้ที่ (c as any).file จาก input; ปรับตามจริงได้
         const f = (c as any).file as File | undefined;
         if (!f)
           throw new Error(`Please upload an image for campaign #${i + 1}.`);
         campFiles.push(f);
       });
 
-      fd.append("campaigns", JSON.stringify(createList));
+      fd.append("campaigns", JSON.stringify(createCampaignList));
       campFiles.forEach((f) => fd.append("campaign_images", f));
+
+      const createRewardList = values.rewards.map((c, idx) => ({
+        reward_header: c.reward_header ?? "",
+        reward_description: c.reward_description ?? "",
+        reward_amount: Number(c.reward_amount ?? 0),
+        backup_amount: Number(c.backup_amount ?? 0),
+        order: Number(c.order ?? idx + 1),
+      }));
+
+      const rewardFiles: File[] = [];
+      values.rewards.forEach((c, i) => {
+        const f = (c as any).file as File | undefined;
+        if (!f) throw new Error(`Please upload an image for reward #${i + 1}.`);
+        rewardFiles.push(f);
+      });
+
+      fd.append("rewards", JSON.stringify(createRewardList));
+      rewardFiles.forEach((f) => fd.append("reward_images", f));
     } else {
-      const { manifest, files: newFiles } = buildManifestAndFiles(
-        values.campaigns
+      const { campaignManifest, campaignFiles } =
+        buildManifestAndFilesForCampaign(values.campaigns);
+
+      const { rewardManifest, rewardFiles } = buildManifestAndFilesForReward(
+        values.rewards
       );
 
-      fd.append("campaigns", JSON.stringify(manifest));
-      newFiles.forEach((f) => fd.append("campaign_images", f));
+      fd.append("campaigns", JSON.stringify(campaignManifest));
+      campaignFiles.forEach((f) => fd.append("campaign_images", f));
+
+      fd.append("rewards", JSON.stringify(rewardManifest));
+      rewardFiles.forEach((f) => fd.append("reward_images", f));
     }
 
     await onSubmit?.(fd, editItem?.id ?? null);
@@ -423,6 +505,103 @@ export default function PostForm({
             onClick={() => append({ order: fields.length + 1, file: null })}
           >
             Add Campaign
+          </Button>
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
+          <Typography variant="h6" sx={{ mt: 4, mb: 1 }}>
+            Rewards
+          </Typography>
+          {rewardFields.map((field, idx) => (
+            <Grid
+              container
+              spacing={1}
+              key={field.id}
+              sx={{ mb: 2, p: 1, border: "1px dashed #ddd", borderRadius: 1 }}
+            >
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  label="Reward Header"
+                  fullWidth
+                  {...register(`rewards.${idx}.reward_header` as const)}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  label="Order"
+                  type="number"
+                  fullWidth
+                  {...register(`rewards.${idx}.order` as const, {
+                    valueAsNumber: true,
+                  })}
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  label="Reward Description"
+                  fullWidth
+                  multiline
+                  rows={3}
+                  {...register(`rewards.${idx}.reward_description` as const)}
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  label="Reward Amount"
+                  fullWidth
+                  {...register(`rewards.${idx}.reward_amount` as const, {
+                    valueAsNumber: true,
+                  })}
+                />
+              </Grid>
+              {/* <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  label="Backup Amount"
+                  type="number"
+                  fullWidth
+                  {...register(`rewards.${idx}.backup_amount` as const, {
+                    valueAsNumber: true,
+                  })}
+                />
+              </Grid> */}
+              <Grid size={{ xs: 12 }}>
+                <Button variant="outlined" component="label" fullWidth>
+                  {watch(`rewards.${idx}.file`)
+                    ? "Change Image (optional for update)"
+                    : "Upload Reward Image"}
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={(e) =>
+                      setValue(
+                        `rewards.${idx}.file`,
+                        (e.target.files && e.target.files[0]) || null
+                      )
+                    }
+                  />
+                </Button>
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <IconButton color="error" onClick={() => removeReward(idx)}>
+                  <DeleteIcon />
+                </IconButton>
+              </Grid>
+            </Grid>
+          ))}
+          <Button
+            startIcon={<AddIcon />}
+            variant="outlined"
+            onClick={() =>
+              appendReward({
+                order: rewardFields.length + 1,
+                file: null,
+                reward_amount: 0,
+                backup_amount: 0,
+              })
+            }
+          >
+            Add Reward
           </Button>
         </Grid>
 
