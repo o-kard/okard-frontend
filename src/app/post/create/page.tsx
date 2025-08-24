@@ -12,9 +12,7 @@ export default function PostCreatePage() {
   const router = useRouter();
   const haveUserDb = useRequireUserInDb();
 
-  if (haveUserDb !== "ok") {
-    return <div>You need to set up profile first…</div>;
-  }
+  if (haveUserDb !== "ok") return;
 
   const handleSubmit = async (
     data: Omit<Post, "id" | "user_id" | "images">,

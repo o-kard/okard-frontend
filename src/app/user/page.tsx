@@ -1,14 +1,22 @@
 "use client";
 
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { createUser } from "@/modules/user/api/api";
 import UserForm from "@/modules/user/components/UserForm";
 
+function sanitize(rt: string | null) {
+  // กัน open redirect: ยอมเฉพาะ path ในโดเมนตัวเอง
+  if (!rt || !rt.startsWith("/")) return null;
+  return rt;
+}
+
 export default function ProfilePage() {
   const { user } = useUser();
   const router = useRouter();
+  const sp = useSearchParams();
+  const returnTo = sanitize(sp.get("returnTo"));
 
   const clerk_id = user?.id || null;
   const username = user?.username || null;
@@ -21,7 +29,7 @@ export default function ProfilePage() {
     if (!user) return;
 
     const ok = await createUser(fd);
-    if (ok) router.push("/");
+    if (ok) router.replace(returnTo ?? "/");
   };
 
   return (

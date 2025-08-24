@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { checkUserExists } from "@/modules/user/api/api";
 
@@ -16,12 +16,14 @@ export function useRequireUserInDb(
   const { redirectTo = "/user", enabled = true } = opts;
   const { user, isLoaded } = useUser();
   const router = useRouter();
+  const pathname = usePathname();
+  const search = useSearchParams();
   const [status, setStatus] = useState<Status>("idle");
 
   useEffect(() => {
     if (!enabled) return;
     if (!isLoaded) return;
-    if (!user)    return;
+    if (!user) return;
 
     let cancelled = false;
     (async () => {
@@ -32,7 +34,8 @@ export function useRequireUserInDb(
 
         if (!exists) {
           setStatus("missing");
-          router.replace(redirectTo);
+          const returnTo = pathname + (search.size ? `?${search.toString()}` : "");
+          router.replace(`${redirectTo}?returnTo=${encodeURIComponent(returnTo)}`);
         } else {
           setStatus("ok");
         }
@@ -41,7 +44,9 @@ export function useRequireUserInDb(
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [enabled, isLoaded, user?.id, redirectTo, router]);
 
   return status;
