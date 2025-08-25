@@ -47,7 +47,7 @@ type CampaignManifestItem = {
   order: number;
   campaign_header?: string;
   campaign_description?: string;
-  fileIndex?: number;
+  isEdited?: boolean;
 };
 
 type RewardManifestItem = {
@@ -57,7 +57,7 @@ type RewardManifestItem = {
   reward_description?: string;
   reward_amount?: number;
   backup_amount?: number;
-  fileIndex?: number;
+  isEdited?: boolean;
 };
 
 type FormValues = {
@@ -125,61 +125,81 @@ export default function PostForm({
       },
     });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control,
     name: "campaigns",
   });
-
   const {
     fields: rewardFields,
     append: appendReward,
     remove: removeReward,
+    replace: replaceRewards,
   } = useFieldArray({ control, name: "rewards" });
 
   useEffect(() => {
-    if (editItem) {
-      setValue("post_header", editItem.post_header);
-      setValue("post_description", editItem.post_description || "");
-      setValue("goal_amount", editItem.goal_amount);
-      setValue("current_amount", editItem.current_amount ?? 0);
-      setValue("supporter", editItem.supporter ?? 0);
-      setValue("state", editItem.state);
-      setValue("status", editItem.status);
-      setValue("category", editItem.category);
-      setValue(
-        "effective_start_from",
-        toLocalInputValue(editItem?.effective_start_from)
-      );
-      setValue(
-        "effective_end_date",
-        toLocalInputValue(editItem?.effective_end_date)
-      );
-      const campaignMapped = (editItem.campaigns || []).map((c, idx) => ({
-        id: c.id,
-        campaign_header: c.campaign_header,
-        campaign_description: c.campaign_description,
-        order: c.order ?? idx + 1,
-        file: null,
-      }));
-      if (campaignMapped.length > 0) setValue("campaigns", campaignMapped);
+    if (!editItem) return;
 
-      const rewardMapped = (editItem.rewards || []).map((c, idx) => ({
-        id: c.id,
-        reward_header: c.reward_header,
-        reward_description: c.reward_description,
-        reward_amount: c.reward_amount ?? 0,
-        backup_amount: c.backup_amount ?? 0,
-        order: c.order ?? idx + 1,
-        file: null,
-      }));
-      if (rewardMapped.length > 0) setValue("rewards", rewardMapped);
+    setValue("post_header", editItem.post_header);
+    setValue("post_description", editItem.post_description || "");
+    setValue("goal_amount", editItem.goal_amount);
+    setValue("current_amount", editItem.current_amount ?? 0);
+    setValue("supporter", editItem.supporter ?? 0);
+    setValue("state", editItem.state);
+    setValue("status", editItem.status);
+    setValue("category", editItem.category);
+    setValue(
+      "effective_start_from",
+      toLocalInputValue(editItem?.effective_start_from)
+    );
+    setValue(
+      "effective_end_date",
+      toLocalInputValue(editItem?.effective_end_date)
+    );
+
+    // ----- Campaigns: sort by order -----
+    const sortedCamps = (editItem.campaigns || [])
+      .slice()
+      .sort((a, b) => Number(a.order ?? 0) - Number(b.order ?? 0));
+
+    const campaignMapped = sortedCamps.map((c, idx) => ({
+      id: c.id,
+      campaign_header: c.campaign_header,
+      campaign_description: c.campaign_description,
+      order: Number(c.order ?? idx + 1),
+      file: null as File | null,
+    }));
+
+    if (campaignMapped.length > 0) {
+      replace(campaignMapped);
+    } else {
+      setValue("campaigns", []);
     }
-  }, [editItem, setValue]);
+
+    // ----- Rewards: sort by order -----
+    const sortedRewards = (editItem.rewards || [])
+      .slice()
+      .sort((a, b) => Number(a.order ?? 0) - Number(b.order ?? 0));
+
+    const rewardMapped = sortedRewards.map((c, idx) => ({
+      id: c.id,
+      reward_header: c.reward_header,
+      reward_description: c.reward_description,
+      reward_amount: Number(c.reward_amount ?? 0),
+      backup_amount: Number(c.backup_amount ?? 0),
+      order: Number(c.order ?? idx + 1),
+      file: null as File | null,
+    }));
+
+    if (rewardMapped.length > 0) {
+      replaceRewards(rewardMapped);
+    } else {
+      setValue("rewards", []);
+    }
+  }, [editItem, setValue, replace, replaceRewards]);
 
   const buildManifestAndFilesForCampaign = (items: FormCampaign[]) => {
     const campaignManifest: CampaignManifestItem[] = [];
     const campaignFiles: File[] = [];
-    let next = 0;
 
     for (const c of items) {
       const item: CampaignManifestItem = {
@@ -191,9 +211,10 @@ export default function PostForm({
         item.campaign_description = c.campaign_description;
 
       if (c.file) {
-        item.fileIndex = next;
+        item.isEdited = true;
         campaignFiles.push(c.file);
-        next++;
+      } else {
+        item.isEdited = false;
       }
       campaignManifest.push(item);
     }
@@ -203,7 +224,6 @@ export default function PostForm({
   const buildManifestAndFilesForReward = (items: FormReward[]) => {
     const rewardManifest: RewardManifestItem[] = [];
     const rewardFiles: File[] = [];
-    let next = 0;
 
     for (const c of items) {
       const item: RewardManifestItem = {
@@ -217,10 +237,12 @@ export default function PostForm({
       if (c.backup_amount != null) item.backup_amount = Number(c.backup_amount);
 
       if (c.file) {
-        item.fileIndex = next;
+        item.isEdited = true;
         rewardFiles.push(c.file);
-        next++;
+      } else {
+        item.isEdited = false;
       }
+
       rewardManifest.push(item);
     }
     return { rewardManifest, rewardFiles };
