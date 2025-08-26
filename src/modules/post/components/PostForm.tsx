@@ -362,6 +362,9 @@ export default function PostForm({
               fullWidth
               value={field.value ?? ""}
               onChange={field.onChange}
+              slotProps={{
+                select: { MenuProps: { disableScrollLock: true } },
+              }}
             >
               <MenuItem value="draft">Draft</MenuItem>
               <MenuItem value="published">Published</MenuItem>
@@ -380,6 +383,9 @@ export default function PostForm({
               fullWidth
               value={field.value ?? ""}
               onChange={field.onChange}
+              slotProps={{
+                select: { MenuProps: { disableScrollLock: true } },
+              }}
             >
               <MenuItem value="active">Active</MenuItem>
               <MenuItem value="inactive">Inactive</MenuItem>
@@ -397,6 +403,9 @@ export default function PostForm({
               fullWidth
               value={field.value ?? ""}
               onChange={field.onChange}
+              slotProps={{
+                select: { MenuProps: { disableScrollLock: true } },
+              }}
             >
               {categoryOptions.map((opt) => (
                 <MenuItem key={opt.value} value={opt.value}>
