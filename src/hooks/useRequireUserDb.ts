@@ -13,7 +13,7 @@ export function useRequireUserInDb(
     enabled?: boolean;
   } = {}
 ) {
-  const { redirectTo = "/user", enabled = true } = opts;
+  const { redirectTo = "/user/setup", enabled = true } = opts;
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const pathname = usePathname();
