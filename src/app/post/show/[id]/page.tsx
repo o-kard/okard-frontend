@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   Box,
   Container,
@@ -30,6 +30,7 @@ export default function PostDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const [post, setPost] = useState<Post | null>(null);
+  const router = useRouter();
 
   const formatDate = (dateStr?: string | null) => {
     if (!dateStr) return "-";
@@ -323,6 +324,7 @@ export default function PostDetailPage() {
               textTransform: "none",
               "&:hover": { bgcolor: "#12a884" },
             }}
+            onClick={() => router.push(`/payment/${id}`)}
           >
             Contribute this Campaign
           </Button>

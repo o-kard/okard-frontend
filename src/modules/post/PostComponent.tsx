@@ -11,7 +11,6 @@ import {
   Drawer,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import Link from "next/link";
 import ExploreHeader from "./components/ExploreHeader";
 import { useMediaQuery } from "@mui/material";
 import PostList from "./components/PostList";
