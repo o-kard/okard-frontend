@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Button, Grid, Stack, Typography } from "@mui/material";
 import type { Reward } from "@/modules/post/types/post";
+import { AttachMoney, Groups } from "@mui/icons-material";
 
 const slugify = (s?: string) =>
   (s || "")
@@ -104,54 +105,121 @@ export default function RewardSections({
         </Grid>
 
         {/* RIGHT: Sections */}
-        <Grid size={{ xs: 12, md: 9 }}>
-          <Stack spacing={6}>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Stack spacing={4}>
             {data.map((c, i) => {
               const img = c.image?.[0]?.path
                 ? `${apiBaseUrl}${c.image[0].path}`
                 : undefined;
               const anchorId = `${i + 1}-${slugify(c.reward_header)}`;
+              const amount = (c as any).amount ?? (c as any).reward_amount ?? 0;
+              const backupCount = (c as any).backup_amount ?? 0;
 
               return (
                 <Box
                   key={c.id ?? `sec-${i}`}
                   id={anchorId}
-                  component="div"
                   ref={(el) => {
                     sectionRefs.current[i] = el as HTMLDivElement | null;
                   }}
                   sx={{ scrollMarginTop }}
                 >
-                  <Typography variant="h5" fontWeight={900} sx={{ mb: 1.2 }}>
-                    {c.reward_header || `Reward #${i + 1}`}
-                  </Typography>
+                  <Box
+                    sx={{
+                      border: "2px solid",
+                      borderColor: "divider",
+                      borderRadius: 4,
+                      p: 2.5,
+                      boxShadow: 1,
+                      position: "relative",
+                      bgcolor: "background.paper",
+                    }}
+                  >
+                    <Grid container spacing={2} alignItems="stretch">
+                      {/* left image */}
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        {img ? (
+                          <Box
+                            component="img"
+                            src={img}
+                            alt={c.reward_header || `Reward #${i + 1}`}
+                            sx={{
+                              width: "100%",
+                              height: 200,
+                              objectFit: "cover",
+                              borderRadius: 2,
+                              display: "block",
+                            }}
+                          />
+                        ) : (
+                          <Box
+                            sx={{
+                              width: "100%",
+                              height: 200,
+                              borderRadius: 2,
+                              bgcolor: "action.hover",
+                            }}
+                          />
+                        )}
+                        <Box>
+                          <Typography
+                            variant="body2"
+                            sx={{ color: "text.secondary", pt: 2 }}
+                          >
+                            more than
+                          </Typography>
+                          <Typography variant="h6" fontWeight={900}>
+                            {new Intl.NumberFormat("th-TH").format(amount)} THB
+                          </Typography>
+                        </Box>
+                      </Grid>
 
-                  {c.reward_description && (
-                    <Typography
-                      sx={{
-                        mb: 2,
-                        color: "text.secondary",
-                        whiteSpace: "pre-line",
-                      }}
-                    >
-                      {c.reward_description}
-                    </Typography>
-                  )}
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <Typography
+                          variant="h5"
+                          fontWeight={900}
+                          sx={{ mb: 1 }}
+                        >
+                          {c.reward_header || `Reward #${i + 1}`}
+                        </Typography>
 
-                  {img && (
-                    <Box
-                      component="img"
-                      src={img}
-                      alt={c.reward_header || `Reward #${i + 1}`}
-                      sx={{
-                        width: "600px",
-                        height: "600px",
-                        borderRadius: 2,
-                        boxShadow: 1,
-                        display: "block",
-                      }}
-                    />
-                  )}
+                        {c.reward_description && (
+                          <Typography
+                            sx={{
+                              color: "text.secondary",
+                              mb: 2,
+                              whiteSpace: "pre-line",
+                            }}
+                          >
+                            {c.reward_description}
+                          </Typography>
+                        )}
+
+                        {/* bottom-right backup count */}
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          alignItems="center"
+                          sx={{
+                            position: { xs: "static", sm: "absolute" },
+                            right: { sm: 16 },
+                            bottom: { sm: 14 },
+                            mt: { xs: 2, sm: 0 },
+                            px: 1.25,
+                            py: 0.75,
+                            borderRadius: 999,
+                            bgcolor: "action.hover",
+                            width: "fit-content",
+                          }}
+                        >
+                          <Groups sx={{ fontSize: 18 }} />
+                          <Typography variant="body2">
+                            {backupCount} backup this level
+                          </Typography>
+                        </Stack>
+                      </Grid>
+                    </Grid>
+                  </Box>
                 </Box>
               );
             })}

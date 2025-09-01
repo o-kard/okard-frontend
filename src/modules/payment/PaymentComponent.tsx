@@ -67,7 +67,7 @@ export default function PaymentComponent({ postId, userId }: Props) {
     };
     const res = await createPayment(payload, userId);
     if (res) {
-      router.replace(`/post/show/${post.id}`);
+      router.replace(`/post/show/${post.id}`); 
     }
   };
 
