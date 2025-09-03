@@ -13,7 +13,7 @@ type FormValues = {
   tel: string;
   address: string;
   user_description: string | null;
-  country: string | null;
+  country_id: string | null;
   birth_date: string | null;
   user_image: File | null;
 };
@@ -49,7 +49,7 @@ export default function UserForm({
         tel: "",
         address: "",
         user_description: null,
-        country: null,
+        country_id: "",
         birth_date: null,
         user_image: null,
       },
@@ -82,7 +82,7 @@ export default function UserForm({
         tel: values.tel,
         address: values.address,
         user_description: values.user_description || null,
-        country: values.country || null,
+        country_id: values.country_id || null,
         birth_date: values.birth_date! || null,
       };
       fd.append("data", JSON.stringify(payload));
@@ -151,7 +151,7 @@ export default function UserForm({
         <Box flex={1}>
           <Typography mb={1}>Country</Typography>
           <select
-            {...register("country", { required: "Please select country" })}
+            {...register("country_id", { required: "Please select country" })}
             className="border rounded px-3 py-2 w-full"
             disabled={countryLoading}
           >

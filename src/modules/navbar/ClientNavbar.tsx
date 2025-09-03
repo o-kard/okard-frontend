@@ -133,7 +133,10 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
             </SignedOut>
 
             <SignedIn>
-              <UserButton />
+              <UserButton
+                userProfileMode="navigation"
+                userProfileUrl="/user"
+              />
             </SignedIn>
           </Grid>
         </Grid>
