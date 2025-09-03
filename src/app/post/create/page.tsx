@@ -4,10 +4,14 @@ import { useUser } from "@clerk/nextjs";
 import { createPostWithCampaigns } from "@/modules/post/api/api";
 import PostForm from "@/modules/post/components/PostForm";
 import { Container, Typography, Box } from "@mui/material";
+import { useRequireUserInDb } from "@/hooks/useRequireUserDb";
 
 export default function PostCreatePage() {
   const { user } = useUser();
   const router = useRouter();
+  const haveUserDb = useRequireUserInDb();
+
+  if (haveUserDb !== "ok") return;
 
   const handleSubmit = async (fd: FormData) => {
     if (!user) return;

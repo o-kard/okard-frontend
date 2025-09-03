@@ -1,7 +1,7 @@
 export type User = {
   id: string;
   clerk_id: string;
-  email: string;
+  email: string | null;
   username: string;
   first_name: string;
   middle_name?: string | null;
@@ -11,5 +11,4 @@ export type User = {
   user_description: string;
   country?: string | null;
   birth_date?: string | null;
-  image_id?: string | null;
 };
