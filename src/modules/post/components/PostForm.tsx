@@ -24,6 +24,19 @@ import type {
   PostStateType,
   PostStatusType,
 } from "../types/post";
+import {
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type FormCampaign = {
   id?: string;
@@ -77,6 +90,30 @@ type FormValues = {
   rewards: FormReward[];
 };
 
+type Props = {
+  editItem?: Post | null;
+  onSubmit?: (fd: FormData, editId?: string | null) => Promise<void> | void;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+};
+
+type PostImageItem = { id: string; file: File; preview: string; order: number };
+
+function SortableThumb({ item }: { item: PostImageItem }) {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: item.id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <img
+        src={item.preview}
+        style={{ width: 140, height: 100, objectFit: "cover", borderRadius: 8 }}
+      />
+      <small># {item.order}</small>
+    </div>
+  );
+}
+
 const categoryOptions = [
   { value: "tech", label: "Technology" },
   { value: "education", label: "Education" },
@@ -106,13 +143,6 @@ const toAbsolute = (p?: string) => {
   const base = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") ?? "";
   const rel = p.startsWith("/") ? p : `/${p}`;
   return `${base}${rel}`;
-};
-
-type Props = {
-  editItem?: Post | null;
-  onSubmit?: (fd: FormData, editId?: string | null) => Promise<void> | void;
-  onSuccess?: () => void;
-  onCancel?: () => void;
 };
 
 export default function PostForm({
@@ -147,6 +177,19 @@ export default function PostForm({
   const [rewardPreviews, setRewardPreviews] = useState<Record<number, string>>(
     {}
   );
+  const [postImages, setPostImages] = useState<PostImageItem[]>([]);
+  const sensors = useSensors(useSensor(PointerSensor));
+  const onDragEnd = (e: any) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIndex = postImages.findIndex((x) => x.id === active.id);
+    const newIndex = postImages.findIndex((x) => x.id === over.id);
+    const next = arrayMove(postImages, oldIndex, newIndex).map((x, i) => ({
+      ...x,
+      order: i + 1,
+    }));
+    setPostImages(next);
+  };
 
   useEffect(() => {
     return () => {
@@ -158,15 +201,19 @@ export default function PostForm({
 
   const handlePostFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    postImagePreviews.forEach((u) => URL.revokeObjectURL(u));
-    const urls = files.map((f) => URL.createObjectURL(f));
-    setPostImagePreviews(urls);
+    const items = files.map((f, i) => ({
+      id: `${f.name}-${i}-${crypto.randomUUID()}`,
+      file: f,
+      preview: URL.createObjectURL(f),
+      order: i + 1,
+    }));
+    setPostImages(items);
     setValue("post_images", files);
   };
-
   const handleClearPostImages = () => {
     postImagePreviews.forEach((u) => URL.revokeObjectURL(u));
     setPostImagePreviews([]);
+    setPostImages([]);
     setValue("post_images", []);
   };
 
@@ -287,11 +334,19 @@ export default function PostForm({
       setValue("rewards", []);
     }
 
+    // ----- Post images -----
     const postUrls: string[] = Array.isArray(editItem.images)
       ? editItem.images.map((img) => toAbsolute(img.path)).filter(Boolean)
       : [];
 
-    setPostImagePreviews(postUrls);
+    const mappedImages = postUrls.map((url, idx) => ({
+      id: editItem.images?.[idx]?.id ?? `${idx}-${crypto.randomUUID()}`,
+      file: null as any,
+      preview: url,
+      order: idx + 1,
+    }));
+
+    setPostImages(mappedImages);
 
     const campMap: Record<number, string> = {};
     (editItem.campaigns || []).forEach((c, i) => {
@@ -363,6 +418,8 @@ export default function PostForm({
 
   const handleFormSubmit: SubmitHandler<FormValues> = async (values) => {
     const fd = new FormData();
+    const isEdit = Boolean(editItem?.id);
+    const pickedNewFiles = (watch("post_images") ?? []).length > 0;
 
     // --- post_data (normalize optional -> ค่า default) ---
     const postPayload = {
@@ -378,15 +435,6 @@ export default function PostForm({
       category: values.category,
     };
     fd.append("post_data", JSON.stringify(postPayload));
-
-    // --- post images: รองรับ FileList และ File[] ---
-    const postFiles: File[] =
-      values.post_images instanceof FileList
-        ? Array.from(values.post_images)
-        : values.post_images ?? [];
-    postFiles.forEach((f) => fd.append("images", f));
-
-    const isEdit = Boolean(editItem?.id);
 
     if (!isEdit) {
       const createCampaignList = values.campaigns.map((c, idx) => ({
@@ -436,6 +484,34 @@ export default function PostForm({
 
       fd.append("rewards", JSON.stringify(rewardManifest));
       rewardFiles.forEach((f) => fd.append("reward_images", f));
+    }
+
+    if (!isEdit) {
+      postImages
+        .sort((a, b) => a.order - b.order)
+        .forEach((it) => fd.append("images", it.file));
+      fd.append(
+        "images_manifest",
+        JSON.stringify(
+          postImages.map((it) => ({ filename: it.file.name, order: it.order }))
+        )
+      );
+    } else if (pickedNewFiles) {
+      postImages
+        .sort((a, b) => a.order - b.order)
+        .forEach((it) => fd.append("images", it.file));
+      fd.append(
+        "images_manifest",
+        JSON.stringify(
+          postImages.map((it) => ({ filename: it.file.name, order: it.order }))
+        )
+      );
+    } else {
+      const reorder = postImages.map((it) => ({
+        id: it.id,
+        order: it.order,
+      }));
+      fd.append("images_reorder", JSON.stringify(reorder));
     }
 
     await onSubmit?.(fd, editItem?.id ?? null);
@@ -572,43 +648,39 @@ export default function PostForm({
               onChange={handlePostFilesChange}
             />
           </Button>
-          {postImagePreviews.length > 0 && (
-            <Box sx={{ mt: 1 }}>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                Preview ({postImagePreviews.length})
-              </Typography>
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
-                  gap: 2,
-                }}
+
+          {postImages.length > 0 && (
+            <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+              <SortableContext
+                items={postImages.map((x) => x.id)}
+                strategy={verticalListSortingStrategy}
               >
-                {postImagePreviews.map((url, i) => (
-                  <img
-                    key={i}
-                    src={toAbsolute(url)}
-                    style={{
-                      width: "100%",
-                      height: 120,
-                      objectFit: "cover",
-                      borderRadius: 8,
-                      border: "1px solid #ddd",
-                    }}
-                  />
-                ))}
-              </Box>
-              <Button
-                size="small"
-                variant="text"
-                color="error"
-                sx={{ mt: 1 }}
-                onClick={handleClearPostImages}
-              >
-                Clear all images
-              </Button>
-            </Box>
+                <Box
+                  sx={{
+                    mt: 1,
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))",
+                    gap: 2,
+                  }}
+                >
+                  {postImages.map((it) => (
+                    <SortableThumb key={it.id} item={it} />
+                  ))}
+                </Box>
+              </SortableContext>
+            </DndContext>
           )}
+
+          <Box>
+            <Button
+              size="small"
+              variant="text"
+              color="error"
+              onClick={() => handleClearPostImages()}
+            >
+              Clear image
+            </Button>
+          </Box>
         </Grid>
 
         <Grid size={{ xs: 12 }}>

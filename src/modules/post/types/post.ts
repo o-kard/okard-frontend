@@ -45,4 +45,5 @@ export type Reward = {
 
 export type Image = {
   path: string;
+  id?: string;
 };

@@ -75,3 +75,20 @@ export async function updatePostWithCampaigns(
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+export async function reorderPostImages(
+  postId: string,
+  clerkId: string,
+  items: { id: string; order: number }[]
+) {
+  const fd = new FormData();
+  fd.append("images_reorder", JSON.stringify(items));
+  const res = await fetch(
+    `${API_URL}/${postId}/with-campaigns?clerk_id=${encodeURIComponent(
+      clerkId
+    )}`,
+    { method: "PUT", body: fd }
+  );
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
