@@ -12,6 +12,8 @@ import {
   Grid,
 } from "@mui/material";
 
+import NotificationComponent from "@/modules/notification/NotificationComponent";
+
 export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
   const { openSignIn, openSignUp } = useClerk();
 
@@ -113,6 +115,10 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
               START A CAMPAIGN
             </Button>
 
+            <SignedIn>
+              <NotificationComponent />
+            </SignedIn>
+
             <SignedOut>
               <Box display="flex" gap={1}>
                 <Button
@@ -133,10 +139,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
             </SignedOut>
 
             <SignedIn>
-              <UserButton
-                userProfileMode="navigation"
-                userProfileUrl="/user"
-              />
+              <UserButton userProfileMode="navigation" userProfileUrl="/user" />
             </SignedIn>
           </Grid>
         </Grid>
