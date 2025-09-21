@@ -142,5 +142,6 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
         </Grid>
       </Container>
     </AppBar>
+    //>>
   );
 }
