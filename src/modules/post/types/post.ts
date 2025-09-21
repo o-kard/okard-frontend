@@ -1,3 +1,5 @@
+import { User, UserPublicResponse } from "@/modules/user/types/user";
+
 export type PostCategoryType = "tech" | "education" | "health" | "other";
 export type PostStatusType = "active" | "inactive";
 export type PostStateType = "draft" | "published" | "archived";
@@ -19,6 +21,7 @@ export type Post = {
   images?: Image[] | [];
   campaigns?: Campaign[] | [];
   rewards?: Reward[] | [];
+  comments?: PostComment[] | [];
 };
 
 export type Campaign = {
@@ -41,6 +44,25 @@ export type Reward = {
   backup_amount: number;
   order: number;
   image?: Image[] | [];
+};
+
+export type PostComment = {
+  id?: string;
+  post_id: string;
+  parent_id?: string | null;
+  user_id: string;
+  content: string;
+  likes: number;
+  created_at?: string;
+  is_liked?: boolean;
+  author: UserPublicResponse;
+  children?: PostComment[] | null;
+};
+
+export type LikeResp = {
+  comment_id: string;
+  likes: number;
+  is_liked: boolean;
 };
 
 export type Image = {

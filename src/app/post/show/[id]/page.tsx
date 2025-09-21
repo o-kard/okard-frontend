@@ -25,12 +25,15 @@ import { Post } from "@/modules/post/types/post";
 import PostDetailTabs from "@/modules/post/components/PostDetailTabs";
 import CampaignSections from "@/modules/post/components/CampaginSection";
 import RewardSections from "@/modules/post/components/RewardSection";
+import CommentSections from "@/modules/post/components/CommentSection";
+import { useUser } from "@clerk/nextjs";
 
 export default function PostDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const [post, setPost] = useState<Post | null>(null);
   const router = useRouter();
+  const { user } = useUser();
 
   const formatDate = (dateStr?: string | null) => {
     if (!dateStr) return "-";
@@ -393,11 +396,14 @@ export default function PostDetailPage() {
               key: "comment",
               label: "Comment",
               content: (
-                <Box>
-                  <Typography variant="h5" fontWeight={900} sx={{ mb: 1.5 }}>
-                    Comment
-                  </Typography>
-                </Box>
+                <CommentSections
+                  comments={post.comments}
+                  postId={post.id}
+                  apiBaseUrl={process.env.NEXT_PUBLIC_API_URL}
+                  scrollMarginTop={100}
+                  title=""
+                  clerkId={user?.id}
+                />
               ),
             },
             {
