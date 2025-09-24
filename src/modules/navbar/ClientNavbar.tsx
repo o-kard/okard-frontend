@@ -12,7 +12,12 @@ import {
   Grid,
 } from "@mui/material";
 
-import NotificationComponent from "@/modules/notification/NotificationComponent";
+import dynamic from "next/dynamic";
+
+const NotificationComponent = dynamic(
+  () => import("@/modules/notification/NotificationComponent"),
+  { ssr: false }
+);
 
 export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
   const { openSignIn, openSignUp } = useClerk();
