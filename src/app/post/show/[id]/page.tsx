@@ -25,7 +25,7 @@ import { Post } from "@/modules/post/types/post";
 import PostDetailTabs from "@/modules/post/components/PostDetailTabs";
 import CampaignSections from "@/modules/post/components/CampaginSection";
 import RewardSections from "@/modules/post/components/RewardSection";
-import CommentSections from "@/modules/post/components/CommentSection";
+import CommentSections from "@/modules/post/components/comment/CommentSection";
 import { useUser } from "@clerk/nextjs";
 
 export default function PostDetailPage() {
@@ -397,7 +397,6 @@ export default function PostDetailPage() {
               label: "Comment",
               content: (
                 <CommentSections
-                  comments={post.comments}
                   postId={post.id}
                   apiBaseUrl={process.env.NEXT_PUBLIC_API_URL}
                   scrollMarginTop={100}
