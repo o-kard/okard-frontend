@@ -2,10 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Notification } from "../types/notification";
 import { listNotifications, deleteNotification } from "../api/api";
 
-type Opts = { userId?: string; pollMs?: number };
+type Opts = { clerkId?: string; pollMs?: number };
 
 export function useNotifications(opts: Opts = {}) {
-  const { userId, pollMs = 15000 } = opts;
+  const { clerkId, pollMs = 15000 } = opts;
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -14,7 +14,7 @@ export function useNotifications(opts: Opts = {}) {
   const fetchNow = async () => {
     try {
       setLoading(true);
-      const data = await listNotifications(userId);
+      const data = await listNotifications(clerkId);
       setItems(data);
       setError(null);
     } catch (e: any) {
@@ -37,7 +37,7 @@ export function useNotifications(opts: Opts = {}) {
         if (timer.current) window.clearInterval(timer.current);
       };
     }
-  }, [userId, pollMs]);
+  }, [clerkId, pollMs]);
 
   const unreadCount = useMemo(() => items.length, [items]);
 

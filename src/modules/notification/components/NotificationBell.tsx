@@ -13,9 +13,9 @@ import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneR
 import { useNotifications } from "./useNotifications";
 import NotificationItem from "./NotificationItem";
 
-export default function NotificationBell({ userId }: { userId?: string }) {
+export default function NotificationBell({ clerkId }: { clerkId?: string }) {
   const { items, unreadCount, loading, error, removeOne, refetch } =
-    useNotifications({ userId, pollMs: 15000 });
+    useNotifications({ clerkId, pollMs: 15000 });
 
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(anchorEl);

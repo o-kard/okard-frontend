@@ -3,9 +3,9 @@ import { Notification } from "../types/notification";
 const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/notification`;
 
 export async function listNotifications(
-  userId?: string
+  clerk_id?: string
 ): Promise<Notification[]> {
-  const url = userId ? `${API_URL}?user_id=${userId}` : API_URL;
+  const url = clerk_id ? `${API_URL}?clerk_id=${clerk_id}` : API_URL;
   const res = await fetch(url, { credentials: "include" });
   if (!res.ok) throw new Error("Failed to fetch notifications");
   return res.json();
