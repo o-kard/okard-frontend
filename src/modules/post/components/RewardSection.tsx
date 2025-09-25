@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Button, Grid, Stack, Typography } from "@mui/material";
 import type { Reward } from "@/modules/post/types/post";
 import { AttachMoney, Groups } from "@mui/icons-material";
+import { useActiveSection } from "../hooks/useActiveSection";
 
 const slugify = (s?: string) =>
   (s || "")
@@ -33,30 +34,7 @@ export default function RewardSections({
   );
 
   const sectionRefs = useRef<Array<HTMLDivElement | null>>([]);
-  const [activeIdx, setActiveIdx] = useState(0);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const idx = Number(entry.target.getAttribute("data-idx") || "0");
-            setActiveIdx(idx);
-          }
-        });
-      },
-      { rootMargin: "-20% 0px -70% 0px", threshold: [0, 0.2, 0.5, 1] }
-    );
-
-    sectionRefs.current.forEach((node, i) => {
-      if (node) {
-        node.setAttribute("data-idx", String(i));
-        observer.observe(node);
-      }
-    });
-
-    return () => observer.disconnect();
-  }, [data.length]);
+  const activeIdx = useActiveSection(sectionRefs, data.length);
 
   const handleNavClick = (i: number) => {
     const node = sectionRefs.current[i];
