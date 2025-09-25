@@ -17,3 +17,17 @@ export async function fetchDashboardPosts(
   if (!res.ok) throw new Error("Failed to fetch posts");
   return res.json();
 }
+
+export async function fetchPaymentStats(clerkId: string) {
+  const res = await fetch(`${API_URL}/payments?clerk_id=${clerkId}`);
+  if (!res.ok) throw new Error("Failed to fetch payment stats");
+  return res.json();
+}
+
+export async function fetchInvestorCountries(clerkId: string) {
+  const res = await fetch(
+    `${API_URL}/investors-by-country?clerk_id=${clerkId}`
+  );
+  if (!res.ok) throw new Error("Failed to fetch investor countries");
+  return res.json();
+}

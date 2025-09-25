@@ -17,11 +17,15 @@ import DashboardPosts from "./components/DashboardPosts";
 import {
   fetchDashboardSummary,
   fetchDashboardPosts,
+  fetchPaymentStats,
+  fetchInvestorCountries,
 } from "./api/api";
 import type {
   DashboardSummary as SummaryType,
   DashboardPost,
 } from "./types/dashboard";
+import PaymentChart from "./components/DashboardBarChart";
+import InvestorPieChart from "./components/DashboardPieChart";
 
 export default function DashboardComponent() {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -29,6 +33,12 @@ export default function DashboardComponent() {
 
   const [summary, setSummary] = useState<SummaryType | null>(null);
   const [posts, setPosts] = useState<DashboardPost[]>([]);
+  const [payments, setPayments] = useState<
+    { date: string; total_amount: number }[]
+  >([]);
+  const [countries, setCountries] = useState<
+    { country: string; invest_count: number }[]
+  >([]);
   const [loading, setLoading] = useState(true);
 
   const [limit, setLimit] = useState(10);
@@ -39,13 +49,16 @@ export default function DashboardComponent() {
 
     async function loadData() {
       try {
-        setLoading(true);
-        const [s, p] = await Promise.all([
+        const [s, p, pay, c] = await Promise.all([
           fetchDashboardSummary(clerkId),
           fetchDashboardPosts(clerkId, limit, offset),
+          fetchPaymentStats(clerkId),
+          fetchInvestorCountries(clerkId),
         ]);
         setSummary(s);
         setPosts(p);
+        setPayments(pay);
+        setCountries(c);
       } catch (err) {
         console.error(err);
       } finally {
@@ -80,7 +93,7 @@ export default function DashboardComponent() {
           value={limit}
           onChange={(e) => {
             setLimit(Number(e.target.value));
-            setOffset(0); 
+            setOffset(0);
           }}
           size="small"
         >
@@ -109,6 +122,16 @@ export default function DashboardComponent() {
       </Stack>
 
       <DashboardPosts posts={posts} />
+
+      <Typography variant="h5" mt={4}>
+        Payments (last 7 days)
+      </Typography>
+      <PaymentChart data={payments} />
+
+      <Typography variant="h5" mt={4}>
+        Investors by Country
+      </Typography>
+      <InvestorPieChart data={countries} />
     </Box>
   );
 }
