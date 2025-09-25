@@ -1,12 +1,13 @@
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
-import PaymentComponent from "@/modules/payment/PaymentComponent";
+import DashboardComponent from "@/modules/dashboard/DashboardComponent";
 
-export default function PostPage() {
+export default function TestPage() {
   return (
     <>
       <SignedIn>
-        <PaymentComponent />
+        <DashboardComponent />
       </SignedIn>
+
       <SignedOut>
         <RedirectToSignIn />
       </SignedOut>
