@@ -9,6 +9,8 @@ import {
   MenuItem,
   Button,
   Stack,
+  Grid,
+  Container,
 } from "@mui/material";
 import { useUser } from "@clerk/nextjs";
 
@@ -76,62 +78,66 @@ export default function DashboardComponent() {
   if (loading) return <CircularProgress />;
 
   return (
-    <Box p={3}>
+    <Container maxWidth={false}>
       <Typography variant="h4" fontWeight="bold" gutterBottom>
         Dashboard
       </Typography>
 
-      {summary && <DashboardSummary summary={summary} />}
+      <Grid size={{ xs: 12, md: 6 }}>
+        {summary && <DashboardSummary summary={summary} />}
+      </Grid>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <Typography variant="h5" mt={4} gutterBottom>
+          My Campaigns
+        </Typography>
 
-      <Typography variant="h5" mt={4} gutterBottom>
-        My Campaigns
-      </Typography>
+        <Stack direction="row" spacing={2} mb={2} alignItems="center">
+          <Typography>Rows per page:</Typography>
+          <Select
+            value={limit}
+            onChange={(e) => {
+              setLimit(Number(e.target.value));
+              setOffset(0);
+            }}
+            size="small"
+          >
+            {[5, 10, 20, 50].map((n) => (
+              <MenuItem key={n} value={n}>
+                {n}
+              </MenuItem>
+            ))}
+          </Select>
 
-      <Stack direction="row" spacing={2} mb={2} alignItems="center">
-        <Typography>Rows per page:</Typography>
-        <Select
-          value={limit}
-          onChange={(e) => {
-            setLimit(Number(e.target.value));
-            setOffset(0);
-          }}
-          size="small"
-        >
-          {[5, 10, 20, 50].map((n) => (
-            <MenuItem key={n} value={n}>
-              {n}
-            </MenuItem>
-          ))}
-        </Select>
-
-        <Button
-          variant="outlined"
-          size="small"
-          disabled={offset === 0}
-          onClick={() => setOffset(Math.max(0, offset - limit))}
-        >
-          Prev
-        </Button>
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={() => setOffset(offset + limit)}
-        >
-          Next
-        </Button>
-      </Stack>
-
-      <DashboardPosts posts={posts} />
-
-      <Typography variant="h5" mt={4}>
-        Payments (last 7 days)
-      </Typography>
-      <PaymentChart data={payments} />
-
-      <Typography variant="h5" mt={4}>
-        Investors by Country
-      </Typography>
-      <InvestorPieChart data={countries} />
-    </Box>
+          <Button
+            variant="outlined"
+            size="small"
+            disabled={offset === 0}
+            onClick={() => setOffset(Math.max(0, offset - limit))}
+          >
+            Prev
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => setOffset(offset + limit)}
+          >
+            Next
+          </Button>
+        </Stack>
+        <DashboardPosts posts={posts} />
+      </Grid>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <Typography variant="h5" mt={4}>
+          Investors by Country
+        </Typography>
+        <InvestorPieChart data={countries} />
+      </Grid>
+      <Grid size={{ xs: 12, md: 12 }}>
+        <Typography variant="h5" mt={4}>
+          Payments (last 7 days)
+        </Typography>
+        <PaymentChart data={payments} />
+      </Grid>
+    </Container>
   );
 }
