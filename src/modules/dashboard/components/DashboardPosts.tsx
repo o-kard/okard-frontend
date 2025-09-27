@@ -27,8 +27,15 @@ export default function DashboardPosts({ posts }: { posts: DashboardPost[] }) {
               <Box mt={1}>
                 <LinearProgress
                   variant="determinate"
-                  value={post.progress_pct}
-                  sx={{ height: 10, borderRadius: 5 }}
+                  value={post.hit_goal ? 100 : post.progress_pct}
+                  sx={{
+                    height: 10,
+                    borderRadius: 5,
+                    "& .MuiLinearProgress-bar": {
+                      backgroundColor: post.hit_goal ? "green" : undefined,
+                    },
+                    backgroundColor: post.hit_goal ? "lightgreen" : undefined,
+                  }}
                 />
               </Box>
               <Typography variant="body2" mt={1}>
