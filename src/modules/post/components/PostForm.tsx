@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   useForm,
   useFieldArray,
@@ -13,6 +13,7 @@ import {
   Button,
   IconButton,
   Typography,
+  Box,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -23,6 +24,19 @@ import type {
   PostStateType,
   PostStatusType,
 } from "../types/post";
+import {
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type FormCampaign = {
   id?: string;
@@ -76,6 +90,30 @@ type FormValues = {
   rewards: FormReward[];
 };
 
+type Props = {
+  editItem?: Post | null;
+  onSubmit?: (fd: FormData, editId?: string | null) => Promise<void> | void;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+};
+
+type PostImageItem = { id: string; file: File; preview: string; order: number };
+
+function SortableThumb({ item }: { item: PostImageItem }) {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: item.id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <img
+        src={item.preview}
+        style={{ width: 140, height: 100, objectFit: "cover", borderRadius: 8 }}
+      />
+      <small># {item.order}</small>
+    </div>
+  );
+}
+
 const categoryOptions = [
   { value: "tech", label: "Technology" },
   { value: "education", label: "Education" },
@@ -90,14 +128,21 @@ const toLocalInputValue = (iso?: string | null): string => {
     .toISOString()
     .slice(0, 16);
 };
+
 const toIso = (local: string): string | null =>
   local ? new Date(local).toISOString() : null;
 
-type Props = {
-  editItem?: Post | null;
-  onSubmit?: (fd: FormData, editId?: string | null) => Promise<void> | void;
-  onSuccess?: () => void;
-  onCancel?: () => void;
+const toAbsolute = (p?: string) => {
+  if (!p) return "";
+  if (
+    p.startsWith("blob:") ||
+    p.startsWith("http://") ||
+    p.startsWith("https://")
+  )
+    return p;
+  const base = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") ?? "";
+  const rel = p.startsWith("/") ? p : `/${p}`;
+  return `${base}${rel}`;
 };
 
 export default function PostForm({
@@ -124,6 +169,99 @@ export default function PostForm({
         rewards: [{ order: 1, file: null, reward_amount: 0, backup_amount: 0 }],
       },
     });
+
+  const [postImagePreviews, setPostImagePreviews] = useState<string[]>([]);
+  const [campaignPreviews, setCampaignPreviews] = useState<
+    Record<number, string>
+  >({});
+  const [rewardPreviews, setRewardPreviews] = useState<Record<number, string>>(
+    {}
+  );
+  const [postImages, setPostImages] = useState<PostImageItem[]>([]);
+  const sensors = useSensors(useSensor(PointerSensor));
+  const onDragEnd = (e: any) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIndex = postImages.findIndex((x) => x.id === active.id);
+    const newIndex = postImages.findIndex((x) => x.id === over.id);
+    const next = arrayMove(postImages, oldIndex, newIndex).map((x, i) => ({
+      ...x,
+      order: i + 1,
+    }));
+    setPostImages(next);
+  };
+
+  useEffect(() => {
+    return () => {
+      postImagePreviews.forEach((u) => URL.revokeObjectURL(u));
+      Object.values(campaignPreviews).forEach((u) => URL.revokeObjectURL(u));
+      Object.values(rewardPreviews).forEach((u) => URL.revokeObjectURL(u));
+    };
+  }, []);
+
+  const handlePostFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const items = files.map((f, i) => ({
+      id: `${f.name}-${i}-${crypto.randomUUID()}`,
+      file: f,
+      preview: URL.createObjectURL(f),
+      order: i + 1,
+    }));
+    setPostImages(items);
+    setValue("post_images", files);
+  };
+  const handleClearPostImages = () => {
+    postImagePreviews.forEach((u) => URL.revokeObjectURL(u));
+    setPostImagePreviews([]);
+    setPostImages([]);
+    setValue("post_images", []);
+  };
+
+  const handleCampaignFileChange = (
+    idx: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const f = (e.target.files && e.target.files[0]) || null;
+    setValue(`campaigns.${idx}.file`, f);
+    if (campaignPreviews[idx]) URL.revokeObjectURL(campaignPreviews[idx]);
+    setCampaignPreviews((s) => ({
+      ...s,
+      [idx]: f ? URL.createObjectURL(f) : "",
+    }));
+  };
+
+  const handleClearCampaignImage = (idx: number) => {
+    if (campaignPreviews[idx]) URL.revokeObjectURL(campaignPreviews[idx]);
+    setCampaignPreviews((s) => {
+      const n = { ...s };
+      delete n[idx];
+      return n;
+    });
+    setValue(`campaigns.${idx}.file`, null);
+  };
+
+  const handleRewardFileChange = (
+    idx: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const f = (e.target.files && e.target.files[0]) || null;
+    setValue(`rewards.${idx}.file`, f);
+    if (rewardPreviews[idx]) URL.revokeObjectURL(rewardPreviews[idx]);
+    setRewardPreviews((s) => ({
+      ...s,
+      [idx]: f ? URL.createObjectURL(f) : "",
+    }));
+  };
+
+  const handleClearRewardImage = (idx: number) => {
+    if (rewardPreviews[idx]) URL.revokeObjectURL(rewardPreviews[idx]);
+    setRewardPreviews((s) => {
+      const n = { ...s };
+      delete n[idx];
+      return n;
+    });
+    setValue(`rewards.${idx}.file`, null);
+  };
 
   const { fields, append, remove, replace } = useFieldArray({
     control,
@@ -195,6 +333,36 @@ export default function PostForm({
     } else {
       setValue("rewards", []);
     }
+
+    // ----- Post images -----
+    const postUrls: string[] = Array.isArray(editItem.images)
+      ? editItem.images.map((img) => toAbsolute(img.path)).filter(Boolean)
+      : [];
+
+    const mappedImages = postUrls.map((url, idx) => ({
+      id: editItem.images?.[idx]?.id ?? `${idx}-${crypto.randomUUID()}`,
+      file: null as any,
+      preview: url,
+      order: idx + 1,
+    }));
+
+    setPostImages(mappedImages);
+
+    const campMap: Record<number, string> = {};
+    (editItem.campaigns || []).forEach((c, i) => {
+      if (Array.isArray(c.image) && c.image.length > 0) {
+        campMap[i] = toAbsolute(c.image[0].path);
+      }
+    });
+    setCampaignPreviews(campMap);
+
+    const rewardMap: Record<number, string> = {};
+    (editItem.rewards || []).forEach((r, i) => {
+      if (Array.isArray(r.image) && r.image.length > 0) {
+        rewardMap[i] = toAbsolute(r.image[0].path);
+      }
+    });
+    setRewardPreviews(rewardMap);
   }, [editItem, setValue, replace, replaceRewards]);
 
   const buildManifestAndFilesForCampaign = (items: FormCampaign[]) => {
@@ -250,6 +418,8 @@ export default function PostForm({
 
   const handleFormSubmit: SubmitHandler<FormValues> = async (values) => {
     const fd = new FormData();
+    const isEdit = Boolean(editItem?.id);
+    const pickedNewFiles = (watch("post_images") ?? []).length > 0;
 
     // --- post_data (normalize optional -> ค่า default) ---
     const postPayload = {
@@ -265,15 +435,6 @@ export default function PostForm({
       category: values.category,
     };
     fd.append("post_data", JSON.stringify(postPayload));
-
-    // --- post images: รองรับ FileList และ File[] ---
-    const postFiles: File[] =
-      values.post_images instanceof FileList
-        ? Array.from(values.post_images)
-        : values.post_images ?? [];
-    postFiles.forEach((f) => fd.append("images", f));
-
-    const isEdit = Boolean(editItem?.id);
 
     if (!isEdit) {
       const createCampaignList = values.campaigns.map((c, idx) => ({
@@ -323,6 +484,34 @@ export default function PostForm({
 
       fd.append("rewards", JSON.stringify(rewardManifest));
       rewardFiles.forEach((f) => fd.append("reward_images", f));
+    }
+
+    if (!isEdit) {
+      postImages
+        .sort((a, b) => a.order - b.order)
+        .forEach((it) => fd.append("images", it.file));
+      fd.append(
+        "images_manifest",
+        JSON.stringify(
+          postImages.map((it) => ({ filename: it.file.name, order: it.order }))
+        )
+      );
+    } else if (pickedNewFiles) {
+      postImages
+        .sort((a, b) => a.order - b.order)
+        .forEach((it) => fd.append("images", it.file));
+      fd.append(
+        "images_manifest",
+        JSON.stringify(
+          postImages.map((it) => ({ filename: it.file.name, order: it.order }))
+        )
+      );
+    } else {
+      const reorder = postImages.map((it) => ({
+        id: it.id,
+        order: it.order,
+      }));
+      fd.append("images_reorder", JSON.stringify(reorder));
     }
 
     await onSubmit?.(fd, editItem?.id ?? null);
@@ -456,12 +645,42 @@ export default function PostForm({
               hidden
               multiple
               accept="image/*"
-              onChange={(e) => {
-                const files = Array.from(e.target.files || []);
-                setValue("post_images", files);
-              }}
+              onChange={handlePostFilesChange}
             />
           </Button>
+
+          {postImages.length > 0 && (
+            <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+              <SortableContext
+                items={postImages.map((x) => x.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <Box
+                  sx={{
+                    mt: 1,
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))",
+                    gap: 2,
+                  }}
+                >
+                  {postImages.map((it) => (
+                    <SortableThumb key={it.id} item={it} />
+                  ))}
+                </Box>
+              </SortableContext>
+            </DndContext>
+          )}
+
+          <Box>
+            <Button
+              size="small"
+              variant="text"
+              color="error"
+              onClick={() => handleClearPostImages()}
+            >
+              Clear image
+            </Button>
+          </Box>
         </Grid>
 
         <Grid size={{ xs: 12 }}>
@@ -514,12 +733,35 @@ export default function PostForm({
                     type="file"
                     hidden
                     accept="image/*"
-                    onChange={(e) => {
-                      const f = (e.target.files && e.target.files[0]) || null;
-                      setValue(`campaigns.${idx}.file`, f);
-                    }}
+                    onChange={(e) => handleCampaignFileChange(idx, e)}
                   />
                 </Button>
+
+                {campaignPreviews[idx] && (
+                  <Box sx={{ mt: 1 }}>
+                    <img
+                      src={toAbsolute(campaignPreviews[idx])}
+                      alt={`camp-${idx}`}
+                      style={{
+                        width: 200,
+                        height: 140,
+                        objectFit: "cover",
+                        borderRadius: 8,
+                        border: "1px solid #ddd",
+                      }}
+                    />
+                    <Box>
+                      <Button
+                        size="small"
+                        variant="text"
+                        color="error"
+                        onClick={() => handleClearCampaignImage(idx)}
+                      >
+                        Clear image
+                      </Button>
+                    </Box>
+                  </Box>
+                )}
               </Grid>
 
               <Grid size={{ xs: 12 }}>
@@ -585,16 +827,6 @@ export default function PostForm({
                   })}
                 />
               </Grid>
-              {/* <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  label="Backup Amount"
-                  type="number"
-                  fullWidth
-                  {...register(`rewards.${idx}.backup_amount` as const, {
-                    valueAsNumber: true,
-                  })}
-                />
-              </Grid> */}
               <Grid size={{ xs: 12 }}>
                 <Button variant="outlined" component="label" fullWidth>
                   {watch(`rewards.${idx}.file`)
@@ -604,14 +836,35 @@ export default function PostForm({
                     type="file"
                     hidden
                     accept="image/*"
-                    onChange={(e) =>
-                      setValue(
-                        `rewards.${idx}.file`,
-                        (e.target.files && e.target.files[0]) || null
-                      )
-                    }
+                    onChange={(e) => handleRewardFileChange(idx, e)}
                   />
                 </Button>
+
+                {rewardPreviews[idx] && (
+                  <Box sx={{ mt: 1 }}>
+                    <img
+                      src={toAbsolute(rewardPreviews[idx])}
+                      alt={`reward-${idx}`}
+                      style={{
+                        width: 200,
+                        height: 140,
+                        objectFit: "cover",
+                        borderRadius: 8,
+                        border: "1px solid #ddd",
+                      }}
+                    />
+                    <Box>
+                      <Button
+                        size="small"
+                        variant="text"
+                        color="error"
+                        onClick={() => handleClearRewardImage(idx)}
+                      >
+                        Clear image
+                      </Button>
+                    </Box>
+                  </Box>
+                )}
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <IconButton color="error" onClick={() => removeReward(idx)}>

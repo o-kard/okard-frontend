@@ -1,3 +1,5 @@
+export type UUID = string;
+
 export type PaymentType =
   | "promptpay"
   | "card"
@@ -5,9 +7,9 @@ export type PaymentType =
   | "pay_by_bank";
 
 export type Payment = {
-  id?: string;
+  id?: UUID;
   amount: number;
-  post_id: string;
+  post_id: UUID;
   full_name: string;
   email: string;
   payment_method: PaymentType;
