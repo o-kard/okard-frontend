@@ -9,6 +9,7 @@ export type User = {
   tel: string;
   address: string;
   user_description: string;
+  country_id: string | null;
   country?: string | null;
   birth_date?: string | null;
 };
