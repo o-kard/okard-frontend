@@ -118,6 +118,7 @@ export async function unlikeComment(commentId: string, clerkId: string) {
       method: "DELETE",
     }
   );
+}
 export async function reorderPostImages(
   postId: string,
   clerkId: string,

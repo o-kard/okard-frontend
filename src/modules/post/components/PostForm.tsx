@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useEffect, useState } from "react";
 import {
   useForm,
   useFieldArray,
@@ -15,7 +14,6 @@ import {
   Button,
   Typography,
   IconButton,
-  Typography,
   Box,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
@@ -94,12 +92,12 @@ export type FormValues = {
   rewards: FormReward[];
 };
 
-type Props = {
-  editItem?: Post | null;
-  onSubmit?: (fd: FormData, editId?: string | null) => Promise<void> | void;
-  onSuccess?: () => void;
-  onCancel?: () => void;
-};
+// type Props = {
+//   editItem?: Post | null;
+//   onSubmit?: (fd: FormData, editId?: string | null) => Promise<void> | void;
+//   onSuccess?: () => void;
+//   onCancel?: () => void;
+// };
 
 type PostImageItem = { id: string; file: File; preview: string; order: number };
 
@@ -142,6 +140,7 @@ type Props = {
   onSuccess?: () => void;
   onCancel?: () => void;
   onPredict?: (values: FormValues) => Promise<any>;
+}
 const toAbsolute = (p?: string) => {
   if (!p) return "";
   if (
