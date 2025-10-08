@@ -15,3 +15,9 @@ export type DashboardPost = {
   investor_count: number;
   hit_goal: boolean;
 };
+
+export type TrendingPost = {
+  post_id: string
+  post_header: string
+  donate_count: number
+}

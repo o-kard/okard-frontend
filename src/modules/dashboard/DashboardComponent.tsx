@@ -21,13 +21,16 @@ import {
   fetchDashboardPosts,
   fetchPaymentStats,
   fetchInvestorCountries,
+  fetchTrendingPosts,
 } from "./api/api";
 import type {
   DashboardSummary as SummaryType,
   DashboardPost,
+  TrendingPost,
 } from "./types/dashboard";
 import PaymentChart from "./components/DashboardBarChart";
 import InvestorPieChart from "./components/DashboardPieChart";
+import DashboardTrending from "./components/DashboardTrending";
 
 export default function DashboardComponent() {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -41,6 +44,7 @@ export default function DashboardComponent() {
   const [countries, setCountries] = useState<
     { country: string; invest_count: number }[]
   >([]);
+  const [trending, setTrending] = useState<TrendingPost[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [limit, setLimit] = useState(10);
@@ -51,16 +55,18 @@ export default function DashboardComponent() {
 
     async function loadData() {
       try {
-        const [s, p, pay, c] = await Promise.all([
+        const [s, p, pay, c, t] = await Promise.all([
           fetchDashboardSummary(clerkId),
           fetchDashboardPosts(clerkId, limit, offset),
           fetchPaymentStats(clerkId),
           fetchInvestorCountries(clerkId),
+          fetchTrendingPosts(clerkId),
         ]);
         setSummary(s);
         setPosts(p);
         setPayments(pay);
         setCountries(c);
+        setTrending(t);
       } catch (err) {
         console.error(err);
       } finally {
@@ -137,6 +143,12 @@ export default function DashboardComponent() {
             Payments (last 7 days)
           </Typography>
           <PaymentChart data={payments} />
+        </Grid>
+        <Grid size={{ xs: 12, md: 12 }}>
+          <Typography variant="h5" mt={4}>
+            🔥 Top 5 Trending Posts
+          </Typography>
+          <DashboardTrending data={trending} />
         </Grid>
       </Grid>
     </Container>

@@ -31,3 +31,12 @@ export async function fetchInvestorCountries(clerkId: string) {
   if (!res.ok) throw new Error("Failed to fetch investor countries");
   return res.json();
 }
+
+export async function fetchTrendingPosts(clerkId: string, day?: string) {
+  const url = `${API_URL}/posts/trending?clerk_id=${clerkId}${
+    day ? `&day=${day}` : ""
+  }`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch trending posts");
+  return res.json();
+}
