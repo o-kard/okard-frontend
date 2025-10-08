@@ -1,16 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useForm,
   useFieldArray,
   Controller,
   SubmitHandler,
+
 } from "react-hook-form";
 import {
   TextField,
   MenuItem,
   Button,
+  Typography,
   IconButton,
   Typography,
   Box,
@@ -24,6 +27,7 @@ import type {
   PostStateType,
   PostStatusType,
 } from "../types/post";
+import PredictResultDialog from "@/modules/post/components/PredictResultDialog";
 import {
   DndContext,
   PointerSensor,
@@ -74,7 +78,7 @@ type RewardManifestItem = {
   isEdited?: boolean;
 };
 
-type FormValues = {
+export type FormValues = {
   post_header: string;
   post_description: string;
   goal_amount: number;
@@ -132,6 +136,12 @@ const toLocalInputValue = (iso?: string | null): string => {
 const toIso = (local: string): string | null =>
   local ? new Date(local).toISOString() : null;
 
+type Props = {
+  editItem?: Post | null;
+  onSubmit?: (fd: FormData, editId?: string | null) => Promise<void> | void;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+  onPredict?: (values: FormValues) => Promise<any>;
 const toAbsolute = (p?: string) => {
   if (!p) return "";
   if (
@@ -150,6 +160,7 @@ export default function PostForm({
   onSubmit,
   onSuccess,
   onCancel,
+  onPredict,
 }: Props) {
   const { control, register, handleSubmit, setValue, watch } =
     useForm<FormValues>({
@@ -262,6 +273,10 @@ export default function PostForm({
     });
     setValue(`rewards.${idx}.file`, null);
   };
+
+  useEffect(() => {
+    console.log("PostForm mounted, onPredict =", onPredict);
+  }, [onPredict]);
 
   const { fields, append, remove, replace } = useFieldArray({
     control,
@@ -516,6 +531,42 @@ export default function PostForm({
 
     await onSubmit?.(fd, editItem?.id ?? null);
     onSuccess?.();
+
+
+  };
+
+  const [openModal, setOpenModal] = useState(false);
+  const [loadingPredict, setLoadingPredict] = useState(false);
+  const [predictResult, setPredictResult] = useState<any>(null);
+
+  const onPredictClick = () => {
+    console.log("✅ Predict button clicked");
+    if (!onPredict) {
+      console.warn("⚠️ onPredict not provided");
+      return;
+    }
+
+    handleSubmit(
+      async (values) => {
+        try {
+          setOpenModal(true);
+          setLoadingPredict(true);
+          setPredictResult(null);
+
+          console.log("👉 calling onPredict now");
+          const result = await onPredict(values);   
+          setPredictResult(result || { message: "No result returned" });
+        } catch (err) {
+          console.error("Predict error:", err);
+          setPredictResult({ message: "Prediction failed ❌" });
+        } finally {
+          setLoadingPredict(false);
+        }
+      },
+      (errors) => {
+        console.log("❌ Predict validation errors:", errors);
+      }
+    )();
   };
 
   return (
@@ -893,11 +944,26 @@ export default function PostForm({
           <Button type="submit" variant="contained" color="success" fullWidth>
             {editItem ? "Update (with campaigns)" : "Create (with campaigns)"}
           </Button>
+          <Button
+            variant="outlined"
+            color="primary"
+            type="button"        
+            onClick={onPredictClick}
+          >
+            Predict
+          </Button>
           <Button variant="outlined" onClick={onCancel}>
             Cancel
           </Button>
         </Grid>
       </Grid>
+
+      <PredictResultDialog
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        loading={loadingPredict}
+        result={predictResult}
+      />
     </form>
   );
 }
