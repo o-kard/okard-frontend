@@ -1,6 +1,8 @@
-import { Post } from "../types/post";
+import { request } from "@/api/api";
+import { LikeResp, Post, PostComment } from "../types/post";
 
 const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/post`;
+const API_URL_COMMENT = `${process.env.NEXT_PUBLIC_API_URL}/api/comment`;
 
 export async function fetchPosts(): Promise<Post[]> {
   const res = await fetch(API_URL);
@@ -76,6 +78,46 @@ export async function updatePostWithCampaigns(
   return res.json();
 }
 
+// Comment API
+
+export async function createComment(fd: FormData, clerkId: string) {
+  return request<PostComment>(
+    `${API_URL_COMMENT}?clerk_id=${encodeURIComponent(clerkId)}`,
+    {
+      method: "POST",
+      body: fd,
+    }
+  );
+}
+
+export async function fetchComments(postId: string, clerk_id: string | null) {
+  return request<PostComment[]>(
+    `${API_URL_COMMENT}/post/${postId}?clerk_id=${encodeURIComponent(
+      clerk_id || ""
+    )}`
+  );
+}
+
+export async function likeComment(commentId: string, clerkId: string) {
+  return request<LikeResp>(
+    `${API_URL_COMMENT}/${commentId}/like?clerk_id=${encodeURIComponent(
+      clerkId
+    )}`,
+    {
+      method: "PUT",
+    }
+  );
+}
+
+export async function unlikeComment(commentId: string, clerkId: string) {
+  return request<LikeResp>(
+    `${API_URL_COMMENT}/${commentId}/like?clerk_id=${encodeURIComponent(
+      clerkId
+    )}`,
+    {
+      method: "DELETE",
+    }
+  );
 export async function reorderPostImages(
   postId: string,
   clerkId: string,

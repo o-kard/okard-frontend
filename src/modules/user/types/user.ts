@@ -1,3 +1,5 @@
+import { Image } from "@/modules/post/types/post";
+
 export type User = {
   id: string;
   clerk_id: string;
@@ -13,3 +15,9 @@ export type User = {
   country?: string | null;
   birth_date?: string | null;
 };
+
+export type UserPublicResponse = {
+  id: string;
+  username: string;
+  image: Image | null;
+}
