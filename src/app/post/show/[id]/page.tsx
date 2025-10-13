@@ -32,6 +32,7 @@ export default function PostDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const [post, setPost] = useState<Post | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const router = useRouter();
   const { user } = useUser();
 
@@ -122,27 +123,105 @@ export default function PostDetailPage() {
               overflow: "hidden",
             }}
           >
+            {/* Image Carousel */}
             <Box
               sx={{
                 position: "relative",
                 height: { xs: 420, md: 520 },
                 bgcolor: "grey.100",
+                overflow: "hidden",
               }}
             >
-              {imgSrc && (
-                <Box
-                  component="img"
-                  src={imgSrc}
-                  alt={post.post_header}
-                  sx={{
-                    position: "absolute",
-                    inset: 0,
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                />
+              {post.images && post.images.length > 0 && (
+                <>
+                  <Box
+                    component="img"
+                    src={`${process.env.NEXT_PUBLIC_API_URL}${post.images[currentIndex].path}`}
+                    alt={post.post_header}
+                    sx={{
+                      position: "absolute",
+                      inset: 0,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      transition: "opacity 0.5s ease-in-out",
+                    }}
+                  />
+
+                  {/* Prev Button */}
+                  <IconButton
+                    onClick={() =>
+                      setCurrentIndex((prev) =>
+                        prev === 0 ? post.images!.length - 1 : prev - 1
+                      )
+                    }
+                    sx={{
+                      position: "absolute",
+                      top: "50%",
+                      left: 16,
+                      transform: "translateY(-50%)",
+                      bgcolor: "rgba(0,0,0,0.4)",
+                      color: "white",
+                      "&:hover": { bgcolor: "rgba(0,0,0,0.6)" },
+                    }}
+                  >
+                    <ArrowBackIosNewIcon fontSize="small" />
+                  </IconButton>
+
+                  {/* Next Button */}
+                  <IconButton
+                    onClick={() =>
+                      setCurrentIndex((prev) =>
+                        prev === post.images!.length - 1 ? 0 : prev + 1
+                      )
+                    }
+                    sx={{
+                      position: "absolute",
+                      top: "50%",
+                      right: 16,
+                      transform: "translateY(-50%)",
+                      bgcolor: "rgba(0,0,0,0.4)",
+                      color: "white",
+                      "&:hover": { bgcolor: "rgba(0,0,0,0.6)" },
+                    }}
+                  >
+                    <ArrowBackIosNewIcon
+                      fontSize="small"
+                      sx={{ transform: "rotate(180deg)" }}
+                    />
+                  </IconButton>
+
+                  {/* Indicator Dots */}
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    sx={{
+                      position: "absolute",
+                      bottom: 16,
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    {post.images.map((_, i) => (
+                      <Box
+                        key={i}
+                        onClick={() => setCurrentIndex(i)}
+                        sx={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: "50%",
+                          bgcolor:
+                            i === currentIndex
+                              ? "primary.main"
+                              : "rgba(255,255,255,0.6)",
+                          cursor: "pointer",
+                        }}
+                      />
+                    ))}
+                  </Stack>
+                </>
               )}
+
               <Chip
                 label={post.category}
                 color="primary"
@@ -151,20 +230,6 @@ export default function PostDetailPage() {
                   top: 16,
                   right: 16,
                   fontWeight: 700,
-                }}
-              />
-              <Box
-                sx={{
-                  position: "absolute",
-                  right: 12,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  width: 0,
-                  height: 0,
-                  borderTop: "12px solid transparent",
-                  borderBottom: "12px solid transparent",
-                  borderLeft: "18px solid #10b981",
-                  opacity: 0.9,
                 }}
               />
             </Box>

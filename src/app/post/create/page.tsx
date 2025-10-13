@@ -1,6 +1,9 @@
+// PostCreatePage.tsx
+
 "use client";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
+import { useState } from "react"; // 👈 1. Import useState
 import { createPostWithCampaigns } from "@/modules/post/api/api";
 import PostForm from "@/modules/post/components/PostForm";
 import { Container, Typography, Box } from "@mui/material";
@@ -11,71 +14,34 @@ import { useCountryOptions } from "@/hooks/useCountryOptions";
 import { getUserById } from "@/modules/user/api/api";
 
 export default function PostCreatePage() {
-  const { user: clerkUser } = useUser();        
+  const { user: clerkUser } = useUser();
   const router = useRouter();
   const { countryOptions } = useCountryOptions();
 
+  const [predictResult, setPredictResult] = useState<any | null>(null);
 
-  // const handleSubmit = async (fd: FormData) => {
-  //   if (!clerkUser) return;
-  //   const ok = await createPostWithCampaigns(fd, clerkUser.id);
-  //   if (ok) router.push("/post");
-  // };
   const handleSubmit = async (fd: FormData) => {
     if (!clerkUser) return;
 
     try {
-      console.log("🧾 FormData before predict:", [...fd.entries()]);
+      if (predictResult) {
+        fd.append("predict_result", JSON.stringify(predictResult));
+      }
 
-      // ✅ ดึงข้อมูล post_data ออกมา
-      const postDataRaw = fd.get("post_data") as string;
-      const postData = postDataRaw ? JSON.parse(postDataRaw) : {};
-
-      // ✅ สร้าง formValues สำหรับ predict
-      const formValues = {
-        goal_amount: postData.goal_amount ?? 0,
-        post_header: postData.post_header ?? "",
-        post_description: postData.post_description ?? "",
-        effective_start_from: postData.effective_start_from ?? "",
-        effective_end_date: postData.effective_end_date ?? "",
-        post_images: [],
-        current_amount: 0,
-        supporter: 0,
-        state: "draft" as const,
-        status: "active" as const,
-        category: "tech" as const,
-        campaigns: [],
-        rewards: [],
-      };
-
-      // ✅ predict ก่อน
-      const predictResult = await handlePredict(formValues);
-      console.log("🔮 Predict result:", predictResult);
-
-      // ✅ แนบผล predict เข้าไปใน FormData
-      fd.append("predict_result", JSON.stringify(predictResult));
-
-      // ✅ สร้าง post พร้อมผล predict
       const ok = await createPostWithCampaigns(fd, clerkUser.id);
-      console.log("✅ Post created:", ok);
-      router.push("/post");
+      if (ok) {
+        router.push("/post");
+      }
     } catch (err) {
-      console.error("❌ Error:", err);
-      alert("Error while creating or predicting.");
+      console.error("❌ Error creating post:", err);
+      alert("Error while creating post.");
     }
   };
 
-
-
-
-
-
   const handlePredict = async (values: FormValues) => {
-    
     if (!clerkUser) return;
 
     try {
-      console.log("in")
       const dbUser = await getUserById(clerkUser.id);
       const userCountryId = dbUser.country_id;
       const countryLabel =
@@ -91,19 +57,19 @@ export default function PostCreatePage() {
         has_video: 0,
         has_photo: (values.post_images?.length ?? 0) > 0 ? 1 : 0,
       };
-
-      const result = await predictPost(input, clerkUser.id);
-      console.log("Prediction result:", result);
-      return result; //คืนค่ากลับ
+      
+      const result = await predictPost(input, clerkUser.id); 
+      
+      console.log("🔮 Prediction result received:", result);
+      
+      setPredictResult(result);
+      
+      return result; 
     } catch (err) {
       console.error("Predict error", err);
-      return { message: "Predict failed" }; 
+      return { message: "Predict failed" };
     }
   };
-
-
-
-  
 
   return (
     <Container maxWidth="sm">
@@ -112,7 +78,7 @@ export default function PostCreatePage() {
           Create New Post
         </Typography>
         <PostForm
-          onPredict={handlePredict} 
+          onPredict={handlePredict}
           onSubmit={handleSubmit}
           onCancel={() => router.push("/post")}
         />

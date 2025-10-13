@@ -4,12 +4,9 @@ export interface PredictInput {
   blurb: string;
   start_date: string;
   end_date: string;
-  // currency: string;
   country_displayable_name: string;
-  // location_state: string;
   has_video: number;
   has_photo: number;
-//   dur_bin: string;
 }
 
 export interface PredictResponse {
