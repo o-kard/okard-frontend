@@ -3,7 +3,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { useState } from "react"; // 👈 1. Import useState
+import { useState } from "react";
 import { createPostWithCampaigns } from "@/modules/post/api/api";
 import PostForm from "@/modules/post/components/PostForm";
 import { Container, Typography, Box } from "@mui/material";
@@ -22,12 +22,7 @@ export default function PostCreatePage() {
 
   const handleSubmit = async (fd: FormData) => {
     if (!clerkUser) return;
-
     try {
-      if (predictResult) {
-        fd.append("predict_result", JSON.stringify(predictResult));
-      }
-
       const ok = await createPostWithCampaigns(fd, clerkUser.id);
       if (ok) {
         router.push("/post");
