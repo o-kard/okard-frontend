@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import {
   Box,
@@ -25,17 +26,32 @@ export default function PostComponent() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const [category, setCategory] = useState<string>("all");
+  const searchParams = useSearchParams();
+  const initialCategory = searchParams.get("category") || "all";
+  const searchQuery = searchParams.get("query")?.toLowerCase() || "";
+
+  const [category, setCategory] = useState<string>(initialCategory);
   const [timing, setTiming] = useState<Timing>("all");
   const [includeClosed, setIncludeClosed] = useState(false);
 
   const isMdUp = useMediaQuery("(min-width:900px)");
 
   const categories = [
-    { value: "tech", label: "Technology" },
-    { value: "education", label: "Education" },
-    { value: "health", label: "Health & Wellness" },
-    { value: "other", label: "Other" },
+    { value: "Art", label: "Art" },
+    { value: "Comics", label: "Comics" },
+    { value: "Crafts", label: "Crafts" },
+    { value: "Dance", label: "Dance" },
+    { value: "Design", label: "Design" },
+    { value: "Fashion", label: "Fashion" },
+    { value: "Film & Video", label: "Film & Video" },
+    { value: "Food", label: "Food" },
+    { value: "Games", label: "Games" },
+    { value: "Journalism", label: "Journalism" },
+    { value: "Music", label: "Music" },
+    { value: "Photography", label: "Photography" },
+    { value: "Publishing", label: "Publishing" },
+    { value: "Technology", label: "Technology" },
+    { value: "Theater", label: "Theater" }
   ];
 
   useEffect(() => {
@@ -44,6 +60,12 @@ export default function PostComponent() {
 
   const filtered = useMemo(() => {
     let data = [...posts];
+    if (searchQuery) {
+      data = data.filter((p) =>
+        p.post_header?.toLowerCase().includes(searchQuery) ||
+        p.post_description?.toLowerCase().includes(searchQuery)
+      );
+    }
     if (category !== "all")
       data = data.filter(
         (p) => p.category?.toLowerCase() === category.toLowerCase()
@@ -59,7 +81,7 @@ export default function PostComponent() {
       data = data.filter((p) => p.state === "archived");
     }
     return data;
-  }, [posts, category, includeClosed, timing]);
+  }, [posts, category, includeClosed, timing, searchQuery]);
 
   const handleDelete = async (id: string) => {
     if (!user) return;
