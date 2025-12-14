@@ -19,6 +19,8 @@
     "@mui/icons-material": "^7.3.1",
     "@mui/material": "^7.3.1",
     "@mui/styled-engine-sc": "^7.2.0",
+    "@mui/x-charts": "^8.22.0",
+    "dayjs": "^1.11.19",
     "dnd-kit": "^0.0.2",
     "next": "^16.0.10",
     "react": "^19.2.3",
