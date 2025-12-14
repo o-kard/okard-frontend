@@ -20,9 +20,9 @@
     "@mui/material": "^7.3.1",
     "@mui/styled-engine-sc": "^7.2.0",
     "dnd-kit": "^0.0.2",
-    "next": "^16.0.8",
-    "react": "^19.2.1",
-    "react-dom": "^19.2.1",
+    "next": "^16.0.10",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "react-hook-form": "^7.63.0",
     "react-material-ui-carousel": "^3.4.2",
     "styled-components": "^6.1.19"
@@ -34,6 +34,12 @@
     "@types/react-dom": "^19",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "react-material-ui-carousel": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    }
   },
   "packageManager": "pnpm@10.4.1+sha512.c753b6c3ad7afa13af388fa6d808035a008e30ea9993f58c6663e2bc5ff21679aa834db094987129aa4d488b86df57f7b634981b2f827cdcacc698cc0cfb88af"
 }
