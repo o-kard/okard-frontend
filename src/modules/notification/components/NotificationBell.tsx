@@ -13,7 +13,15 @@ import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneR
 import { useNotifications } from "./useNotifications";
 import NotificationItem from "./NotificationItem";
 
-export default function NotificationBell({ clerkId }: { clerkId?: string }) {
+export default function NotificationBell({ 
+  clerkId, 
+  isHome = false, 
+  isHovered = false 
+}: { 
+  clerkId?: string; 
+  isHome?: boolean; 
+  isHovered?: boolean; 
+}) {
   const { items, unreadCount, loading, error, removeOne, refetch } =
     useNotifications({ clerkId, pollMs: 15000 });
 
@@ -29,7 +37,7 @@ export default function NotificationBell({ clerkId }: { clerkId?: string }) {
         size="large"
       >
         <Badge badgeContent={unreadCount} color="error">
-          <NotificationsNoneRoundedIcon />
+          <NotificationsNoneRoundedIcon sx={{fontSize:32, color: (isHome && !isHovered) ? "white" : "black"}}/>
         </Badge>
       </IconButton>
 

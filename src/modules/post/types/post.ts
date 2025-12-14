@@ -24,6 +24,7 @@ export type Post = {
   campaigns?: Campaign[] | [];
   rewards?: Reward[] | [];
   comments?: PostComment[] | [];
+  user: UserPublicResponse;
 };
 
 export type Campaign = {
