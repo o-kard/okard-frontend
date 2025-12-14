@@ -28,7 +28,9 @@ export default function CampaignSections({
 }: Props) {
   const data = useMemo(
     () =>
-      (campaigns ?? []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+      (campaigns ?? [])
+        .slice()
+        .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)),
     [campaigns]
   );
 
@@ -85,8 +87,8 @@ export default function CampaignSections({
         <Grid size={{ xs: 12, md: 9 }}>
           <Stack spacing={6}>
             {data.map((c, i) => {
-              const img = c.image?.[0]?.path
-                ? `${apiBaseUrl}${c.image[0].path}`
+              const img = c.images?.[0]?.path
+                ? `${apiBaseUrl}${c.images[0].path}`
                 : undefined;
               const anchorId = `${i + 1}-${slugify(c.campaign_header)}`;
 

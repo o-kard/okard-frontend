@@ -12,7 +12,10 @@ function sanitize(rt: string | null) {
   return rt;
 }
 
-export default function UserSetupPage() {
+import { Suspense } from "react";
+// ... (imports)
+
+function UserSetupContent() {
   const { user } = useUser();
   const router = useRouter();
   const sp = useSearchParams();
@@ -61,5 +64,13 @@ export default function UserSetupPage() {
         <RedirectToSignIn />
       </SignedOut>
     </>
+  );
+}
+
+export default function UserSetupPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <UserSetupContent />
+    </Suspense>
   );
 }

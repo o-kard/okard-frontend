@@ -43,7 +43,7 @@ type FormCampaign = {
   id?: string;
   campaign_header?: string;
   campaign_description?: string;
-  order: number;
+  display_order: number;
   file?: File | null;
 };
 
@@ -51,7 +51,7 @@ type FormReward = {
   id?: string;
   reward_header?: string;
   reward_description?: string;
-  order: number;
+  display_order: number;
   reward_amount: number;
   backup_amount: number;
   file?: File | null;
@@ -59,7 +59,7 @@ type FormReward = {
 
 type CampaignManifestItem = {
   id?: string;
-  order: number;
+  display_order: number;
   campaign_header?: string;
   campaign_description?: string;
   isEdited?: boolean;
@@ -67,7 +67,7 @@ type CampaignManifestItem = {
 
 type RewardManifestItem = {
   id?: string;
-  order: number;
+  display_order: number;
   reward_header?: string;
   reward_description?: string;
   reward_amount?: number;
@@ -98,7 +98,12 @@ export type FormValues = {
 //   onCancel?: () => void;
 // };
 
-type PostImageItem = { id: string; file: File; preview: string; order: number };
+type PostImageItem = {
+  id: string;
+  file: File;
+  preview: string;
+  display_order: number;
+};
 
 function SortableThumb({
   item,
@@ -123,7 +128,7 @@ function SortableThumb({
             borderRadius: 8,
           }}
         />
-        <small># {item.order}</small>
+        <small># {item.display_order}</small>
       </div>
       <IconButton
         size="small"
@@ -203,8 +208,10 @@ export default function PostForm({
         status: "active",
         category: "tech",
         post_images: [],
-        campaigns: [{ order: 1, file: null }],
-        rewards: [{ order: 1, file: null, reward_amount: 0, backup_amount: 0 }],
+        campaigns: [{ display_order: 1, file: null }],
+        rewards: [
+          { display_order: 1, file: null, reward_amount: 0, backup_amount: 0 },
+        ],
       },
     });
 
@@ -224,7 +231,7 @@ export default function PostForm({
     const newIndex = postImages.findIndex((x) => x.id === over.id);
     const next = arrayMove(postImages, oldIndex, newIndex).map((x, i) => ({
       ...x,
-      order: i + 1,
+      display_order: i + 1,
     }));
     setPostImages(next);
   };
@@ -247,7 +254,7 @@ export default function PostForm({
         id: `${f.name}-${i}-${crypto.randomUUID()}`,
         file: f,
         preview: URL.createObjectURL(f),
-        order: currentImages.length + i + 1,
+        display_order: currentImages.length + i + 1,
       }));
 
       const combinedImages = [...currentImages, ...newItems];
@@ -276,7 +283,7 @@ export default function PostForm({
 
       const updatedImages = remainingImages.map((img, index) => ({
         ...img,
-        order: index + 1,
+        display_order: index + 1,
       }));
 
       setValue(
@@ -379,13 +386,15 @@ export default function PostForm({
     // ----- Campaigns: sort by order -----
     const sortedCamps = (editItem.campaigns || [])
       .slice()
-      .sort((a, b) => Number(a.order ?? 0) - Number(b.order ?? 0));
+      .sort(
+        (a, b) => Number(a.display_order ?? 0) - Number(b.display_order ?? 0)
+      );
 
     const campaignMapped = sortedCamps.map((c, idx) => ({
       id: c.id,
       campaign_header: c.campaign_header,
       campaign_description: c.campaign_description,
-      order: Number(c.order ?? idx + 1),
+      display_order: Number(c.display_order ?? idx + 1),
       file: null as File | null,
     }));
 
@@ -398,7 +407,9 @@ export default function PostForm({
     // ----- Rewards: sort by order -----
     const sortedRewards = (editItem.rewards || [])
       .slice()
-      .sort((a, b) => Number(a.order ?? 0) - Number(b.order ?? 0));
+      .sort(
+        (a, b) => Number(a.display_order ?? 0) - Number(b.display_order ?? 0)
+      );
 
     const rewardMapped = sortedRewards.map((c, idx) => ({
       id: c.id,
@@ -406,7 +417,7 @@ export default function PostForm({
       reward_description: c.reward_description,
       reward_amount: Number(c.reward_amount ?? 0),
       backup_amount: Number(c.backup_amount ?? 0),
-      order: Number(c.order ?? idx + 1),
+      display_order: Number(c.display_order ?? idx + 1),
       file: null as File | null,
     }));
 
@@ -425,23 +436,23 @@ export default function PostForm({
       id: editItem.images?.[idx]?.id ?? `${idx}-${crypto.randomUUID()}`,
       file: null as any,
       preview: url,
-      order: idx + 1,
+      display_order: idx + 1,
     }));
 
     setPostImages(mappedImages);
 
     const campMap: Record<number, string> = {};
     (editItem.campaigns || []).forEach((c, i) => {
-      if (Array.isArray(c.image) && c.image.length > 0) {
-        campMap[i] = toAbsolute(c.image[0].path);
+      if (Array.isArray(c.images) && c.images.length > 0) {
+        campMap[i] = toAbsolute(c.images[0].path);
       }
     });
     setCampaignPreviews(campMap);
 
     const rewardMap: Record<number, string> = {};
     (editItem.rewards || []).forEach((r, i) => {
-      if (Array.isArray(r.image) && r.image.length > 0) {
-        rewardMap[i] = toAbsolute(r.image[0].path);
+      if (Array.isArray(r.images) && r.images.length > 0) {
+        rewardMap[i] = toAbsolute(r.images[0].path);
       }
     });
     setRewardPreviews(rewardMap);
@@ -454,7 +465,7 @@ export default function PostForm({
     for (const c of items) {
       const item: CampaignManifestItem = {
         ...(c.id ? { id: c.id } : {}),
-        order: Number(c.order ?? 0),
+        display_order: Number(c.display_order ?? 0),
       };
       if (c.campaign_header) item.campaign_header = c.campaign_header;
       if (c.campaign_description)
@@ -478,7 +489,7 @@ export default function PostForm({
     for (const c of items) {
       const item: RewardManifestItem = {
         ...(c.id ? { id: c.id } : {}),
-        order: Number(c.order ?? 0),
+        display_order: Number(c.display_order ?? 0),
       };
       if (c.reward_header != null) item.reward_header = c.reward_header;
       if (c.reward_description != null)
@@ -522,7 +533,7 @@ export default function PostForm({
       const createCampaignList = values.campaigns.map((c, idx) => ({
         campaign_header: c.campaign_header ?? "",
         campaign_description: c.campaign_description ?? "",
-        order: Number(c.order ?? idx + 1),
+        display_order: Number(c.display_order ?? idx + 1),
       }));
 
       const campFiles: File[] = [];
@@ -541,7 +552,7 @@ export default function PostForm({
         reward_description: c.reward_description ?? "",
         reward_amount: Number(c.reward_amount ?? 0),
         backup_amount: Number(c.backup_amount ?? 0),
-        order: Number(c.order ?? idx + 1),
+        display_order: Number(c.display_order ?? idx + 1),
       }));
 
       const rewardFiles: File[] = [];
@@ -568,30 +579,34 @@ export default function PostForm({
       rewardFiles.forEach((f) => fd.append("reward_images", f));
     }
 
-    if (!isEdit) {
-      postImages
-        .sort((a, b) => a.order - b.order)
+    // --- Image Handling ---
+    const newImages = postImages.filter((it) => it.file); // Files to upload
+    const existingImages = postImages.filter((it) => !it.file); // Existing on server
+
+    // 1. New Images
+    if (newImages.length > 0) {
+      newImages
+        .sort((a, b) => a.display_order - b.display_order)
         .forEach((it) => fd.append("images", it.file));
+
       fd.append(
         "images_manifest",
         JSON.stringify(
-          postImages.map((it) => ({ filename: it.file.name, order: it.order }))
+          newImages.map((it) => ({
+            filename: it.file.name,
+            display_order: it.display_order,
+          }))
         )
       );
-    } else if (pickedNewFiles) {
-      postImages
-        .sort((a, b) => a.order - b.order)
-        .forEach((it) => fd.append("images", it.file));
-      fd.append(
-        "images_manifest",
-        JSON.stringify(
-          postImages.map((it) => ({ filename: it.file.name, order: it.order }))
-        )
-      );
-    } else {
-      const reorder = postImages.map((it) => ({
+    }
+
+    // 2. Existing Images (Reorder & Keep)
+    // If isEdit, we must send this list to tell backend which old images to keep & their order.
+    // If user deleted all old images, this array is empty -> backend deletes all old images.
+    if (isEdit) {
+      const reorder = existingImages.map((it) => ({
         id: it.id,
-        order: it.order,
+        display_order: it.display_order,
       }));
       fd.append("images_reorder", JSON.stringify(reorder));
     }
@@ -827,7 +842,7 @@ export default function PostForm({
                   label="Order"
                   type="number"
                   fullWidth
-                  {...register(`campaigns.${idx}.order` as const, {
+                  {...register(`campaigns.${idx}.display_order` as const, {
                     valueAsNumber: true,
                   })}
                 />
@@ -895,7 +910,9 @@ export default function PostForm({
           <Button
             startIcon={<AddIcon />}
             variant="outlined"
-            onClick={() => append({ order: fields.length + 1, file: null })}
+            onClick={() =>
+              append({ display_order: fields.length + 1, file: null })
+            }
           >
             Add Campaign
           </Button>
@@ -924,7 +941,7 @@ export default function PostForm({
                   label="Order"
                   type="number"
                   fullWidth
-                  {...register(`rewards.${idx}.order` as const, {
+                  {...register(`rewards.${idx}.display_order` as const, {
                     valueAsNumber: true,
                   })}
                 />
@@ -998,7 +1015,7 @@ export default function PostForm({
             variant="outlined"
             onClick={() =>
               appendReward({
-                order: rewardFields.length + 1,
+                display_order: rewardFields.length + 1,
                 file: null,
                 reward_amount: 0,
                 backup_amount: 0,

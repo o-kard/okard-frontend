@@ -33,7 +33,7 @@ export type Campaign = {
   created_at?: string;
   campaign_header: string;
   campaign_description: string;
-  order: number;
+  display_order: number;
   image?: Image[] | [];
 };
 
@@ -45,7 +45,7 @@ export type Reward = {
   reward_description: string;
   reward_amount: number;
   backup_amount: number;
-  order: number;
+  display_order: number;
   image?: Image[] | [];
 };
 
@@ -71,4 +71,5 @@ export type LikeResp = {
 export type Image = {
   path: string;
   id?: UUID;
+  display_order?: number;
 };

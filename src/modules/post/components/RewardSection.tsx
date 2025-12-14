@@ -29,7 +29,9 @@ export default function RewardSections({
 }: Props) {
   const data = useMemo(
     () =>
-      (rewards ?? []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+      (rewards ?? [])
+        .slice()
+        .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)),
     [rewards]
   );
 
@@ -86,8 +88,8 @@ export default function RewardSections({
         <Grid size={{ xs: 12, md: 4 }}>
           <Stack spacing={4}>
             {data.map((c, i) => {
-              const img = c.image?.[0]?.path
-                ? `${apiBaseUrl}${c.image[0].path}`
+              const img = c.images?.[0]?.path
+                ? `${apiBaseUrl}${c.images[0].path}`
                 : undefined;
               const anchorId = `${i + 1}-${slugify(c.reward_header)}`;
               const amount = (c as any).amount ?? (c as any).reward_amount ?? 0;

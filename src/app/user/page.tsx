@@ -90,7 +90,11 @@ function validateEmail(s: string) {
 // -------------------------------
 // Main page
 // -------------------------------
-export default function UserPage() {
+import { Suspense } from "react";
+
+// ... (imports remain the same, ensuring Suspense is imported from react)
+
+function UserContent() {
   // useRequireUserInDb?.();
   const { user, isLoaded } = useUser();
   const router = useRouter();
@@ -615,6 +619,14 @@ export default function UserPage() {
         </DialogActions>
       </Dialog>
     </>
+  );
+}
+
+export default function UserPage() {
+  return (
+    <Suspense fallback={<CircularProgress />}>
+      <UserContent />
+    </Suspense>
   );
 }
 
