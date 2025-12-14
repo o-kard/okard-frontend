@@ -6,7 +6,6 @@ import {
   useFieldArray,
   Controller,
   SubmitHandler,
-
 } from "react-hook-form";
 import {
   TextField,
@@ -101,17 +100,46 @@ export type FormValues = {
 
 type PostImageItem = { id: string; file: File; preview: string; order: number };
 
-function SortableThumb({ item }: { item: PostImageItem }) {
+function SortableThumb({
+  item,
+  onRemove,
+}: {
+  item: PostImageItem;
+  onRemove: (id: string) => void;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: item.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
+
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <img
-        src={item.preview}
-        style={{ width: 140, height: 100, objectFit: "cover", borderRadius: 8 }}
-      />
-      <small># {item.order}</small>
+    <div style={{ position: "relative" }}>
+      <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+        <img
+          src={item.preview}
+          style={{
+            width: 140,
+            height: 100,
+            objectFit: "cover",
+            borderRadius: 8,
+          }}
+        />
+        <small># {item.order}</small>
+      </div>
+      <IconButton
+        size="small"
+        onClick={() => onRemove(item.id)}
+        sx={{
+          position: "absolute",
+          top: 0,
+          right: 0,
+          backgroundColor: "rgba(255, 255, 255, 0.7)",
+          "&:hover": {
+            backgroundColor: "rgba(255, 255, 255, 0.9)",
+          },
+        }}
+      >
+        <DeleteIcon fontSize="small" />
+      </IconButton>
     </div>
   );
 }
@@ -140,7 +168,7 @@ type Props = {
   onSuccess?: () => void;
   onCancel?: () => void;
   onPredict?: (values: FormValues) => Promise<any>;
-}
+};
 const toAbsolute = (p?: string) => {
   if (!p) return "";
   if (
@@ -210,16 +238,56 @@ export default function PostForm({
   }, []);
 
   const handlePostFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const items = files.map((f, i) => ({
-      id: `${f.name}-${i}-${crypto.randomUUID()}`,
-      file: f,
-      preview: URL.createObjectURL(f),
-      order: i + 1,
-    }));
-    setPostImages(items);
-    setValue("post_images", files);
+    const newFiles = Array.from(e.target.files || []);
+
+    if (newFiles.length === 0) return;
+
+    setPostImages((currentImages) => {
+      const newItems = newFiles.map((f, i) => ({
+        id: `${f.name}-${i}-${crypto.randomUUID()}`,
+        file: f,
+        preview: URL.createObjectURL(f),
+        order: currentImages.length + i + 1,
+      }));
+
+      const combinedImages = [...currentImages, ...newItems];
+
+      console.log("Updated Images State:", combinedImages);
+
+      setValue(
+        "post_images",
+        combinedImages.map((img) => img.file)
+      );
+
+      return combinedImages;
+    });
   };
+
+  const handleRemovePostImage = (idToRemove: string) => {
+    setPostImages((currentImages) => {
+      const imageToRemove = currentImages.find((img) => img.id === idToRemove);
+      if (imageToRemove) {
+        URL.revokeObjectURL(imageToRemove.preview);
+      }
+
+      const remainingImages = currentImages.filter(
+        (img) => img.id !== idToRemove
+      );
+
+      const updatedImages = remainingImages.map((img, index) => ({
+        ...img,
+        order: index + 1,
+      }));
+
+      setValue(
+        "post_images",
+        updatedImages.map((img) => img.file)
+      );
+
+      return updatedImages;
+    });
+  };
+
   const handleClearPostImages = () => {
     postImagePreviews.forEach((u) => URL.revokeObjectURL(u));
     setPostImagePreviews([]);
@@ -530,8 +598,6 @@ export default function PostForm({
 
     await onSubmit?.(fd, editItem?.id ?? null);
     onSuccess?.();
-
-
   };
 
   const [openModal, setOpenModal] = useState(false);
@@ -553,7 +619,7 @@ export default function PostForm({
           setPredictResult(null);
 
           console.log("👉 calling onPredict now");
-          const result = await onPredict(values);   
+          const result = await onPredict(values);
           setPredictResult(result || { message: "No result returned" });
         } catch (err) {
           console.error("Predict error:", err);
@@ -714,7 +780,11 @@ export default function PostForm({
                   }}
                 >
                   {postImages.map((it) => (
-                    <SortableThumb key={it.id} item={it} />
+                    <SortableThumb
+                      key={it.id}
+                      item={it}
+                      onRemove={handleRemovePostImage}
+                    />
                   ))}
                 </Box>
               </SortableContext>
@@ -946,7 +1016,7 @@ export default function PostForm({
           <Button
             variant="outlined"
             color="primary"
-            type="button"        
+            type="button"
             onClick={onPredictClick}
           >
             Predict
