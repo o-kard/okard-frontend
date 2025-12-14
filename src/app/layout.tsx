@@ -61,6 +61,22 @@ import "./globals.css";
 import ThemeRegistry from "../modules/themeRegister/ThemeRegistry";
 import AppShell from "../modules/navbar/AppShell";
 
+//import font
+import { Syncopate, Montserrat } from "next/font/google";
+
+const syncopate = Syncopate({
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  variable: "--font-syncopate", 
+  display: "swap",
+});
+
+const montserrat = Montserrat({
+  subsets: ["latin"], 
+  variable: "--font-montserrat",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "kard",
   description: "Fund your next big idea",
@@ -74,7 +90,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body>
+        <body className={`${syncopate.variable} ${montserrat.variable}`}>
           <ThemeRegistry>
             <AppShell>{children}</AppShell>
           </ThemeRegistry>
