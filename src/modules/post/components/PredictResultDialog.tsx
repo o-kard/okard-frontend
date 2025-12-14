@@ -78,7 +78,7 @@ export default function PredictResultDialog({
               { key: "success_cls", label: "Success or Fail", icon: <CheckCircleOutlineIcon /> },
               { key: "risk_level", label: "Risk Level", icon: <ErrorOutlineIcon /> },
               { key: "days_to_state_change", label: "State Change In", icon: <EventIcon /> },
-              { key: "recommend_category", label: "Category", icon: <CategoryIcon /> },
+              // { key: "recommend_category", label: "Category", icon: <CategoryIcon /> },
               { key: "goal_eval", label: "Goal Evaluation", icon: <TrackChangesIcon /> },
               { key: "stretch_potential_cls", label: "Pledge Stretch Potential", icon: <CompareArrowsIcon /> },
             ].map((item) => {
@@ -114,16 +114,16 @@ export default function PredictResultDialog({
                   {/* Result */}
                   <Box flex={1} textAlign="right">
                     <Typography fontWeight="bold">{label}</Typography>
-                  </Box>
+                  </Box> 
 
                   {/* Confidence */}
-                  <Box flex={0.6} textAlign="right">
+                  {/* <Box flex={0.6} textAlign="right">
                     {confidence !== undefined && (
                       <Typography variant="body2" color="text.secondary">
                         {(confidence * 100).toFixed(1)}%
                       </Typography>
                     )}
-                  </Box>
+                  </Box> */}
                 </Box>
               );
             })}
