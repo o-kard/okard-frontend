@@ -1,0 +1,14 @@
+.campaign_card_embla {
+  overflow: hidden;
+}
+
+.campaign_card_embla__container {
+  display: flex;
+  gap: 16px;
+}
+
+.campaign_card_campaign_card_embla__slide {
+  flex: 0 0 auto;
+}
+
+

@@ -136,9 +136,12 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
             fontWeight: "bold",
             fontSize: "1.2rem",
             color: "#12C998",
+            display: "inline-flex",
+            alignItems: "center",  
           }}
-        >
-          🌞kard
+          >
+            <img src="/Logo_sun.svg" alt="Logo" width="32" height="32" /> 
+            kard
         </Typography>
         <IconButton onClick={handleDrawerToggle}>
           <CloseIcon />
@@ -264,20 +267,24 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
              <IconButton ref={menuBtnRef} onClick={handleDrawerToggle} edge="start" sx={{ color: "#12C998" }}>
                 <MenuIcon sx={{ fontSize: 28 }} />
              </IconButton>
-             <Typography
-                component={NextLink}
-                href="/"
-                variant="h6"
-                sx={{
-                  textDecoration: "none",
-                  fontFamily: "var(--font-syncopate)",
-                  fontSize: "2rem",
-                  fontWeight: "bold",
-                  color: "#12C998",
-                }}
-              >
-                🌞kard
-              </Typography>
+                <Typography
+                  component={NextLink}
+                  href="/"
+                  variant="h6"
+                  sx={{
+                    textDecoration: "none",
+                    fontFamily: "var(--font-syncopate)",
+                    fontSize: "2rem",
+                    fontWeight: "bold",
+                    color: "#12C998",
+                    whiteSpace: "nowrap",
+                    display: "inline-flex",
+                    alignItems: "center",  
+                  }}
+                >
+                  <img src="/Logo_sun.svg" alt="Logo" width="40" height="40" style={{ marginRight: '8px' }} /> 
+                  kard
+                </Typography>
               <Box>
                 <SignedIn>
                    <UserButton />
@@ -328,10 +335,14 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                     fontWeight: "bold",
                     color: "#12C998",
                     whiteSpace: "nowrap",
+                    display: "inline-flex",
+                    alignItems: "center",  
                   }}
                 >
-                  🌞kard
+                  <img src="/Logo_sun.svg" alt="Logo" width="40" height="40" style={{ marginRight: '8px' }} /> 
+                  kard
                 </Typography>
+
                 <Button
                   component={NextLink}
                   href="/post"

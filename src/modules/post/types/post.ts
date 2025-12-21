@@ -1,6 +1,8 @@
 import { User, UserPublicResponse } from "@/modules/user/types/user";
 
-export type PostCategoryType = "tech" | "education" | "health" | "other";
+export type PostCategoryType = "art" | "comics" | "crafts" | "dance"
+| "design" | "fashion" | "filmVideo" | "food" | "games" | "journalism"
+| "music" | "photography" | "publishing" | "technology" | "theater";
 export type PostStatusType = "active" | "inactive";
 export type PostStateType = "draft" | "published" | "archived";
 

@@ -37,21 +37,21 @@ export default function PostComponent() {
   const isMdUp = useMediaQuery("(min-width:900px)");
 
   const categories = [
-    { value: "Art", label: "Art" },
-    { value: "Comics", label: "Comics" },
-    { value: "Crafts", label: "Crafts" },
-    { value: "Dance", label: "Dance" },
-    { value: "Design", label: "Design" },
-    { value: "Fashion", label: "Fashion" },
-    { value: "Film & Video", label: "Film & Video" },
-    { value: "Food", label: "Food" },
-    { value: "Games", label: "Games" },
-    { value: "Journalism", label: "Journalism" },
-    { value: "Music", label: "Music" },
-    { value: "Photography", label: "Photography" },
-    { value: "Publishing", label: "Publishing" },
-    { value: "Technology", label: "Technology" },
-    { value: "Theater", label: "Theater" }
+    { value: "art", label: "Art" },
+    { value: "comics", label: "Comics" },
+    { value: "crafts", label: "Crafts" },
+    { value: "dance", label: "Dance" },
+    { value: "design", label: "Design" },
+    { value: "fashion", label: "Fashion" },
+    { value: "filmVideo", label: "Film & Video" },
+    { value: "food", label: "Food" },
+    { value: "games", label: "Games" },
+    { value: "journalism", label: "Journalism" },
+    { value: "music", label: "Music" },
+    { value: "photography", label: "Photography" },
+    { value: "publishing", label: "Publishing" },
+    { value: "technology", label: "Technology" },
+    { value: "theater", label: "Theater" }
   ];
 
   useEffect(() => {

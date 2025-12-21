@@ -59,7 +59,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import ThemeRegistry from "../modules/themeRegister/ThemeRegistry";
-import AppShell from "../modules/navbar/AppShell";
+import AppShell from "../modules/layout/AppShell";
 
 //import font
 import { Syncopate, Montserrat } from "next/font/google";

@@ -150,10 +150,21 @@ function SortableThumb({
 }
 
 const categoryOptions = [
-  { value: "tech", label: "Technology" },
-  { value: "education", label: "Education" },
-  { value: "health", label: "Health & Wellness" },
-  { value: "other", label: "Other" },
+  { value: "art", label: "Art" },
+  { value: "comics", label: "Comics" },
+  { value: "crafts", label: "Crafts" },
+  { value: "dance", label: "Dance" },
+  { value: "design", label: "Design" },
+  { value: "fashion", label: "Fashion" },
+  { value: "filmVideo", label: "Film & Video" },
+  { value: "food", label: "Food" },
+  { value: "games", label: "Games" },
+  { value: "journalism", label: "Journalism" },
+  { value: "music", label: "Music" },
+  { value: "photography", label: "Photography" },
+  { value: "publishing", label: "Publishing" },
+  { value: "technology", label: "Technology" },
+  { value: "theater", label: "Theater" },
 ];
 
 const toLocalInputValue = (iso?: string | null): string => {
@@ -208,7 +219,7 @@ export default function PostForm({
         effective_end_date: null,
         state: "draft",
         status: "active",
-        category: "tech",
+        category: "technology",
         post_images: [],
         campaigns: [{ display_order: 1, file: null }],
         rewards: [
