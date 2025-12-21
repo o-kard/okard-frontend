@@ -141,3 +141,31 @@ export async function changeStatus(postId: string, status: string, token: string
     }
   );
 }
+export async function getForYouCampaigns(
+  clerkId: string,
+): Promise<Post[]> {
+  const res = await fetch(
+    `${API_URL}/for-you?clerk_id=${clerkId}`,
+    { cache: "no-store" }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch for-you campaigns");
+  }
+
+  const data: {
+    campaigns: {
+      campaign: Post
+      score: number
+    }[]
+  } = await res.json();
+
+  data.campaigns.forEach(({ campaign, score }, i) => {
+  console.log(
+    `[FOR_YOU #${i}] score=${score.toFixed(3)}`,
+    campaign.post_header
+    );
+  });
+
+  return data.campaigns.map(c => c.campaign);
+}

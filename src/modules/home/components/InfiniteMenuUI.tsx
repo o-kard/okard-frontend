@@ -3,13 +3,13 @@
 import { FC } from "react";
 import { Box, Typography, IconButton, Select, MenuItem } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { HomeCampaign } from "../types/types";
+import { Post } from "@/modules/post/types/post";
 import { CATEGORY_COLORS } from "../utils/categoryColors";
 
 
 type Props = {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
-  activeItem: HomeCampaign | null;
+  activeItem: Post | null;
   isMoving: boolean;
   onActionClick: () => void;
 
@@ -168,17 +168,17 @@ const InfiniteMenuUI: FC<Props> = ({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: activeItem.creatorAvatarUrl
+              backgroundColor: activeItem.user.image?.path
                 ? "transparent"
                 : "rgba(255,255,255,0.25)",
               overflow: "hidden",
             }}
           >
-            {activeItem.creatorAvatarUrl ? (
+            {activeItem.user.image?.path ? (
               <Box
                 component="img"
-                src={activeItem.creatorAvatarUrl}
-                alt={activeItem.creatorName}
+                src={`${process.env.NEXT_PUBLIC_API_URL}${activeItem.user.image.path}`}
+                alt={activeItem.user.username}
                 sx={{
                   width: "100%",
                   height: "100%",
@@ -196,7 +196,7 @@ const InfiniteMenuUI: FC<Props> = ({
                   userSelect: "none",
                 }}
               >
-                {activeItem.creatorName.charAt(0) ?? "?"}
+                {activeItem.user.username?.charAt(0) ?? "?"}
               </Typography>
             )}
           </Box>
@@ -211,7 +211,7 @@ const InfiniteMenuUI: FC<Props> = ({
               fontSize: "1.25rem",
             }}
           >
-            {activeItem.creatorName}
+            {activeItem.user.username}
           </Typography>
           </Box>
         </Box>
@@ -277,7 +277,7 @@ const InfiniteMenuUI: FC<Props> = ({
                   color: "white",
                 }}
               >
-                {activeItem.supporters?.toLocaleString() || 0}
+                {activeItem.supporter?.toLocaleString() || 0}
               </Typography>
             </Box>
 

@@ -15,11 +15,12 @@ import MenuIcon from "@mui/icons-material/Menu";
 import ExploreHeader from "./components/ExploreHeader";
 import { useMediaQuery } from "@mui/material";
 import PostList from "./components/PostList";
-import { Post } from "./types/post";
-import { fetchPosts, deletePost } from "./api/api";
+import { Post, } from "./types/post";
+import { fetchPosts, deletePost, getForYouCampaigns } from "./api/api";
 import SideFilters from "./components/SideFilters";
 
 type Timing = "all" | "draft" | "published" | "archived";
+type ViewMode = "popular" | "recommended"
 
 export default function PostComponent() {
   const { user } = useUser();
@@ -33,6 +34,8 @@ export default function PostComponent() {
   const [category, setCategory] = useState<string>(initialCategory);
   const [timing, setTiming] = useState<Timing>("all");
   const [includeClosed, setIncludeClosed] = useState(false);
+
+  const [viewMode, setViewMode] = useState<ViewMode>("popular");
 
   const isMdUp = useMediaQuery("(min-width:900px)");
 
@@ -54,9 +57,22 @@ export default function PostComponent() {
     { value: "theater", label: "Theater" }
   ];
 
+
   useEffect(() => {
-    (async () => setPosts(await fetchPosts()))();
-  }, []);
+    if (!user) return;
+
+    const load = async () => {
+      if (viewMode === "recommended") {
+        const posts = await getForYouCampaigns(user.id);
+        setPosts(posts);
+      } else {
+        const all = await fetchPosts();
+        setPosts(all);
+      }
+    };
+
+    load();
+  }, [viewMode, user]);
 
   const filtered = useMemo(() => {
     let data = [...posts];
@@ -118,6 +134,8 @@ export default function PostComponent() {
                 onTimingChange={setTiming}
                 includeClosed={includeClosed}
                 onToggleClosed={setIncludeClosed}
+                onViewModeChange={setViewMode}
+                viewMode={viewMode}
                 onClear={() => {
                   setCategory("all");
                   setTiming("all");
@@ -151,6 +169,11 @@ export default function PostComponent() {
                 selectedCategory={category}
                 onSelectCategory={(v) => {
                   setCategory(v);
+                  setMobileOpen(false);
+                }}
+                viewMode={viewMode}
+                onViewModeChange={(v) => {
+                  setViewMode(v);
                   setMobileOpen(false);
                 }}
                 timing={timing}

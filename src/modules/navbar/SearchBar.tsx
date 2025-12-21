@@ -72,6 +72,7 @@ const timer = setTimeout(async () => {
     setLoading(true);
     try {
     const data = await search(query);
+    console.log("SEARCH DATA:", data);
     setResults(data.results);
     } catch (err) {
     console.error("Search Error:", err);

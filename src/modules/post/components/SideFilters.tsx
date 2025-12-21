@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 
 type Timing = "all" | "draft" | "published" | "archived";
+type ViewMode = "popular" | "recommended"
 type CategoryOption = { value: string; label: string };
 
 type Props = {
@@ -25,6 +26,8 @@ type Props = {
   onTimingChange: (v: Timing) => void;
   includeClosed: boolean;
   onToggleClosed: (v: boolean) => void;
+  viewMode: ViewMode
+  onViewModeChange: (v: ViewMode) => void
   onClear?: () => void;
 };
 
@@ -36,6 +39,8 @@ export default function SideFilters({
   onTimingChange,
   includeClosed,
   onToggleClosed,
+  onViewModeChange,
+  viewMode,
   onClear,
 }: Props) {
   return (
@@ -51,6 +56,16 @@ export default function SideFilters({
       <Typography variant="subtitle1" fontWeight={700} gutterBottom>
         Filter Results
       </Typography>
+
+      <Typography variant="overline" color="text.secondary">
+        View Mode
+      </Typography>
+      <RadioGroup value={viewMode} onChange={(e) => onViewModeChange(e.target.value as ViewMode)}>
+        <FormControlLabel value="popular" control={<Radio />} label="Popular Campaigns" />
+        <FormControlLabel value="recommended" control={<Radio />} label="Recommended For You" />
+      </RadioGroup>
+
+      <Divider sx={{ my: 2 }} />
 
       <Typography variant="overline" color="text.secondary">
         Category

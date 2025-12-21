@@ -107,10 +107,18 @@ export default function PostDetailPage() {
 
   useEffect(() => {
     if (!id) return;
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/post/${id}`)
+
+    const clerkId = user?.id;
+
+    const url = clerkId
+      ? `${process.env.NEXT_PUBLIC_API_URL}/api/post/${id}?clerk_id=${clerkId}`
+      : `${process.env.NEXT_PUBLIC_API_URL}/api/post/${id}`;
+
+    fetch(url)
       .then((r) => r.json())
-      .then(setPost);
-  }, [id]);
+      .then(setPost)
+      .catch(console.error);
+  }, [id, user?.id]);
 
   const imgSrc = useMemo(
     () =>

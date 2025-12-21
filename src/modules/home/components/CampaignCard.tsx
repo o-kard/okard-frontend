@@ -9,7 +9,7 @@ import {
   Box,
   Button,
 } from "@mui/material";
-import { Project, HomeCampaign } from "../types/types";
+import { Post } from "@/modules/post/types/post";
 import { FundingProgress } from "./LinearProgress";
 import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
@@ -21,11 +21,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CATEGORY_COLORS } from "../utils/categoryColors"; 
 
-// type Props = {
-//   campaign: HomeCampaign
-// }
-
-export default function ProjectCard({ campaign, onHoverBackground }: { campaign: HomeCampaign; onHoverBackground?: (img: string | null) => void; }) {
+export default function ProjectCard({ campaign, onHoverBackground }: { campaign: Post; onHoverBackground?: (img: string | null) => void; }) {
   const [bookmarked, setBookmarked] = useState(false);
   const router = useRouter();
   const categoryKey =
@@ -35,11 +31,17 @@ export default function ProjectCard({ campaign, onHoverBackground }: { campaign:
     CATEGORY_COLORS[categoryKey] ?? CATEGORY_COLORS.all;
   return (
     <Link
-      href={`/post`}
+      href={`/post/show/${campaign.id}`}
       style={{ textDecoration: "none" }}
     >
     <Card
-        onMouseEnter={() => onHoverBackground?.(campaign.coverImageUrl)}
+        onMouseEnter={() => {
+          const img = campaign.images?.[0]?.path
+            ? `${process.env.NEXT_PUBLIC_API_URL}${campaign.images[0].path}`
+            : null;
+
+          onHoverBackground?.(img);
+        }}
         onMouseLeave={() => onHoverBackground?.(null)}
         sx={{
           width: { xs: 320, md: 420 },
@@ -64,7 +66,11 @@ export default function ProjectCard({ campaign, onHoverBackground }: { campaign:
         {/* Image */}
         <CardMedia
           component="img"
-          image={campaign.coverImageUrl ?? "/placeholder.png"}
+            image={
+            campaign.images?.[0]?.path
+              ? `${process.env.NEXT_PUBLIC_API_URL}${campaign.images[0].path}`
+              : ""
+          }
           alt={campaign.post_header}
           sx={{
             width: "100%",
@@ -182,18 +188,18 @@ export default function ProjectCard({ campaign, onHoverBackground }: { campaign:
                 height: 32,
                 borderRadius: "50%",
                 overflow: "hidden",
-                bgcolor: campaign.creatorAvatarUrl ? "transparent" : "gray",
+                bgcolor: campaign.user.image?.path ? "transparent" : "gray",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
               }}
             >
-              {campaign.creatorAvatarUrl ? (
+              {campaign.user.image?.path ? (
                 <Box
                   component="img"
-                  src={campaign.creatorAvatarUrl}
-                  alt={campaign.creatorName}
+                  src={`${process.env.NEXT_PUBLIC_API_URL}${campaign.user.image.path}`}
+                  alt={campaign.user.username}
                   sx={{
                     width: "100%",
                     height: "100%",
@@ -210,13 +216,13 @@ export default function ProjectCard({ campaign, onHoverBackground }: { campaign:
                     textTransform: "uppercase",
                   }}
                 >
-                  {campaign.creatorName?.charAt(0) || "?"}
+                  {campaign.user.username?.charAt(0) || "?"}
                 </Typography>
               )}
             </Box>
 
             {/* Name */}
-            {campaign.creatorName}
+            {campaign.user.username}
           </Typography>
         </Box>
 

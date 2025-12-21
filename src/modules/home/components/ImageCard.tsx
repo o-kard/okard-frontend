@@ -1,14 +1,15 @@
 import { Box, Typography } from "@mui/material";
-import { HomeCampaign } from "../types/types";
+import { Post } from "@/modules/post/types/post";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import IconButton from "@mui/material/IconButton";
 import { useState } from "react";
+import Link from "next/dist/client/link";
 
 type ResponsiveNumber = number | { xs?: number; sm?: number; md?: number; lg?: number; xl?: number };
 
 type ImageCardProps = {
-  campaign: HomeCampaign;
+  campaign: Post;
   big?: boolean;
   minHeight?: ResponsiveNumber;
 };
@@ -19,6 +20,10 @@ export default function ImageCard({
 }: ImageCardProps) {
     const [bookmarked, setBookmarked] = useState(false);
   return (
+    <Link
+      href={`/post/show/${campaign.id}`}
+      style={{ textDecoration: "none" }}
+    >
     <Box
       className="campaign-card"
       sx={{
@@ -37,7 +42,9 @@ export default function ImageCard({
       {/* Image */}
       <Box
         component="img"
-        src={campaign.coverImageUrl ?? "/"}
+        src={ campaign?.images?.[0]?.path
+        ? `${process.env.NEXT_PUBLIC_API_URL}${campaign.images[0].path}`
+        : undefined}
         sx={{
           width: "100%",
           height: "100%",
@@ -128,48 +135,48 @@ export default function ImageCard({
               gap: 1,
             }}
           >
-            {/* Avatar */}
-            <Box
-              sx={{
-                width: 24,
-                height: 24,
-                borderRadius: "50%",
-                overflow: "hidden",
-                bgcolor: campaign.creatorAvatarUrl ? "transparent" : "gray",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              {campaign.creatorAvatarUrl ? (
-                <Box
-                  component="img"
-                  src={campaign.creatorAvatarUrl}
-                  alt={campaign.creatorName}
-                  sx={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                />
-              ) : (
-                <Typography
-                  sx={{
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: "#rgba(255, 255, 255, 0.14)",
-                    lineHeight: 1,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {campaign.creatorName.charAt(0) || "?"}
-                </Typography>
-              )}
-            </Box>
+          {/* Avatar */}
+          <Box
+            sx={{
+              width: 24,
+              height: 24,
+              borderRadius: "50%",
+              overflow: "hidden",
+              bgcolor: campaign.user.image?.path ? "transparent" : "gray",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            {campaign.user.image?.path ? (
+              <Box
+                component="img"
+                src={`${process.env.NEXT_PUBLIC_API_URL}${campaign.user.image.path}`}
+                alt={campaign.user.username}
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+              />
+            ) : (
+              <Typography
+                sx={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "rgba(255,255,255,0.8)",
+                  lineHeight: 1,
+                  textTransform: "uppercase",
+                }}
+              >
+                {campaign.user.username?.[0] ?? "?"}
+              </Typography>
+            )}
+          </Box>
 
             {/* Name */}
-            {campaign.creatorName}
+            {campaign.user?.username}
           </Typography>
           <Box display="flex" flexDirection="row" justifyContent="flex-start">
             <Typography fontSize={big ? "0.8rem" : "0.75rem"} sx={{whiteSpace:"normal", wordBreak:"break-word"}}>
@@ -221,7 +228,7 @@ export default function ImageCard({
             }}
           />
         </Box>
-
-    </Box>
+      </Box>
+    </Link>
   );
 }

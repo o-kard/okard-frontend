@@ -1,8 +1,8 @@
 import { Box } from "@mui/material";
 import ImageCard from "./ImageCard";
-import { Project, HomeCampaign } from "../types/types";
+import { Post } from "@/modules/post/types/post";
 
-export default function CampaignGrid({ campaigns }: { campaigns: HomeCampaign[] }) {
+export default function CampaignGrid({ campaigns }: { campaigns: Post[] }) {
 
   return (
     <Box
