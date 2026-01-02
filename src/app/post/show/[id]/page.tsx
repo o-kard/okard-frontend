@@ -27,6 +27,18 @@ import CampaignSections from "@/modules/post/components/CampaginSection";
 import RewardSections from "@/modules/post/components/RewardSection";
 import CommentSections from "@/modules/post/components/comment/CommentSection";
 import { useUser } from "@clerk/nextjs";
+import EditRequestModal from "@/modules/edit_request/components/EditRequestModal";
+import ReportModal from "@/modules/report/components/ReportModal";
+import EditIcon from "@mui/icons-material/Edit";
+import ReportIcon from "@mui/icons-material/Report";
+import { getUserById } from "@/modules/user/api/api";
+import ReviewEditRequestModal from "@/modules/edit_request/components/ReviewEditRequestModal";
+import RateReviewIcon from "@mui/icons-material/RateReview";
+import ProgressForm from "@/modules/progress/components/ProgressForm";
+import ProgressSection from "@/modules/progress/components/ProgressSection";
+import { getProgressByPostId } from "@/modules/progress/api/api";
+import { Progress } from "@/modules/progress/types";
+import AddIcon from "@mui/icons-material/Add";
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -35,6 +47,49 @@ export default function PostDetailPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const router = useRouter();
   const { user } = useUser();
+  const [appUser, setAppUser] = useState<{ id: string } | null>(null);
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [openReportModal, setOpenReportModal] = useState(false);
+  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
+  const [reviewRequest, setReviewRequest] = useState<any>(null);
+
+  // Progress
+  const [progressItems, setProgressItems] = useState<Progress[]>([]);
+  const [openProgressForm, setOpenProgressForm] = useState(false);
+
+  const fetchProgress = () => {
+    if (!id) return;
+    getProgressByPostId(id)
+      .then(setProgressItems)
+      .catch((err) => console.error("Failed to fetch progress", err));
+  };
+
+  useEffect(() => {
+    if (user?.id) {
+      getUserById(user.id).then((u) => setAppUser(u));
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!id) return;
+    // Fetch pending requests
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/edit_requests/?post_id=${id}`)
+      .then((res) => {
+        if (res.ok) return res.json();
+        return [];
+      })
+      .then((data) => setPendingRequests(data))
+      .catch((err) => console.error("Failed to fetch edit requests", err));
+
+    fetchProgress();
+  }, [id]);
+
+  const portableReview = useMemo(() => {
+    if (!appUser || pendingRequests.length === 0) return null;
+    return pendingRequests.find((req) =>
+      req.approvers?.some((app: any) => app.user_id === appUser.id),
+    );
+  }, [appUser, pendingRequests]);
 
   const formatDate = (dateStr?: string | null) => {
     if (!dateStr) return "-";
@@ -62,7 +117,7 @@ export default function PostDetailPage() {
       post?.images?.[0]?.path
         ? `${process.env.NEXT_PUBLIC_API_URL}${post.images[0].path}`
         : undefined,
-    [post]
+    [post],
   );
 
   const goal = Math.max(0, post?.goal_amount ?? 0);
@@ -152,7 +207,7 @@ export default function PostDetailPage() {
                   <IconButton
                     onClick={() =>
                       setCurrentIndex((prev) =>
-                        prev === 0 ? post.images!.length - 1 : prev - 1
+                        prev === 0 ? post.images!.length - 1 : prev - 1,
                       )
                     }
                     sx={{
@@ -172,7 +227,7 @@ export default function PostDetailPage() {
                   <IconButton
                     onClick={() =>
                       setCurrentIndex((prev) =>
-                        prev === post.images!.length - 1 ? 0 : prev + 1
+                        prev === post.images!.length - 1 ? 0 : prev + 1,
                       )
                     }
                     sx={{
@@ -376,7 +431,61 @@ export default function PostDetailPage() {
             <IconButton sx={{ bgcolor: "#f1f1f1" }}>
               <ShareIcon />
             </IconButton>
+
+            {/* Edit Button (Owner Only) */}
+            {appUser && post.user_id === appUser.id && (
+              <Button
+                variant="outlined"
+                startIcon={<EditIcon />}
+                onClick={() => setOpenEditModal(true)}
+                color="primary"
+              >
+                Edit
+              </Button>
+            )}
+
+            {/* Report Button (Everyone) */}
+            <IconButton
+              sx={{ bgcolor: "#fff0f0", color: "error.main" }}
+              onClick={() => setOpenReportModal(true)}
+              title="Report this post"
+            >
+              <ReportIcon />
+            </IconButton>
+
+            {portableReview && (
+              <Button
+                variant="contained"
+                color="warning"
+                startIcon={<RateReviewIcon />}
+                onClick={() => setReviewRequest(portableReview)}
+              >
+                Review Request
+              </Button>
+            )}
           </Stack>
+
+          <EditRequestModal
+            open={openEditModal}
+            onClose={() => setOpenEditModal(false)}
+            postId={post.id}
+            clerkId={user?.id || ""}
+            proposedChanges={undefined}
+          />
+
+          <ReviewEditRequestModal
+            open={!!reviewRequest}
+            onClose={() => setReviewRequest(null)}
+            request={reviewRequest}
+            clerkId={user?.id || ""}
+          />
+
+          <ReportModal
+            open={openReportModal}
+            onClose={() => setOpenReportModal(false)}
+            postId={post.id}
+            clerkId={user?.id || ""}
+          />
 
           <Button
             variant="contained"
@@ -448,12 +557,32 @@ export default function PostDetailPage() {
               label: "Progress",
               content: (
                 <Box>
-                  <Typography variant="h5" fontWeight={900} sx={{ mb: 1.5 }}>
-                    Progress
-                  </Typography>
-                  <Typography color="text.secondary">
-                    Updates or milestones go here…
-                  </Typography>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    sx={{ mb: 1.5 }}
+                  >
+                    <Typography variant="h5" fontWeight={900}>
+                      Progress
+                    </Typography>
+                    {appUser && post.user_id === appUser.id && (
+                      <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => setOpenProgressForm(true)}
+                        size="small"
+                      >
+                        Add Update
+                      </Button>
+                    )}
+                  </Stack>
+
+                  <ProgressSection
+                    items={progressItems}
+                    apiBaseUrl={process.env.NEXT_PUBLIC_API_URL}
+                    title=""
+                  />
                 </Box>
               ),
             },
@@ -487,6 +616,14 @@ export default function PostDetailPage() {
           ]}
         />
       </Box>
+
+      {/* Modals */}
+      <ProgressForm
+        open={openProgressForm}
+        onClose={() => setOpenProgressForm(false)}
+        postId={post.id}
+        onSuccess={fetchProgress}
+      />
     </Container>
   );
 }

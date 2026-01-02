@@ -173,6 +173,7 @@ type Props = {
   onSuccess?: () => void;
   onCancel?: () => void;
   onPredict?: (values: FormValues) => Promise<any>;
+  onEditRequest?: (proposedChanges: any) => void;
 };
 const toAbsolute = (p?: string) => {
   if (!p) return "";
@@ -193,6 +194,7 @@ export default function PostForm({
   onSuccess,
   onCancel,
   onPredict,
+  onEditRequest,
 }: Props) {
   const { control, register, handleSubmit, setValue, watch } =
     useForm<FormValues>({
@@ -442,7 +444,8 @@ export default function PostForm({
     setPostImages(mappedImages);
 
     const campMap: Record<number, string> = {};
-    (editItem.campaigns || []).forEach((c, i) => {
+    // Use sortedCamps to match the form field order
+    sortedCamps.forEach((c, i) => {
       if (Array.isArray(c.images) && c.images.length > 0) {
         campMap[i] = toAbsolute(c.images[0].path);
       }
@@ -450,7 +453,8 @@ export default function PostForm({
     setCampaignPreviews(campMap);
 
     const rewardMap: Record<number, string> = {};
-    (editItem.rewards || []).forEach((r, i) => {
+    // Use sortedRewards to match the form field order
+    sortedRewards.forEach((r, i) => {
       if (Array.isArray(r.images) && r.images.length > 0) {
         rewardMap[i] = toAbsolute(r.images[0].path);
       }
@@ -482,7 +486,10 @@ export default function PostForm({
     return { campaignManifest, campaignFiles };
   };
 
-  const buildManifestAndFilesForReward = (items: FormReward[]) => {
+  const buildManifestAndFilesForReward = (
+    items: FormReward[],
+    originalMap?: Map<string, any>
+  ) => {
     const rewardManifest: RewardManifestItem[] = [];
     const rewardFiles: File[] = [];
 
@@ -497,13 +504,34 @@ export default function PostForm({
       if (c.reward_amount != null) item.reward_amount = Number(c.reward_amount);
       if (c.backup_amount != null) item.backup_amount = Number(c.backup_amount);
 
+      let isEdited = false;
+
+      // Check for file change
       if (c.file) {
-        item.isEdited = true;
+        isEdited = true;
         rewardFiles.push(c.file);
-      } else {
-        item.isEdited = false;
       }
 
+      // Check for text/value changes if originalMap provided
+      if (c.id && originalMap && originalMap.has(c.id)) {
+        const orig = originalMap.get(c.id);
+        if (
+          orig.reward_header !== c.reward_header ||
+          orig.reward_description !== c.reward_description ||
+          Number(orig.reward_amount) !== Number(c.reward_amount) ||
+          Number(orig.backup_amount) !== Number(c.backup_amount)
+        ) {
+          isEdited = true;
+        }
+      } else if (!c.id) {
+        // New item is considered edited
+        isEdited = true;
+      }
+
+      item.isEdited = isEdited;
+
+      // For Edit Request payload, we might filter outside,
+      // but here we just mark it.
       rewardManifest.push(item);
     }
     return { rewardManifest, rewardFiles };
@@ -514,7 +542,7 @@ export default function PostForm({
     const isEdit = Boolean(editItem?.id);
     const pickedNewFiles = (watch("post_images") ?? []).length > 0;
 
-    // --- post_data (normalize optional -> ค่า default) ---
+    // --- post_data (normalize optional -> default) ---
     const postPayload = {
       post_header: values.post_header ?? "",
       post_description: values.post_description ?? "",
@@ -528,6 +556,12 @@ export default function PostForm({
       category: values.category,
     };
     fd.append("post_data", JSON.stringify(postPayload));
+
+    // Prepare Maps for comparison
+    const originalRewardsMap = new Map();
+    if (editItem?.rewards) {
+      editItem.rewards.forEach((r) => originalRewardsMap.set(r.id, r));
+    }
 
     if (!isEdit) {
       const createCampaignList = values.campaigns.map((c, idx) => ({
@@ -569,7 +603,8 @@ export default function PostForm({
         buildManifestAndFilesForCampaign(values.campaigns);
 
       const { rewardManifest, rewardFiles } = buildManifestAndFilesForReward(
-        values.rewards
+        values.rewards,
+        originalRewardsMap
       );
 
       fd.append("campaigns", JSON.stringify(campaignManifest));
@@ -580,10 +615,10 @@ export default function PostForm({
     }
 
     // --- Image Handling ---
-    const newImages = postImages.filter((it) => it.file); // Files to upload
-    const existingImages = postImages.filter((it) => !it.file); // Existing on server
+    const newImages = postImages.filter((it) => it.file);
+    const existingImages = postImages.filter((it) => !it.file);
 
-    // 1. New Images
+    // New Images
     if (newImages.length > 0) {
       newImages
         .sort((a, b) => a.display_order - b.display_order)
@@ -600,9 +635,6 @@ export default function PostForm({
       );
     }
 
-    // 2. Existing Images (Reorder & Keep)
-    // If isEdit, we must send this list to tell backend which old images to keep & their order.
-    // If user deleted all old images, this array is empty -> backend deletes all old images.
     if (isEdit) {
       const reorder = existingImages.map((it) => ({
         id: it.id,
@@ -611,7 +643,119 @@ export default function PostForm({
       fd.append("images_reorder", JSON.stringify(reorder));
     }
 
-    await onSubmit?.(fd, editItem?.id ?? null);
+    // Sensitive Fields
+    const sensitiveFieldsChanged: Partial<FormValues> = {};
+    let hasSensitiveChanges = false;
+    let rewardsChanged = false;
+
+    // Only check for sensitive changes if the post is already PUBLISHED
+    if (isEdit && editItem && editItem.state === "published") {
+      // Check Category
+      if (values.category !== editItem.category) {
+        hasSensitiveChanges = true;
+        sensitiveFieldsChanged.category = values.category;
+      }
+
+      // Check Goal Amount
+      if (Number(values.goal_amount) !== Number(editItem.goal_amount)) {
+        hasSensitiveChanges = true;
+        sensitiveFieldsChanged.goal_amount = Number(values.goal_amount);
+      }
+
+      // Check Status
+      if (values.status !== editItem.status) {
+        hasSensitiveChanges = true;
+        sensitiveFieldsChanged.status = values.status;
+      }
+
+      // Check Effective End Date
+      // Compare ISO strings or timestamps
+      const oldEnd = editItem.effective_end_date
+        ? toIso(toLocalInputValue(editItem.effective_end_date) || "")
+        : null;
+      const newEnd = values.effective_end_date
+        ? toIso(values.effective_end_date)
+        : null;
+
+      if (oldEnd !== newEnd) {
+        hasSensitiveChanges = true;
+        sensitiveFieldsChanged.effective_end_date = newEnd || undefined;
+      }
+
+      // Check Rewards
+      const originalRewards = editItem.rewards || [];
+      const currentRewards = values.rewards;
+
+      const origStr = JSON.stringify(
+        originalRewards.map((r) => ({
+          h: r.reward_header,
+          d: r.reward_description,
+          a: r.reward_amount,
+          b: r.backup_amount,
+        }))
+      );
+      const currStr = JSON.stringify(
+        currentRewards.map((r) => ({
+          h: r.reward_header,
+          d: r.reward_description,
+          a: r.reward_amount,
+          b: r.backup_amount,
+        }))
+      );
+
+      if (origStr !== currStr) {
+        hasSensitiveChanges = true;
+        rewardsChanged = true;
+      }
+    }
+
+    if (hasSensitiveChanges && onEditRequest) {
+      const proposed: any = {};
+      if (sensitiveFieldsChanged.category) proposed.category = values.category;
+      if (sensitiveFieldsChanged.goal_amount)
+        proposed.goal_amount = values.goal_amount;
+      if (sensitiveFieldsChanged.status) proposed.status = values.status;
+      if (sensitiveFieldsChanged.effective_end_date)
+        proposed.effective_end_date = values.effective_end_date;
+
+      if (rewardsChanged) {
+        // Re-build with original map to ensure isEdited is set correctly
+        const map = new Map();
+        if (editItem?.rewards) {
+          editItem.rewards.forEach((r) => map.set(r.id, r));
+        }
+        const { rewardManifest } = buildManifestAndFilesForReward(
+          values.rewards,
+          map
+        );
+        // FILTER HERE: Only satisfy user request "take only isEdited = true"
+        // CHANGE: Send FULL list to handle deletions and reordering.
+        // The backend will treat this list as the "Target State".
+        // Any existing reward NOT in this list will be deleted.
+        proposed.rewards_payload = rewardManifest;
+
+        // Build files map for Edit Request handling
+        const filesMap: Record<string, File> = {};
+        values.rewards.forEach((r) => {
+          const rewardItem = r as any;
+          if (rewardItem.file) {
+            filesMap[`reward_${r.display_order}`] = rewardItem.file;
+          }
+        });
+        proposed.files_map = filesMap;
+      }
+
+      onEditRequest(proposed);
+      return;
+    }
+
+    if (isEdit) {
+      // Submit Direct
+      await onSubmit?.(fd, editItem?.id ?? null);
+    } else {
+      await onSubmit?.(fd, editItem?.id ?? null);
+    }
+
     onSuccess?.();
   };
 
@@ -664,6 +808,12 @@ export default function PostForm({
           <TextField
             label="Goal Amount"
             fullWidth
+            type="number"
+            helperText={
+              editItem && editItem.state === "published"
+                ? "Changing this will trigger an Edit Request"
+                : ""
+            }
             {...register("goal_amount", {
               required: true,
               valueAsNumber: true,
@@ -680,6 +830,7 @@ export default function PostForm({
               select
               label="State"
               fullWidth
+              disabled={!!(editItem?.state === "published")}
               value={field.value ?? ""}
               onChange={field.onChange}
               slotProps={{
@@ -701,6 +852,11 @@ export default function PostForm({
               select
               label="Status"
               fullWidth
+              helperText={
+                editItem && editItem.state === "published"
+                  ? "Changing this will trigger an Edit Request"
+                  : ""
+              }
               value={field.value ?? ""}
               onChange={field.onChange}
               slotProps={{
@@ -723,6 +879,11 @@ export default function PostForm({
               fullWidth
               value={field.value ?? ""}
               onChange={field.onChange}
+              helperText={
+                editItem && editItem.state === "published"
+                  ? "Changing this will trigger an Edit Request"
+                  : ""
+              }
               slotProps={{
                 select: { MenuProps: { disableScrollLock: true } },
               }}
@@ -741,6 +902,7 @@ export default function PostForm({
             label="Start (effective_start_from)"
             type="datetime-local"
             fullWidth
+            disabled={!!(editItem?.state === "published")}
             defaultValue=""
             {...register("effective_start_from")}
             slotProps={{ inputLabel: { shrink: true } }}
@@ -752,6 +914,11 @@ export default function PostForm({
             label="End (effective_end_date)"
             type="datetime-local"
             fullWidth
+            helperText={
+              editItem && editItem.state === "published"
+                ? "Changing this will trigger an Edit Request"
+                : ""
+            }
             defaultValue=""
             {...register("effective_end_date")}
             slotProps={{ inputLabel: { shrink: true } }}
@@ -900,9 +1067,11 @@ export default function PostForm({
               </Grid>
 
               <Grid size={{ xs: 12 }}>
-                <IconButton color="error" onClick={() => remove(idx)}>
-                  <DeleteIcon />
-                </IconButton>
+                {!editItem && (
+                  <IconButton color="error" onClick={() => remove(idx)}>
+                    <DeleteIcon />
+                  </IconButton>
+                )}
               </Grid>
             </Grid>
           ))}
@@ -922,94 +1091,122 @@ export default function PostForm({
           <Typography variant="h6" sx={{ mt: 4, mb: 1 }}>
             Rewards
           </Typography>
-          {rewardFields.map((field, idx) => (
-            <Grid
-              container
-              spacing={1}
-              key={field.id}
-              sx={{ mb: 2, p: 1, border: "1px dashed #ddd", borderRadius: 1 }}
-            >
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  label="Reward Header"
-                  fullWidth
-                  {...register(`rewards.${idx}.reward_header` as const)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  label="Order"
-                  type="number"
-                  fullWidth
-                  {...register(`rewards.${idx}.display_order` as const, {
-                    valueAsNumber: true,
-                  })}
-                />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  label="Reward Description"
-                  fullWidth
-                  multiline
-                  rows={3}
-                  {...register(`rewards.${idx}.reward_description` as const)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  label="Reward Amount"
-                  fullWidth
-                  {...register(`rewards.${idx}.reward_amount` as const, {
-                    valueAsNumber: true,
-                  })}
-                />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <Button variant="outlined" component="label" fullWidth>
-                  {watch(`rewards.${idx}.file`)
-                    ? "Change Image (optional for update)"
-                    : "Upload Reward Image"}
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    onChange={(e) => handleRewardFileChange(idx, e)}
-                  />
-                </Button>
+          {rewardFields.map((field, idx) => {
+            // Check if this reward has backers (backup_amount > 0) AND post is published
+            const isPublished = editItem?.state === "published";
+            const hasBackers = Number(field.backup_amount) > 0;
+            const isDisabled = isPublished && hasBackers;
+            console.log("isDisabled", isDisabled);
+            console.log("hasBackers", hasBackers);
+            console.log("isPublished", isPublished);
 
-                {rewardPreviews[idx] && (
-                  <Box sx={{ mt: 1 }}>
-                    <img
-                      src={toAbsolute(rewardPreviews[idx])}
-                      alt={`reward-${idx}`}
-                      style={{
-                        width: 200,
-                        height: 140,
-                        objectFit: "cover",
-                        borderRadius: 8,
-                        border: "1px solid #ddd",
-                      }}
+            return (
+              <Grid
+                container
+                spacing={1}
+                key={field.id}
+                sx={{ mb: 2, p: 1, border: "1px dashed #ddd", borderRadius: 1 }}
+              >
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField
+                    label="Reward Header"
+                    fullWidth
+                    disabled={isDisabled}
+                    {...register(`rewards.${idx}.reward_header` as const)}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField
+                    label="Order"
+                    type="number"
+                    fullWidth
+                    {...register(`rewards.${idx}.display_order` as const, {
+                      valueAsNumber: true,
+                    })}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    label="Reward Description"
+                    fullWidth
+                    multiline
+                    rows={3}
+                    disabled={isDisabled}
+                    {...register(`rewards.${idx}.reward_description` as const)}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    label="Reward Amount"
+                    fullWidth
+                    disabled={isDisabled}
+                    {...register(`rewards.${idx}.reward_amount` as const, {
+                      valueAsNumber: true,
+                    })}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    fullWidth
+                    disabled={isDisabled}
+                  >
+                    {watch(`rewards.${idx}.file`)
+                      ? "Change Image (optional for update)"
+                      : "Upload Reward Image"}
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={(e) => handleRewardFileChange(idx, e)}
                     />
-                    <Box>
-                      <Button
-                        size="small"
-                        variant="text"
-                        color="error"
-                        onClick={() => handleClearRewardImage(idx)}
-                      >
-                        Clear image
-                      </Button>
+                  </Button>
+
+                  {rewardPreviews[idx] && (
+                    <Box sx={{ mt: 1 }}>
+                      <img
+                        src={toAbsolute(rewardPreviews[idx])}
+                        alt={`reward-${idx}`}
+                        style={{
+                          width: 200,
+                          height: 140,
+                          objectFit: "cover",
+                          borderRadius: 8,
+                          border: "1px solid #ddd",
+                        }}
+                      />
+                      <Box>
+                        <Button
+                          size="small"
+                          variant="text"
+                          color="error"
+                          disabled={isDisabled}
+                          onClick={() => handleClearRewardImage(idx)}
+                        >
+                          Clear image
+                        </Button>
+                      </Box>
                     </Box>
-                  </Box>
-                )}
+                  )}
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <IconButton
+                    color="error"
+                    onClick={() => removeReward(idx)}
+                    disabled={isDisabled}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                  {isDisabled && (
+                    <Typography variant="caption" color="error" sx={{ ml: 1 }}>
+                      Cannot edit/delete because it has backers
+                    </Typography>
+                  )}
+                </Grid>
               </Grid>
-              <Grid size={{ xs: 12 }}>
-                <IconButton color="error" onClick={() => removeReward(idx)}>
-                  <DeleteIcon />
-                </IconButton>
-              </Grid>
-            </Grid>
-          ))}
+            );
+          })}
           <Button
             startIcon={<AddIcon />}
             variant="outlined"

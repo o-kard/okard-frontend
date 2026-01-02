@@ -34,7 +34,7 @@ export type Campaign = {
   campaign_header: string;
   campaign_description: string;
   display_order: number;
-  image?: Image[] | [];
+  images?: Image[] | [];
 };
 
 export type Reward = {
@@ -46,7 +46,7 @@ export type Reward = {
   reward_amount: number;
   backup_amount: number;
   display_order: number;
-  image?: Image[] | [];
+  images?: Image[] | [];
 };
 
 export type PostComment = {
