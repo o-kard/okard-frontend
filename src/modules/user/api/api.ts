@@ -25,3 +25,7 @@ export async function updateUser(id: string, fd: FormData) {
     body: fd,
   });
 }
+
+export async function listUsers() {
+  return request<User[]>(`${API_URL}/list`);
+}

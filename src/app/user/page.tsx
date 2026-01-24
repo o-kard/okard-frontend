@@ -10,6 +10,7 @@ import {
   RedirectToSignIn,
   SignedIn,
   SignedOut,
+  useAuth,
   UserButton,
   useReverification,
   useUser,
@@ -101,6 +102,7 @@ function UserContent() {
   const sp = useSearchParams();
   const tab = useMemo(() => getCurrentTab(sp), [sp]);
   const haveUserDb = useRequireUserInDb();
+  const { getToken } = useAuth();
 
   const [profile, setProfile] = useState<any | null>(null);
 
@@ -237,7 +239,7 @@ function UserContent() {
         if (old) {
           try {
             await destroyEmail(old);
-          } catch {}
+          } catch { }
         }
       }
 
@@ -315,11 +317,13 @@ function UserContent() {
     (async () => {
       try {
         const r = await getUserById(user.id);
+        const token = await getToken();
+        console.log("Clerk token:", token);
         if (r) {
           console.log("Fetched user profile:", r);
           if (!abort) setProfile(r);
         }
-      } catch {}
+      } catch { }
     })();
     return () => {
       abort = true;

@@ -14,6 +14,7 @@ export type User = {
   country_id: string | null;
   country?: string | null;
   birth_date?: string | null;
+  role: string | null;
 };
 
 export type UserPublicResponse = {

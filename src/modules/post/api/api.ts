@@ -119,6 +119,7 @@ export async function unlikeComment(commentId: string, clerkId: string) {
     }
   );
 }
+
 export async function reorderPostImages(
   postId: string,
   clerkId: string,
@@ -134,4 +135,16 @@ export async function reorderPostImages(
   );
   if (!res.ok) throw new Error(await res.text());
   return res.json();
+}
+
+export async function changeStatus(postId: string, status: string, token: string | null) {
+  return request<Post>(
+    `${API_URL}/${postId}/status?status=${encodeURIComponent(status)}`,
+    {
+      method: "PUT",
+      headers: { 
+        Authorization: `Bearer ${token}` 
+      },
+    }
+  );
 }

@@ -1,5 +1,8 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 
+// This file replaces the deprecated middleware.ts file.
+// Ensure the logic aligns with the new proxy conventions.
+
 export default clerkMiddleware();
 
 export const config = {
