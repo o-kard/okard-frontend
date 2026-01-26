@@ -124,8 +124,8 @@ export default function CampaignSections({
                       src={img}
                       alt={c.campaign_header || `Campaign #${i + 1}`}
                       sx={{
-                        width: "600px",
-                        height: "600px",
+                        width: "30%",
+                        height: "auto",
                         borderRadius: 2,
                         boxShadow: 1,
                         display: "block",

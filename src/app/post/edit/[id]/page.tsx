@@ -6,12 +6,15 @@ import { Post } from "@/modules/post/types/post";
 import PostForm from "@/modules/post/components/PostForm";
 import { updatePostWithCampaigns } from "@/modules/post/api/api";
 import { Container, Typography, Box } from "@mui/material";
+import EditRequestModal from "@/modules/edit_request/components/EditRequestModal";
 
 export default function PostEditPage() {
   const { id } = useParams();
   const router = useRouter();
   const { user } = useUser();
   const [post, setPost] = useState<Post | null>(null);
+  const [editRequestOpen, setEditRequestOpen] = useState(false);
+  const [proposedData, setProposedData] = useState<any>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -19,6 +22,11 @@ export default function PostEditPage() {
       .then((res) => res.json())
       .then((data) => setPost(data));
   }, [id]);
+
+  const handleEditRequest = (data: any) => {
+    setProposedData(data);
+    setEditRequestOpen(true);
+  };
 
   const handleSubmit = async (fd: FormData) => {
     if (!user || typeof id !== "string") return;
@@ -42,7 +50,17 @@ export default function PostEditPage() {
           editItem={post}
           onSubmit={handleSubmit}
           onCancel={() => router.push("/post")}
+          onEditRequest={handleEditRequest}
         />
+        {user && typeof id === "string" && (
+          <EditRequestModal
+            open={editRequestOpen}
+            onClose={() => setEditRequestOpen(false)}
+            postId={id}
+            clerkId={user.id}
+            proposedChanges={proposedData}
+          />
+        )}
       </Box>
     </Container>
   );
