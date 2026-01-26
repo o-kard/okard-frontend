@@ -77,30 +77,30 @@ export type Image = {
   display_order?: number;
 };
 
-// export type UserImage = {
-//   id: string
-//   path: string
-// }
+export type UserImage = {
+  id: string
+  path: string
+}
 
-// export type PostSummary = {
-//   id: string
-//   user_id: string
-//   category: PostCategoryType
+export type PostSummary = {
+  id: string
+  user_id: string
+  category: PostCategoryType
 
-//   post_header: string
-//   post_description: string
+  post_header: string
+  post_description: string
 
-//   goal_amount: number
-//   current_amount: number
-//   supporters: number
-//   progress: number
-//   suupporter: number | null
-//   state: PostStateType;
-//   status: PostStatusType;
-//   images: Image[]
-//   user: {
-//     id: string
-//     username: string
-//     image?: UserImage | null
-//   }
-// }
+  goal_amount: number
+  current_amount: number
+  supporters: number
+  progress: number
+  suupporter: number | null
+  state: PostStateType;
+  status: PostStatusType;
+  images: Image[]
+  user: {
+    id: string
+    username: string
+    image?: UserImage | null
+  }
+}
