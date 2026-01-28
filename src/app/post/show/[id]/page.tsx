@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -52,6 +52,9 @@ export default function PostDetailPage() {
   const [openReportModal, setOpenReportModal] = useState(false);
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
   const [reviewRequest, setReviewRequest] = useState<any>(null);
+
+  // ✅ Track if post has been fetched to prevent duplicate view logs
+  const hasFetchedPost = useRef(false);
 
   // Progress
   const [progressItems, setProgressItems] = useState<Progress[]>([]);
@@ -107,6 +110,10 @@ export default function PostDetailPage() {
 
   useEffect(() => {
     if (!id) return;
+
+    // ✅ Prevent duplicate fetches
+    if (hasFetchedPost.current) return;
+    hasFetchedPost.current = true;
 
     const clerkId = user?.id;
 

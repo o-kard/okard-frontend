@@ -4,8 +4,9 @@ import {
   Pie,
   Cell,
   Tooltip,
+  Legend,
 } from "recharts";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { CategoryStats } from "../types/types";
 import { CATEGORY_COLORS } from "../utils/categoryColors";
 
@@ -14,14 +15,26 @@ interface Props {
 }
 
 export default function CategoryPieChart({ stats }: Props) {
-  const pieData = stats.map((s) => {
-  const key = s.category as keyof typeof CATEGORY_COLORS;
+  const theme = useTheme();
 
-  return {
-    ...s,
-    label: CATEGORY_COLORS[key]?.label ?? s.category,
-  };
-});
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
+
+
+  const radius = isMobile ? 80 : isTablet ? 100 : 120;
+  // Standard height for everyone (Legend is external on mobile)
+  const chartHeight = 300;
+
+  const pieData = stats.map((s) => {
+    const key = s.category as keyof typeof CATEGORY_COLORS;
+
+    return {
+      ...s,
+      label: CATEGORY_COLORS[key]?.label ?? s.category,
+    };
+  });
+
   return (
     <Box
       sx={{
@@ -35,27 +48,51 @@ export default function CategoryPieChart({ stats }: Props) {
         Distribution
       </Typography>
 
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={chartHeight}>
         <PieChart>
-            <Pie data={pieData} dataKey="total_projects" nameKey="label" outerRadius={120} label>
-              {pieData.map((entry) => {
-                const key =
-                  String(entry.category) as keyof typeof CATEGORY_COLORS;
+          <Pie
+            data={pieData}
+            dataKey="total_projects"
+            nameKey="label"
+            outerRadius={radius}
+            // cy default (50%) works best now that legend is external
+            label={isDesktop}
+          >
+            {pieData.map((entry) => {
+              const key =
+                String(entry.category) as keyof typeof CATEGORY_COLORS;
 
-                const category = CATEGORY_COLORS[key] ?? CATEGORY_COLORS.all;
+              const category = CATEGORY_COLORS[key] ?? CATEGORY_COLORS.all;
 
-                return (
-                  <Cell
-                    key={entry.category}
-                    fill={category.color}
-                  />
-                );
-              })}
+              return (
+                <Cell
+                  key={entry.category}
+                  fill={category.color}
+                />
+              );
+            })}
 
-            </Pie>
+          </Pie>
           <Tooltip />
         </PieChart>
       </ResponsiveContainer>
+
+      {!isDesktop && (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1.5, mt: 0 }}>
+          {pieData.map((entry) => {
+            const key = String(entry.category) as keyof typeof CATEGORY_COLORS;
+            const category = CATEGORY_COLORS[key] ?? CATEGORY_COLORS.all;
+            return (
+              <Box key={entry.category} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Box sx={{ width: 10, height: 10, bgcolor: category.color, borderRadius: '50%' }} />
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                  {entry.label}
+                </Typography>
+              </Box>
+            );
+          })}
+        </Box>
+      )}
     </Box>
   );
 }

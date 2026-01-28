@@ -9,7 +9,7 @@ import {
   Box,
   Button,
 } from "@mui/material";
-import { Post } from "@/modules/post/types/post";
+import { Post, PostSummary } from "@/modules/post/types/post";
 import { FundingProgress } from "./LinearProgress";
 import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
@@ -19,13 +19,13 @@ import IconButton from "@mui/material/IconButton";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CATEGORY_COLORS } from "../utils/categoryColors"; 
+import { CATEGORY_COLORS } from "../utils/categoryColors";
 
-export default function ProjectCard({ campaign, onHoverBackground }: { campaign: Post; onHoverBackground?: (img: string | null) => void; }) {
+export default function ProjectCard({ campaign, onHoverBackground }: { campaign: Post | PostSummary; onHoverBackground?: (img: string | null) => void; }) {
   const [bookmarked, setBookmarked] = useState(false);
   const router = useRouter();
   const categoryKey =
-  String(campaign.category) as keyof typeof CATEGORY_COLORS;
+    String(campaign.category) as keyof typeof CATEGORY_COLORS;
 
   const category =
     CATEGORY_COLORS[categoryKey] ?? CATEGORY_COLORS.all;
@@ -34,7 +34,7 @@ export default function ProjectCard({ campaign, onHoverBackground }: { campaign:
       href={`/post/show/${campaign.id}`}
       style={{ textDecoration: "none" }}
     >
-    <Card
+      <Card
         onMouseEnter={() => {
           const img = campaign.images?.[0]?.path
             ? `${process.env.NEXT_PUBLIC_API_URL}${campaign.images[0].path}`
@@ -66,7 +66,7 @@ export default function ProjectCard({ campaign, onHoverBackground }: { campaign:
         {/* Image */}
         <CardMedia
           component="img"
-            image={
+          image={
             campaign.images?.[0]?.path
               ? `${process.env.NEXT_PUBLIC_API_URL}${campaign.images[0].path}`
               : ""
@@ -167,7 +167,14 @@ export default function ProjectCard({ campaign, onHoverBackground }: { campaign:
             }}
           />
 
-          <Typography fontWeight={600} fontSize="1.25rem" sx={{fontFamily: "var(--font-montserrat)",}}>
+          <Typography 
+            fontWeight={600} 
+            fontSize="1.25rem" 
+            sx={{ 
+              fontFamily: "var(--font-montserrat)", 
+              textShadow: "0 2px 8px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.9)"
+            }}
+          >
             {campaign.post_header}
           </Typography>
           <Typography
@@ -211,6 +218,7 @@ export default function ProjectCard({ campaign, onHoverBackground }: { campaign:
                   sx={{
                     fontSize: 14,
                     fontWeight: 600,
+                    textShadow: "0 2px 8px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.9)",
                     color: "#rgba(255, 255, 255, 0.14)",
                     lineHeight: 1,
                     textTransform: "uppercase",
@@ -226,88 +234,88 @@ export default function ProjectCard({ campaign, onHoverBackground }: { campaign:
           </Typography>
         </Box>
 
-          <Box
-            className="hoverContent"
-            sx={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              px: 2,
-              py: 2,
-              height: "50%",
-              bgcolor: "white",
-              transform: "translateY(100%)",
-              opacity: 0,
-              transition: "all 0.3s ease",
-              borderRadius: "16px 16px 0 0",
+        <Box
+          className="hoverContent"
+          sx={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            px: 2,
+            py: 2,
+            height: "50%",
+            bgcolor: "white",
+            transform: "translateY(100%)",
+            opacity: 0,
+            transition: "all 0.3s ease",
+            borderRadius: "16px 16px 0 0",
 
-              display: "flex",
-              flexDirection: "column",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {/* 🔹 Top: Description (flexible) */}
+          <Box
+            sx={{
+              flexGrow: 1,
+              overflow: "hidden",
             }}
           >
-            {/* 🔹 Top: Description (flexible) */}
-            <Box
+            <Typography
+              fontWeight={600}
+              fontSize={16}
               sx={{
-                flexGrow: 1,                 
-                overflow: "hidden",          
+                display: "-webkit-box",
+                WebkitLineClamp: 5,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               }}
             >
-              <Typography
-                fontWeight={600}
-                fontSize={16}
-                sx={{
-                  display: "-webkit-box",
-                  WebkitLineClamp: 5,
-                  WebkitBoxOrient: "vertical",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {campaign.post_description}
-              </Typography>
-            </Box>
-
-            {/* 🔹 Bottom: Fixed actions */}
-            <Box
-              sx={{
-                pt: 2,
-                display: "flex",
-                flexDirection: "column",
-                gap: 2,
-              }}
-            >
-              <FundingProgress
-                current={campaign.current_amount ?? 0}
-                goal={campaign.goal_amount ?? 0}
-              />
-
-              <Button
-                variant="contained"
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  router.push(`/post`);
-                }}
-                sx={{
-                  alignSelf: "center",
-                  color: "#fff",
-                  bgcolor: "#12C998",
-                  borderRadius: 2,
-                  fontWeight: "bold",
-                  fontFamily: "var(--font-montserrat)",
-                  px: 3,
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={1}>
-                  Contribute <ThumbUpAltIcon />
-                </Box>
-              </Button>
-            </Box>
+              {campaign.post_description}
+            </Typography>
           </Box>
 
-    </Card>
+          {/* 🔹 Bottom: Fixed actions */}
+          <Box
+            sx={{
+              pt: 2,
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+            }}
+          >
+            <FundingProgress
+              current={campaign.current_amount ?? 0}
+              goal={campaign.goal_amount ?? 0}
+            />
+
+            <Button
+              variant="contained"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                router.push(`/payment/${campaign.id}`);
+              }}
+              sx={{
+                alignSelf: "center",
+                color: "#fff",
+                bgcolor: "#12C998",
+                borderRadius: 2,
+                fontWeight: "bold",
+                fontFamily: "var(--font-montserrat)",
+                px: 3,
+              }}
+            >
+              <Box display="flex" alignItems="center" gap={1}>
+                Contribute <ThumbUpAltIcon />
+              </Box>
+            </Button>
+          </Box>
+        </Box>
+
+      </Card>
     </Link>
   );
 }

@@ -18,79 +18,79 @@ type BubbleCarouselProps = {
 };
 
 export default function BubbleCarousel({ groups }: BubbleCarouselProps) {
-    const videoRef = useRef<HTMLVideoElement | null>(null)
-    const [selectedIndex, setSelectedIndex] = useState(0)
-    const sectionRef = useRef<HTMLDivElement | null>(null)
-    const [isVisible, setIsVisible] = useState(true)
-    const [emblaReady, setEmblaReady] = useState(false);
-    const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const sectionRef = useRef<HTMLDivElement | null>(null)
+  const [isVisible, setIsVisible] = useState(true)
+  const [emblaReady, setEmblaReady] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
 
-    /** ===== categories ===== */
-    const categories = groups.map((g) => g.category);
+  /** ===== categories ===== */
+  const categories = groups.map((g) => g.category);
 
-    /** ===== data ===== */
-    const allProjects = groups.flatMap((g) => g.projects);
+  /** ===== data ===== */
+  const allProjects = groups.flatMap((g) => g.projects);
 
-    const filteredProjects =
-      selectedCategory === "ALL"
-        ? allProjects
-        : allProjects.filter((p) => p.category === selectedCategory);
+  const filteredProjects =
+    selectedCategory === "ALL"
+      ? allProjects
+      : allProjects.filter((p) => p.category === selectedCategory);
 
-    useEffect(() => {
-        const el = sectionRef.current
-        if (!el) return
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el) return
 
-        const observer = new IntersectionObserver(
-        ([entry]) => setIsVisible(entry.isIntersecting),
-        { threshold: 0.4 },
-        )
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0.4 },
+    )
 
-        observer.observe(el)
-        return () => observer.disconnect()
-    }, [])
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
-    useEffect(() => {
-        const video = videoRef.current
-        if (!video) return
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
 
-        if (selectedIndex === 0 && isVisible) {
+    if (selectedIndex === 0 && isVisible) {
         video.play().catch(() => {})
-        } else {
-        video.pause()
-        }
-    }, [selectedIndex, isVisible])
+    } else {
+      video.pause()
+    }
+  }, [selectedIndex, isVisible])
 
-    const [emblaRef, emblaApi] = useEmblaCarousel({
-        loop: true,
-        align: "start",
-        watchDrag: false, 
-    })
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    loop: true,
+    align: "start",
+    watchDrag: false,
+  })
 
-    useEffect(() => {
-        if (!emblaApi) return
+  useEffect(() => {
+    if (!emblaApi) return
 
-        const onSelect = () => setSelectedIndex(emblaApi.selectedScrollSnap())
-        emblaApi.on("select", onSelect)
-        onSelect()
+    const onSelect = () => setSelectedIndex(emblaApi.selectedScrollSnap())
+    emblaApi.on("select", onSelect)
+    onSelect()
 
-        return () => {
-        emblaApi.off("select", onSelect)
-        }
-    }, [emblaApi])
+    return () => {
+      emblaApi.off("select", onSelect)
+    }
+  }, [emblaApi])
 
-    useEffect(() => {
-        if (!emblaApi) return;
-        emblaApi.scrollTo(0, true);
-        setEmblaReady(true);
-    }, [emblaApi]);
-    
+  useEffect(() => {
+    if (!emblaApi) return;
+    emblaApi.scrollTo(0, true);
+    setEmblaReady(true);
+  }, [emblaApi]);
+
 
   return (
     <Box
       ref={sectionRef}
       sx={{
         position: "relative",
-        height: "100dvh", 
+        height: "100dvh",
         width: "100%",
       }}
     >
@@ -197,7 +197,7 @@ export default function BubbleCarousel({ groups }: BubbleCarouselProps) {
                   mb: 2,
                   fontWeight: "bold",
                   fontFamily: "var(--font-syncopate)",
-                  fontSize: { xs: "3rem", md: "6rem" },
+                  fontSize: {xs: "2rem", sm: "4rem", md: "6rem" },
                   color: "#12C998",
                   ...glowHover,
                 }}
@@ -211,18 +211,27 @@ export default function BubbleCarousel({ groups }: BubbleCarouselProps) {
                   mb: 2,
                   fontWeight: "bold",
                   fontFamily: "var(--font-syncopate)",
-                  fontSize: { xs: "3.5rem", md: "8rem" },
+                  fontSize: {xs: "2.5rem", sm: "6rem", md: "8rem" },
                   color: "#12C998",
                   ...glowHover,
                   display: "inline-flex",
-                  alignItems: "center",  // ใช้ alignItems เพื่อจัดตำแหน่งให้รูปและข้อความตรง
+                  alignItems: "center",  
                 }}
               >
-                <img src="/Logo_sun.svg" alt="Logo" width="180" height="180" style={{ marginRight: '8px' }}/>kard
+                <Box
+                  component="img"
+                  src="/Logo_sun.svg"
+                  alt="Logo"
+                  sx={{
+                    width: { xs: 80, sm: 130, md: 180 },
+                    height: { xs: 80, sm: 130, md: 180 },
+                    mr: 1,
+                  }}
+                />kard
               </Typography>
 
               <Typography sx={{ color: "#ddd" }}>
-                use arrows or swipe down to explore projects 
+                use arrows or swipe down to explore projects
               </Typography>
             </Box>
           </Box>

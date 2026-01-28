@@ -15,6 +15,7 @@ export type User = {
   country?: string | null;
   birth_date?: string | null;
   role: string | null;
+  image?: Image | null;
 };
 
 export type UserPublicResponse = {

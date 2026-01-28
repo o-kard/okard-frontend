@@ -6,12 +6,12 @@ import CategoryTabs from "./CategoryTabs";
 import CampaignGrid from "./CampaignGrid";
 import Button from "@mui/material/Button";
 import ArrowCircleRightOutlinedIcon from "@mui/icons-material/ArrowCircleRightOutlined";
-import { Post } from "@/modules/post/types/post";
+import { Post, PostSummary } from "@/modules/post/types/post";
 import { getTopPledgedCampaigns } from "../api/api";
 
 export default function ExploreTopCampaign() {
   const [selectedCategory, setSelectedCategory] = useState<string>("art");
-  const [campaigns, setCampaigns] = useState<Post[]>([]);
+  const [campaigns, setCampaigns] = useState<PostSummary[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function ExploreTopCampaign() {
     <Container maxWidth="lg" sx={{ py: 6 }}>
       <Typography
         fontWeight="bold"
-        fontSize="2.5rem"
+        fontSize={{ xs: "2rem", sm: "3rem",  md: "3.5rem" }}
         textAlign="center"
         mb={4}
         fontFamily="var(--font-montserrat)"

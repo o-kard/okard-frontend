@@ -11,12 +11,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isHome = pathname === "/";
 
   return (
-    <Box sx={{ position: "relative", minHeight: "100vh", overflow: "hidden" }}>
+    <Box sx={{
+      position: "relative",
+      minHeight: "100vh",
+      overflow: "hidden", 
+      display: "flex",       
+      flexDirection: "column" 
+    }}>
       <ClientNavbar isHome={isHome} />
       {isHome ? (
         <Box
           sx={{
-            minHeight: "100vh",
+            flex: 1, 
             position: "relative",
             display: "flex",
             flexDirection: "column",
@@ -25,9 +31,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {children}
         </Box>
       ) : (
-        <Box sx={{ pt: 8 }}>{children}</Box>
+        <Box sx={{ pt: 8, flex: 1 }}>{children}</Box> 
       )}
-      <Footer/>
+      <Footer />
     </Box>
   );
 }

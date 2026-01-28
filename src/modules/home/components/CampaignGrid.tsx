@@ -1,16 +1,16 @@
 import { Box } from "@mui/material";
 import ImageCard from "./ImageCard";
-import { Post } from "@/modules/post/types/post";
+import { Post, PostSummary } from "@/modules/post/types/post";
 
-export default function CampaignGrid({ campaigns }: { campaigns: Post[] }) {
+export default function CampaignGrid({ campaigns }: { campaigns: (Post | PostSummary)[] }) {
 
   return (
     <Box
       sx={{
         display: "grid",
         gridTemplateColumns: {
-          xs: "repeat(2, 1fr)",   
-          md: "repeat(4, 1fr)",   
+          xs: "repeat(2, 1fr)",
+          md: "repeat(4, 1fr)",
         },
         gap: 3,
         // alignItems: "stretch",
@@ -20,8 +20,8 @@ export default function CampaignGrid({ campaigns }: { campaigns: Post[] }) {
         // FEATURED (ตัวแรก)
         if (index === 0) {
           return (
-            <Box key={campaign.id} sx={{ gridColumn: "1 / span 2",  }}>
-              <ImageCard campaign={campaign} big  />
+            <Box key={campaign.id} sx={{ gridColumn: "1 / span 2", }}>
+              <ImageCard campaign={campaign} big />
             </Box>
           );
         }
@@ -32,7 +32,7 @@ export default function CampaignGrid({ campaigns }: { campaigns: Post[] }) {
             <ImageCard
               key={campaign.id}
               campaign={campaign}
-              // big
+            // big
             />
           );
         }

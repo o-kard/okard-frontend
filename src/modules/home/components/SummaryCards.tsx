@@ -8,7 +8,7 @@ export default function SummaryCards({ stats }: { stats: CategoryStats[] }) {
 
   const items = [
     { label: "Total Campaigns", value: totalProjects },
-    { label: "Funded Campaigns", value: fundedProjects },
+    { label: "Goal Reached", value: fundedProjects },
     { label: "Total Raised", value: `$${totalRaised.toLocaleString()}` },
   ];
 

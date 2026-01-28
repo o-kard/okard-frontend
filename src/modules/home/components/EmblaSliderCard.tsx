@@ -26,9 +26,9 @@ export default function EmblaSliderCard({ onHoverBackground }: { onHoverBackgrou
         {/* Title row */}
         <Typography
           fontWeight="bold"
-          fontSize={{ xs: "2.2rem", md: "2.5rem" }} 
+          fontSize={{xs: "2rem", sm: "3rem", md: "3.5rem" }} 
           sx={{
-            letterSpacing: { xs: "0.15rem", md: "0.25rem" },
+            letterSpacing: { xs: "0.05rem", sm: "0.15rem", md: "0.25rem" },
             fontFamily: "var(--font-montserrat)",
             textShadow: `
               0 2px 8px rgba(0,0,0,0.12),
@@ -61,7 +61,7 @@ export default function EmblaSliderCard({ onHoverBackground }: { onHoverBackgrou
             color="text.secondary"
             fontWeight="bold"
             sx={{
-              fontSize: { xs: "1.1rem", md: "1.25rem" },
+              fontSize: { xs: "1rem", sm: "1.1rem", md: "1.25rem" },
               whiteSpace: "nowrap",
               letterSpacing: "0.2rem",
               fontFamily: "var(--font-montserrat)",
@@ -73,18 +73,18 @@ export default function EmblaSliderCard({ onHoverBackground }: { onHoverBackgrou
       </Box>
       </Box>
 
-{/* Slider */}
-<Box
-  sx={{
-    width: "100%",
-    mx: "auto",
-    mt: 2,
-    px: { xs: 2, md: 2 },
-    py: { xs: 2, md: 4 },
-  }}
->
-  <CampaignPart onHoverBackground={onHoverBackground} />
-</Box>
+      {/* Slider */}
+      <Box
+        sx={{
+          width: "100%",
+          mx: "auto",
+          mt: 2,
+          px: { xs: 2, md: 2 },
+          py: { xs: 2, md: 4 },
+        }}
+      >
+        <CampaignPart onHoverBackground={onHoverBackground} />
+      </Box>
 
     
         {/* Button */}

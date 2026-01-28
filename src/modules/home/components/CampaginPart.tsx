@@ -1,14 +1,14 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { Box } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { TabKey } from "../types/types";
-import { Post } from "@/modules/post/types/post";
+import { Post, PostSummary } from "@/modules/post/types/post";
 import CampaignTabs from "./CampaignTabs";
 import CampaignSlider from "./CampaignSlider";
-import { getTopPledgedCampaigns} from "../api/api";
+import { getTopPledgedCampaigns } from "../api/api";
 import { getForYouCampaigns } from "@/modules/post/api/api";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useAuth } from "@clerk/nextjs";
 
 const DEFAULT_LIMIT = 10
 
@@ -16,12 +16,13 @@ type Props = {
   onHoverBackground?: (img: string | null) => void;
 };
 
-export default function CampaignPart({onHoverBackground }: Props) {
+export default function CampaignPart({ onHoverBackground }: Props) {
   const { user, isSignedIn } = useUser();
+  const { getToken } = useAuth();
   const clerkId = user?.id;
   const [tab, setTab] = useState<TabKey>("popular")
-  const [category, setCategory] = useState<string | null>(null) 
-  const [campaigns, setCampaigns] = useState<Post[]>([])
+  const [category, setCategory] = useState<string | null>(null)
+  const [campaigns, setCampaigns] = useState<(Post | PostSummary)[]>([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -30,7 +31,7 @@ export default function CampaignPart({onHoverBackground }: Props) {
 
     const fetchData = async () => {
       try {
-        let data: Post[] = [];
+        let data: (Post | PostSummary)[] = [];
 
         if (tab === "popular") {
           data = await getTopPledgedCampaigns({
@@ -39,8 +40,9 @@ export default function CampaignPart({onHoverBackground }: Props) {
           });
         }
 
-        if (tab === "forYou" && clerkId) {
-          data = await getForYouCampaigns(clerkId);
+        if (tab === "forYou") {
+          const token = await getToken();
+          data = await getForYouCampaigns(token || "");
         }
 
         if (!cancelled) {
@@ -56,21 +58,27 @@ export default function CampaignPart({onHoverBackground }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [tab, category, clerkId]);
+  }, [tab, category, clerkId, getToken]);
 
   return (
     <Box
-        display="flex"
-        flexDirection="column"
-        sx={{
-            alignItems: {
-            xs: "center", 
-            lg: "flex-start", 
-            },
-        }}
-        >
-    <CampaignTabs activeTab={tab} onChange={setTab}  />
-    <CampaignSlider campaigns={campaigns} resetKey={tab} onHoverBackground={onHoverBackground}  />
+      display="flex"
+      flexDirection="column"
+      sx={{
+        alignItems: {
+          xs: "center",
+          lg: "flex-start",
+        },
+      }}
+    >
+      {isSignedIn && <CampaignTabs activeTab={tab} onChange={setTab} />}
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px', width: '100%' }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <CampaignSlider campaigns={campaigns} resetKey={tab} onHoverBackground={onHoverBackground} />
+      )}
     </Box>
   );
 }

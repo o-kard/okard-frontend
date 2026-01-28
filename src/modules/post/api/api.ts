@@ -4,9 +4,23 @@ import { LikeResp, Post, PostComment } from "../types/post";
 const API_PATH = "/api/post";
 const API_PATH_COMMENT = "/api/comment";
 
-export async function fetchPosts(): Promise<Post[]> {
-  return request<Post[]>(API_PATH);
-}
+export const fetchPosts = async (
+  category?: string,
+  searchQuery?: string,
+  sort?: string,
+  state?: string,
+  status?: string
+): Promise<Post[]> => {
+  const params = new URLSearchParams();
+  if (category) params.append("category", category);
+  if (searchQuery) params.append("q", searchQuery);
+  if (sort) params.append("sort", sort);
+  if (state) params.append("state", state);
+  if (status) params.append("status", status);
+
+  const qs = params.toString();
+  return request<Post[]>(`${API_PATH}?${qs}`);
+};
 
 export async function createPostWithImages(
   data: Omit<Post, "id" | "user_id">,
@@ -132,38 +146,43 @@ export async function reorderPostImages(
 
 export async function changeStatus(postId: string, status: string, token: string | null) {
   return request<Post>(
-    `${API_URL}/${postId}/status?status=${encodeURIComponent(status)}`,
+    `${API_PATH}/${postId}/status?status=${encodeURIComponent(status)}`,
     {
       method: "PUT",
-      headers: { 
-        Authorization: `Bearer ${token}` 
+      headers: {
+        Authorization: `Bearer ${token}`
       },
     }
   );
 }
-export async function getForYouCampaigns(
-  clerkId: string,
+export async function getForYouCampaigns(token: string
 ): Promise<Post[]> {
-  const res = await fetch(
-    `${API_URL}/for-you?clerk_id=${clerkId}`,
-    { cache: "no-store" }
-  );
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch for-you campaigns");
-  }
-
-  const data: {
+  const data = await request<{
     campaigns: {
       campaign: Post
       score: number
     }[]
-  } = await res.json();
+  }>(
+    `${API_PATH}/for-you`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+    }
+  );
+
+  if (!data || !data.campaigns) {
+    throw new Error("Failed to fetch for-you campaigns");
+  }
+
+  // Log the full data object for inspection
+  console.log('[FOR_YOU] full data:', data);
 
   data.campaigns.forEach(({ campaign, score }, i) => {
-  console.log(
-    `[FOR_YOU #${i}] score=${score.toFixed(3)}`,
-    campaign.post_header
+    console.log(
+      `[FOR_YOU #${i}] score=${score.toFixed(3)}`,
+      campaign.post_header
     );
   });
 

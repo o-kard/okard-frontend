@@ -1,36 +1,5 @@
 import { Box, Typography } from "@mui/material";
-import PaletteIcon from "@mui/icons-material/Palette";
-import AutoStoriesIcon from "@mui/icons-material/AutoStories";
-import ContentCutIcon from "@mui/icons-material/ContentCut";
-import SelfImprovementIcon from "@mui/icons-material/SelfImprovement";
-import DesignServicesIcon from "@mui/icons-material/DesignServices";
-import CheckroomIcon from "@mui/icons-material/Checkroom";
-import MovieIcon from "@mui/icons-material/Movie";
-import RestaurantIcon from "@mui/icons-material/Restaurant";
-import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
-import NewspaperIcon from "@mui/icons-material/Newspaper";
-import MusicNoteIcon from "@mui/icons-material/MusicNote";
-import CameraAltIcon from "@mui/icons-material/CameraAlt";
-import ComputerIcon from "@mui/icons-material/Computer";
-import TheaterComedyIcon from "@mui/icons-material/TheaterComedy";
-
-export const CATEGORIES = [
-  { label: "Art", value: "art", icon: PaletteIcon },
-  { label: "Comics", value: "comics", icon: AutoStoriesIcon },
-  { label: "Crafts", value: "crafts", icon: ContentCutIcon },
-  { label: "Dance", value: "dance", icon: SelfImprovementIcon },
-  { label: "Design", value: "design", icon: DesignServicesIcon },
-  { label: "Fashion", value: "fashion", icon: CheckroomIcon },
-  { label: "Film & Video", value: "filmVideo", icon: MovieIcon },
-  { label: "Food", value: "food", icon: RestaurantIcon },
-  { label: "Games", value: "games", icon: SportsEsportsIcon },
-  { label: "Journalism", value: "journalism", icon: NewspaperIcon },
-  { label: "Music", value: "music", icon: MusicNoteIcon },
-  { label: "Photography", value: "photography", icon: CameraAltIcon },
-  { label: "Publishing", value: "publishing", icon: AutoStoriesIcon },
-  { label: "Technology", value: "technology", icon: ComputerIcon },
-  { label: "Theater", value: "theater", icon: TheaterComedyIcon },
-];
+import { CATEGORIES_LIST } from "../utils/categoryColors";
 
 type Props = {
   value: string;
@@ -42,15 +11,34 @@ export default function CategoryTabs({ value, onChange }: Props) {
     <Box
       sx={{
         display: "flex",
-        justifyContent: "center",
-        gap: 4,
+        justifyContent: "flex-start",
+        gap: { xs: 1, md: 0.5 },
         borderBottom: "1px solid #ddd",
         pb: 2,
         mb: 4,
-        flexWrap: "wrap",
+        flexWrap: "nowrap",
+        overflowX: "auto",
+        px: { xs: 0.5, md: 0 },
+        // Minimal Scrollbar Styling
+        "&::-webkit-scrollbar": {
+          height: "6px",
+        },
+        "&::-webkit-scrollbar-track": {
+          background: "transparent",
+        },
+        "&::-webkit-scrollbar-thumb": {
+          backgroundColor: "#e0e0e0",
+          borderRadius: "10px",
+          "&:hover": {
+            backgroundColor: "#bdbdbd",
+          }
+        },
+        // Firefox
+        scrollbarWidth: "thin",
+        scrollbarColor: "#e0e0e0 transparent",
       }}
     >
-      {CATEGORIES.map((cat) => {
+      {CATEGORIES_LIST.map((cat) => {
         const Icon = cat.icon;
         const isActive = value === cat.value;
 
@@ -64,6 +52,8 @@ export default function CategoryTabs({ value, onChange }: Props) {
               color: isActive ? "#f06292" : "#000",
               userSelect: "none",
               transition: "color 0.18s ease",
+              minWidth: 70, // Allow width to adjust based on content
+              px: 0.5,
               "&:hover": {
                 color: "rgba(240,98,146,0.6)",
               },
@@ -77,12 +67,13 @@ export default function CategoryTabs({ value, onChange }: Props) {
                 alignItems: "center",
                 justifyContent: "center",
                 mx: "auto",
+                mb: 1,
               }}
             >
-              <Icon sx={{ fontSize: 20 }} />
+              <Icon sx={{ fontSize: 24 }} />
             </Box>
 
-            <Typography fontSize="0.75rem">
+            <Typography fontSize="0.75rem" sx={{ whiteSpace: "nowrap" }}>
               {cat.label}
             </Typography>
 
@@ -91,7 +82,7 @@ export default function CategoryTabs({ value, onChange }: Props) {
                 sx={{
                   mt: 1,
                   height: 4,
-                  width: 32,
+                  width: 48,
                   mx: "auto",
                   borderRadius: 2,
                   background:

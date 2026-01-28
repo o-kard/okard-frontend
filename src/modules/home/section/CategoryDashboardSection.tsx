@@ -59,7 +59,7 @@ export default function CategoryDashboardSection() {
         px: { xs: 2, md: 0 },
         }}
     >
-        <Typography fontSize={{ xs: "2rem", md: "2.5rem" }} fontWeight={700} mb={1}>
+        <Typography fontSize={{ xs: "2rem", sm: "3rem", md: "3.5rem" }} fontWeight={700} mb={1}>
             Category Insights
         </Typography>
         <Typography color="text.secondary" mb={4}>

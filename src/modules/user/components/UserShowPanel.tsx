@@ -6,6 +6,7 @@ import {
   Typography,
   Stack,
   Box,
+  Avatar,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { useEffect, useState } from "react";
@@ -20,6 +21,7 @@ export default function ProfilePanel() {
 
   useEffect(() => {
     if (!isLoaded || !user) return;
+
     let abort = false;
     (async () => {
       try {
@@ -28,7 +30,7 @@ export default function ProfilePanel() {
           console.log("Fetched user profile:", r);
           if (!abort) setProfile(r);
         }
-      } catch {}
+      } catch { }
     })();
     return () => {
       abort = true;
@@ -60,7 +62,7 @@ export default function ProfilePanel() {
             <Typography variant="subtitle2" color="text.secondary">
               Country
             </Typography>
-            <Typography mb={2} ml={1.5}>{profile?.country.en_name ?? "—"}</Typography>
+            <Typography mb={2} ml={1.5}>{profile?.country?.en_name ?? "—"}</Typography>
           </MuiBox>
         </Grid>
 

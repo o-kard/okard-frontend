@@ -2,12 +2,12 @@
 
 import useEmblaCarousel from "embla-carousel-react";
 import { Box } from "@mui/material";
-import { Post } from "@/modules/post/types/post";
+import { Post, PostSummary } from "@/modules/post/types/post";
 import CampaignCard from "./CampaignCard";
 import { useEffect } from "react";
 
 type Props = {
-  campaigns: Post[];
+  campaigns: (Post | PostSummary)[];
   resetKey: string;
   onHoverBackground?: (img: string | null) => void;
 };
@@ -19,7 +19,7 @@ export default function CampaignSlider({ campaigns, resetKey, onHoverBackground 
     containScroll: "trimSnaps",
   });
 
-    useEffect(() => {
+  useEffect(() => {
     if (emblaApi) {
       emblaApi.scrollTo(0, true);
     }
@@ -29,7 +29,7 @@ export default function CampaignSlider({ campaigns, resetKey, onHoverBackground 
     <Box sx={{ overflow: "hidden", width: "100%", py: 1 }} ref={emblaRef}>
       <Box sx={{ display: "flex", gap: 1 }}>
         {campaigns.map((campaign) => (
-          <Box key={campaign.id} sx={{ flex: "0 0 auto", width: { xs: 320, md: 420 }}}>
+          <Box key={campaign.id} sx={{ flex: "0 0 auto", width: { xs: 320, md: 420 } }}>
             <CampaignCard campaign={campaign} key={campaign.id} onHoverBackground={onHoverBackground} />
           </Box>
         ))}

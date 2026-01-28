@@ -26,76 +26,99 @@ export default function Footer() {
           marginTop: '40px',
           width: 'clamp(70%, 95%, 80%))',
           minHeight: 160,
-        //   minWidth: 1000,
           display: 'flex',
-          flexDirection: 'row',
+          flexDirection: { xs: 'column', sm: 'row' },
           alignItems: 'center',
           justifyContent: 'space-between',
           boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-          padding: { xs: '16px', md: '36px 54px' },
-          gap: { xs: 2, md: 0 },
+          padding: { xs: '32px 16px', sm: '40px 32px', md: '48px 54px' },
+          gap: { xs: 3, md: 0 },
         }}
       >
         {/* Logo Section */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 7 }}>
+        <Box sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: { xs: 'center', sm: 'flex-start' },
+          gap: 2,
+          flex: { xs: 'none', sm: 7 },
+          width: { xs: '100%', sm: 'auto' },
+        }}>
           {/* Sun SVG Logo */}
-          <Box sx={{ width: {xs:140, md:'10vw'}, mr: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Box sx={{
+            width: { xs: 100, sm: 120, md: '10vw' },
+            mr: { xs: 1, md: 2 },
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
             <img src="Logo_sun.svg" alt="Logo" />
           </Box>
           {/* Logo Text */}
           <Typography
             sx={{
-              fontSize: 'clamp(1rem, 10vw, 11.5rem)',
-                fontFamily: "var(--font-syncopate)",
-                fontWeight: 700,
-                color: '#13CBA0',
-                letterSpacing: 2,
-                userSelect: 'none',
+              fontSize: { xs: '2.5rem', sm: '3rem', md: 'clamp(3rem, 10vw, 11.5rem)' },
+              fontFamily: "var(--font-syncopate)",
+              fontWeight: 700,
+              color: '#13CBA0',
+              letterSpacing: 2,
+              userSelect: 'none',
             }}
           >
             kard
           </Typography>
         </Box>
 
-        {/* Divider */}
-        <Divider orientation="vertical" flexItem sx={{ borderColor: '#F48CA0', borderRightWidth: 2, mx: 4, alignSelf: 'stretch', display: { xs: 'none', md: 'block' } }} />
+        {/* Divider - Vertical for sm+ */}
+        <Divider orientation="vertical" flexItem sx={{ borderColor: '#F48CA0', borderRightWidth: 2, mx: 4, alignSelf: 'stretch', display: { xs: 'none', sm: 'block' } }} />
+
+        {/* Divider - Horizontal for xs */}
+        <Divider sx={{ borderColor: '#F48CA0', borderBottomWidth: 2, width: '80%', display: { xs: 'block', sm: 'none' } }} />
 
         {/* Contact & Social Section (column) */}
-        <Box sx={{ flex: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        <Box sx={{
+          flex: { xs: 'none', sm: 3 },
+          width: { xs: '100%', sm: 'auto' },
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative'
+        }}>
           {/* Contact Section */}
-          <Typography variant="h6" sx={{ fontWeight: 700, color: '#222', mb: 1, fontSize: {xs: '0.8rem' ,md:'1.2rem'} }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, color: '#222', mb: 1, fontSize: { xs: '0.9rem', sm: '1rem', md: '1.2rem' } }}>
             CONTACT US
           </Typography>
           <Box sx={{
             width: 'fit-content',
-            minWidth: 260,
+            minWidth: { xs: 'auto', sm: 260 },
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-start',
             mx: 'auto',
-            gap: 2,
+            gap: { xs: 1.5, sm: 2 },
           }}>
             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-              <LocationOn sx={{ fontSize: "1.25rem", color: '#222', mt: '2px' }} />
-              <Typography sx={{ fontSize: {xs: '0.7rem' ,md:'0.95rem'}, color: '#222', fontWeight: 'bold' }}>
+              <LocationOn sx={{ fontSize: { xs: '1rem', sm: '1.25rem' }, color: '#222', mt: '2px' }} />
+              <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem' }, color: '#222', fontWeight: 'bold' }}>
                 1 Thanon Chalong Krung,<br />Khwaeng Lam Prathew,<br />Lat Krabang, Bangkok 10520
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <MailOutline sx={{ fontSize: "1.25rem", color: '#222' }} />
-              <Typography sx={{ fontSize: {xs: '0.7rem' ,md:'0.95rem'}, color: '#222', fontWeight: 'bold' }}>
+              <MailOutline sx={{ fontSize: { xs: '1rem', sm: '1.25rem' }, color: '#222' }} />
+              <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem' }, color: '#222', fontWeight: 'bold' }}>
                 okard.support@okard.com
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Phone sx={{ fontSize: "1.25rem", color: '#222' }} />
-              <Typography sx={{ fontSize: {xs: '0.7rem' ,md:'0.95rem'}, color: '#222', fontWeight: 'bold' }}>
+              <Phone sx={{ fontSize: { xs: '1rem', sm: '1.25rem' }, color: '#222' }} />
+              <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem' }, color: '#222', fontWeight: 'bold' }}>
                 02-539-3541
               </Typography>
             </Box>
           </Box>
           {/* Social Section */}
-          <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+          <Box sx={{ display: 'flex', gap: 1, mt: { xs: 2, sm: 1 } }}>
             <IconButton sx={{ color: '#3b5998' }} href="https://www.facebook.com" target="_blank" rel="noopener noreferrer">
               <FacebookRoundedIcon fontSize="medium" />
             </IconButton>
