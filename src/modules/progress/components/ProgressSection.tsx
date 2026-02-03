@@ -64,10 +64,8 @@ export default function ProgressSection({
     return (
       <Box
         sx={{
-          mt: 6,
           textAlign: "center",
           py: 4,
-          bgcolor: "grey.50",
           borderRadius: 2,
         }}
       >
@@ -79,7 +77,7 @@ export default function ProgressSection({
   }
 
   return (
-    <Box sx={{ mt: 6 }}>
+    <Box sx={{ mt: 2 }}>
       <Grid container spacing={3} alignItems="flex-start">
         {/* LEFT: TOC */}
         <Grid size={{ xs: 12, md: 3 }}>
@@ -114,11 +112,11 @@ export default function ProgressSection({
         </Grid>
 
         {/* RIGHT: Sections */}
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 7 }}>
           <Stack spacing={4}>
             {data.map((item, i) => {
-              const img = item.images?.[0]?.path
-                ? `${apiBaseUrl}${item.images[0].path}`
+              const img = item.media?.[0]?.path
+                ? `${apiBaseUrl}${item.media[0].path}`
                 : undefined;
 
               return (

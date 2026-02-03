@@ -6,12 +6,18 @@ import { Post } from "@/modules/post/types/post";
 import PostForm from "@/modules/post/components/PostForm";
 import { updatePostWithCampaigns } from "@/modules/post/api/api";
 import { Container, Typography, Box } from "@mui/material";
+import { getUserById } from "@/modules/user/api/api";
+import { User } from "@/modules/user/types/user";
 import EditRequestModal from "@/modules/edit_request/components/EditRequestModal";
+import LoadingScreen from "@/components/common/LoadingScreen";
 
 export default function PostEditPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
+  const [currentUserProfile, setCurrentUserProfile] = useState<User | null>(
+    null,
+  );
   const [post, setPost] = useState<Post | null>(null);
   const [editRequestOpen, setEditRequestOpen] = useState(false);
   const [proposedData, setProposedData] = useState<any>(null);
@@ -23,6 +29,26 @@ export default function PostEditPage() {
       .then((data) => setPost(data));
   }, [id]);
 
+  useEffect(() => {
+    if (user) {
+      getUserById(user.id).then((u) => setCurrentUserProfile(u));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (isLoaded && !user) {
+      router.push("/sign-in");
+      return;
+    }
+
+    if (post && currentUserProfile) {
+      if (post.user_id !== currentUserProfile.id) {
+        alert("You are not authorized to edit this post.");
+        router.push("/post");
+      }
+    }
+  }, [isLoaded, user, post, currentUserProfile, router]);
+
   const handleEditRequest = (data: any) => {
     setProposedData(data);
     setEditRequestOpen(true);
@@ -33,12 +59,7 @@ export default function PostEditPage() {
     const ok = await updatePostWithCampaigns(id, fd, user.id);
     if (ok) router.push("/post");
   };
-  if (!post)
-    return (
-      <Container maxWidth="sm">
-        <Box mt={6}>Loading...</Box>
-      </Container>
-    );
+  if (!post) return <LoadingScreen message="Loading Post..." />;
 
   return (
     <Container maxWidth="sm">

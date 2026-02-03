@@ -5,7 +5,7 @@ export interface Progress {
   updated_at?: string;
   progress_header: string;
   progress_description?: string;
-  images?: {
+  media?: {
     id: string;
     path: string;
     orig_name: string;

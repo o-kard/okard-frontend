@@ -32,7 +32,7 @@ export default function RewardSections({
       (rewards ?? [])
         .slice()
         .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)),
-    [rewards]
+    [rewards],
   );
 
   const sectionRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -46,7 +46,7 @@ export default function RewardSections({
   if (!data.length) return null;
 
   return (
-    <Box sx={{ mt: 6 }}>
+    <Box>
       <Typography variant="h4" fontWeight={900} sx={{ mb: 2 }}>
         {title}
       </Typography>
@@ -85,11 +85,11 @@ export default function RewardSections({
         </Grid>
 
         {/* RIGHT: Sections */}
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 7 }}>
           <Stack spacing={4}>
             {data.map((c, i) => {
-              const img = c.images?.[0]?.path
-                ? `${apiBaseUrl}${c.images[0].path}`
+              const img = c.media?.[0]?.path
+                ? `${apiBaseUrl}${c.media[0].path}`
                 : undefined;
               const anchorId = `${i + 1}-${slugify(c.reward_header)}`;
               const amount = (c as any).amount ?? (c as any).reward_amount ?? 0;

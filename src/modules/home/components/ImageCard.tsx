@@ -6,7 +6,9 @@ import IconButton from "@mui/material/IconButton";
 import { useState } from "react";
 import Link from "next/dist/client/link";
 
-type ResponsiveNumber = number | { xs?: number; sm?: number; md?: number; lg?: number; xl?: number };
+type ResponsiveNumber =
+  | number
+  | { xs?: number; sm?: number; md?: number; lg?: number; xl?: number };
 
 type ImageCardProps = {
   campaign: Post | PostSummary;
@@ -14,16 +16,10 @@ type ImageCardProps = {
   minHeight?: ResponsiveNumber;
 };
 
-export default function ImageCard({
-  campaign,
-  big = false,
-}: ImageCardProps) {
+export default function ImageCard({ campaign, big = false }: ImageCardProps) {
   const [bookmarked, setBookmarked] = useState(false);
   return (
-    <Link
-      href={`/post/show/${campaign.id}`}
-      style={{ textDecoration: "none" }}
-    >
+    <Link href={`/post/show/${campaign.id}`} style={{ textDecoration: "none" }}>
       <Box
         className="campaign-card"
         sx={{
@@ -35,16 +31,18 @@ export default function ImageCard({
           height: { xs: "200px", md: "300px" },
           "&:hover .favorite": {
             transform: "translateY(0)",
-            opacity: 1
+            opacity: 1,
           },
         }}
       >
         {/* Image */}
         <Box
           component="img"
-          src={campaign?.images?.[0]?.path
-            ? `${process.env.NEXT_PUBLIC_API_URL}${campaign.images[0].path}`
-            : undefined}
+          src={
+            campaign?.images?.[0]?.path
+              ? `${process.env.NEXT_PUBLIC_API_URL}${campaign.images[0].path}`
+              : undefined
+          }
           sx={{
             width: "100%",
             height: "100%",
@@ -57,14 +55,15 @@ export default function ImageCard({
           sx={{
             position: "absolute",
             inset: 0,
-            background: "linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.7))",
+            background:
+              "linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.7))",
 
             "&:hover": {
               transition: "all 0.3s ease",
               boxShadow: "0 12px 32px rgba(0,0,0,0.25)",
-              background: "linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.8))",
-
-            }
+              background:
+                "linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.8))",
+            },
           }}
         />
         {/* Bookmark button */}
@@ -126,12 +125,13 @@ export default function ImageCard({
             fontWeight={600}
             sx={{
               fontFamily: "var(--font-montserrat)",
-              textShadow: "0 2px 8px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.9)",
+              textShadow:
+                "0 2px 8px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.9)",
               fontSize: {
                 xs: big ? "0.95rem" : "0.85rem",
                 sm: big ? "1.1rem" : "0.95rem",
                 md: big ? "1.25rem" : "1rem",
-              }
+              },
             }}
           >
             {campaign.post_header}
@@ -145,12 +145,13 @@ export default function ImageCard({
               display: "flex",
               alignItems: "center",
               gap: 1,
-              textShadow: "0 1px 4px rgba(0,0,0,0.7), 0 1px 2px rgba(0,0,0,0.8)",
+              textShadow:
+                "0 1px 4px rgba(0,0,0,0.7), 0 1px 2px rgba(0,0,0,0.8)",
               fontSize: {
                 xs: big ? "0.75rem" : "0.7rem",
                 sm: big ? "0.85rem" : "0.75rem",
                 md: big ? "1rem" : "0.8rem",
-              }
+              },
             }}
           >
             {/* Avatar */}
@@ -160,17 +161,17 @@ export default function ImageCard({
                 height: { xs: 20, sm: 22, md: 24 },
                 borderRadius: "50%",
                 overflow: "hidden",
-                bgcolor: campaign.user.image?.path ? "transparent" : "gray",
+                bgcolor: campaign.user.media?.path ? "transparent" : "gray",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
               }}
             >
-              {campaign.user.image?.path ? (
+              {campaign.user.media?.path ? (
                 <Box
                   component="img"
-                  src={`${process.env.NEXT_PUBLIC_API_URL}${campaign.user.image.path}`}
+                  src={`${process.env.NEXT_PUBLIC_API_URL}${campaign.user.media.path}`}
                   alt={campaign.user.username}
                   sx={{
                     width: "100%",
@@ -203,15 +204,18 @@ export default function ImageCard({
               sx={{
                 whiteSpace: "normal",
                 wordBreak: "break-word",
-                textShadow: "0 1px 4px rgba(0,0,0,0.7), 0 1px 2px rgba(0,0,0,0.8)",
+                textShadow:
+                  "0 1px 4px rgba(0,0,0,0.7), 0 1px 2px rgba(0,0,0,0.8)",
                 fontSize: {
                   xs: big ? "0.7rem" : "0.65rem",
                   sm: big ? "0.75rem" : "0.7rem",
                   md: big ? "0.8rem" : "0.75rem",
-                }
+                },
               }}
             >
-              {campaign.current_amount?.toLocaleString() ?? 0} USD raised | <span style={{ color: "#12C998" }}>{campaign.progress}%</span> funded
+              {campaign.current_amount?.toLocaleString() ?? 0} USD raised |{" "}
+              <span style={{ color: "#12C998" }}>{campaign.progress}%</span>{" "}
+              funded
             </Typography>
           </Box>
         </Box>
@@ -242,7 +246,6 @@ export default function ImageCard({
               },
             }}
           />
-
 
           {/* animated bar */}
           <Box

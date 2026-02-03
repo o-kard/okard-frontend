@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { Post, PostSummary } from "@/modules/post/types/post";
 import { FundingProgress } from "./LinearProgress";
-import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
+import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import IconButton from "@mui/material/IconButton";
@@ -21,19 +21,20 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CATEGORY_COLORS } from "../utils/categoryColors";
 
-export default function ProjectCard({ campaign, onHoverBackground }: { campaign: Post | PostSummary; onHoverBackground?: (img: string | null) => void; }) {
+export default function ProjectCard({
+  campaign,
+  onHoverBackground,
+}: {
+  campaign: Post | PostSummary;
+  onHoverBackground?: (img: string | null) => void;
+}) {
   const [bookmarked, setBookmarked] = useState(false);
   const router = useRouter();
-  const categoryKey =
-    String(campaign.category) as keyof typeof CATEGORY_COLORS;
+  const categoryKey = String(campaign.category) as keyof typeof CATEGORY_COLORS;
 
-  const category =
-    CATEGORY_COLORS[categoryKey] ?? CATEGORY_COLORS.all;
+  const category = CATEGORY_COLORS[categoryKey] ?? CATEGORY_COLORS.all;
   return (
-    <Link
-      href={`/post/show/${campaign.id}`}
-      style={{ textDecoration: "none" }}
-    >
+    <Link href={`/post/show/${campaign.id}`} style={{ textDecoration: "none" }}>
       <Card
         onMouseEnter={() => {
           const img = campaign.images?.[0]?.path
@@ -56,7 +57,7 @@ export default function ProjectCard({ campaign, onHoverBackground }: { campaign:
           },
           "&:hover .favorite": {
             transform: "translateY(0)",
-            opacity: 1
+            opacity: 1,
           },
           "&:hover img": {
             filter: "blur(5px)",
@@ -125,7 +126,6 @@ export default function ProjectCard({ campaign, onHoverBackground }: { campaign:
           </IconButton>
         </Box>
 
-
         {/* Gradient shadow */}
         <Box
           sx={{
@@ -167,12 +167,13 @@ export default function ProjectCard({ campaign, onHoverBackground }: { campaign:
             }}
           />
 
-          <Typography 
-            fontWeight={600} 
-            fontSize="1.25rem" 
-            sx={{ 
-              fontFamily: "var(--font-montserrat)", 
-              textShadow: "0 2px 8px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.9)"
+          <Typography
+            fontWeight={600}
+            fontSize="1.25rem"
+            sx={{
+              fontFamily: "var(--font-montserrat)",
+              textShadow:
+                "0 2px 8px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.9)",
             }}
           >
             {campaign.post_header}
@@ -195,17 +196,17 @@ export default function ProjectCard({ campaign, onHoverBackground }: { campaign:
                 height: 32,
                 borderRadius: "50%",
                 overflow: "hidden",
-                bgcolor: campaign.user.image?.path ? "transparent" : "gray",
+                bgcolor: campaign.user.media?.path ? "transparent" : "gray",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
               }}
             >
-              {campaign.user.image?.path ? (
+              {campaign.user.media?.path ? (
                 <Box
                   component="img"
-                  src={`${process.env.NEXT_PUBLIC_API_URL}${campaign.user.image.path}`}
+                  src={`${process.env.NEXT_PUBLIC_API_URL}${campaign.user.media.path}`}
                   alt={campaign.user.username}
                   sx={{
                     width: "100%",
@@ -218,7 +219,8 @@ export default function ProjectCard({ campaign, onHoverBackground }: { campaign:
                   sx={{
                     fontSize: 14,
                     fontWeight: 600,
-                    textShadow: "0 2px 8px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.9)",
+                    textShadow:
+                      "0 2px 8px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.9)",
                     color: "#rgba(255, 255, 255, 0.14)",
                     lineHeight: 1,
                     textTransform: "uppercase",
@@ -314,7 +316,6 @@ export default function ProjectCard({ campaign, onHoverBackground }: { campaign:
             </Button>
           </Box>
         </Box>
-
       </Card>
     </Link>
   );

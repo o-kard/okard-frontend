@@ -10,8 +10,8 @@ export default function CreatorCard({ user }: Props) {
     [user.first_name, user.surname].filter(Boolean).join(" ").trim() ||
     user.username ||
     "Unknown User";
-  const avatarUrl = user.image?.path
-    ? `${process.env.NEXT_PUBLIC_API_URL}${user.image.path}`
+  const avatarUrl = user.media?.path
+    ? `${process.env.NEXT_PUBLIC_API_URL}${user.media.path}`
     : undefined;
 
   return (

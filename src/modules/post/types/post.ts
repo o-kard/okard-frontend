@@ -1,8 +1,21 @@
 import { User, UserPublicResponse } from "@/modules/user/types/user";
 
-export type PostCategoryType = "art" | "comics" | "crafts" | "dance"
-| "design" | "fashion" | "filmVideo" | "food" | "games" | "journalism"
-| "music" | "photography" | "publishing" | "technology" | "theater";
+export type PostCategoryType =
+  | "art"
+  | "comics"
+  | "crafts"
+  | "dance"
+  | "design"
+  | "fashion"
+  | "filmVideo"
+  | "food"
+  | "games"
+  | "journalism"
+  | "music"
+  | "photography"
+  | "publishing"
+  | "technology"
+  | "theater";
 export type PostStatusType = "active" | "inactive";
 export type PostStateType = "draft" | "published" | "archived";
 
@@ -23,7 +36,9 @@ export type Post = {
   progress: number | null;
   current_amount: number;
   supporter: number | null;
-  images?: Image[] | [];
+  media?: Media[] | [];
+  images?: Media[] | [];
+  video?: Media | null;
   campaigns?: Campaign[] | [];
   rewards?: Reward[] | [];
   comments?: PostComment[] | [];
@@ -37,7 +52,7 @@ export type Campaign = {
   campaign_header: string;
   campaign_description: string;
   display_order: number;
-  images?: Image[] | [];
+  media?: Media[] | [];
 };
 
 export type Reward = {
@@ -49,7 +64,7 @@ export type Reward = {
   reward_amount: number;
   backup_amount: number;
   display_order: number;
-  images?: Image[] | [];
+  media?: Media[] | [];
 };
 
 export type PostComment = {
@@ -71,36 +86,40 @@ export type LikeResp = {
   is_liked: boolean;
 };
 
-export type Image = {
+export type Media = {
   path: string;
   id?: UUID;
   display_order?: number;
+  media_type?: string;
+  thumbnail_path?: string;
 };
 
-export type UserImage = {
-  id: string
-  path: string
-}
+export type UserMedia = {
+  id: string;
+  path: string;
+};
 
 export type PostSummary = {
-  id: string
-  user_id: string
-  category: PostCategoryType
+  id: string;
+  user_id: string;
+  category: PostCategoryType;
 
-  post_header: string
-  post_description: string
+  post_header: string;
+  post_description: string;
 
-  goal_amount: number
-  current_amount: number
-  supporters: number
-  progress: number
-  suupporter: number | null
+  goal_amount: number;
+  current_amount: number;
+  supporters: number;
+  progress: number;
+  suupporter: number | null;
   state: PostStateType;
   status: PostStatusType;
-  images: Image[]
+  media: Media[];
+  images?: Media[];
+  video?: Media | null;
   user: {
-    id: string
-    username: string
-    image?: UserImage | null
-  }
-}
+    id: string;
+    username: string;
+    media?: UserMedia | null;
+  };
+};

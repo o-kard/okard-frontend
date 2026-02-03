@@ -24,7 +24,7 @@ export default function PostDetailTabs({ sections, stickyTop = 64 }: Props) {
       sx={{
         mt: 4,
         bgcolor: "white",
-        borderRadius: 4,
+        borderRadius: 3,
         boxShadow: "0 8px 40px rgba(0,0,0,0.08)",
       }}
     >
@@ -36,6 +36,8 @@ export default function PostDetailTabs({ sections, stickyTop = 64 }: Props) {
           zIndex: 5,
           borderBottom: "1px solid",
           borderColor: "divider",
+          borderTopRightRadius: 12,
+          borderTopLeftRadius: 12,
         }}
       >
         <Tabs

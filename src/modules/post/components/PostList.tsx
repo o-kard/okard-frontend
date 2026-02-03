@@ -49,18 +49,20 @@ export default function PostList({ posts }: Props) {
                 sx={{ position: "relative", height: 300, bgcolor: "grey.200" }}
               >
                 {img && (
-                  <Box
-                    component="img"
-                    src={img}
-                    alt={post.post_header}
-                    sx={{
-                      position: "absolute",
-                      inset: 0,
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
+                  <>
+                    <Box
+                      component="img"
+                      src={img}
+                      alt={post.post_header}
+                      sx={{
+                        position: "absolute",
+                        inset: 0,
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  </>
                 )}
 
                 {/* gradient overlay: เริ่มโปร่งใส, โผล่เมื่อ hover */}

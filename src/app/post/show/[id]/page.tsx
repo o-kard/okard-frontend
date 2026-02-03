@@ -22,7 +22,7 @@ import InstagramIcon from "@mui/icons-material/Instagram";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import CloseIcon from "@mui/icons-material/Close";
 
-import { Post } from "@/modules/post/types/post";
+import { Post, Media } from "@/modules/post/types/post";
 import PostDetailTabs from "@/modules/post/components/PostDetailTabs";
 import CampaignSections from "@/modules/post/components/CampaginSection";
 import RewardSections from "@/modules/post/components/RewardSection";
@@ -39,6 +39,7 @@ import ProgressSection from "@/modules/progress/components/ProgressSection";
 import { getProgressByPostId } from "@/modules/progress/api/api";
 import { Progress } from "@/modules/progress/types";
 import AddIcon from "@mui/icons-material/Add";
+import { CATEGORY_COLORS } from "@/modules/home/utils/categoryColors";
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -138,6 +139,15 @@ export default function PostDetailPage() {
     [post],
   );
 
+  // Build slider media: video first (if any), then images
+  const sliderMedia = useMemo(() => {
+    if (!post) return [];
+    const items: Media[] = [];
+    if (post.video) items.push(post.video);
+    if (post.images) items.push(...post.images);
+    return items.length > 0 ? items : (post.media ?? []);
+  }, [post]);
+
   const goal = Math.max(0, post?.goal_amount ?? 0);
   const current = Math.max(0, post?.current_amount ?? 0);
   const percent =
@@ -158,6 +168,9 @@ export default function PostDetailPage() {
     );
   }
 
+  const categoryConfig = CATEGORY_COLORS[post.category];
+  const CategoryIcon = categoryConfig?.icon;
+
   return (
     <Container
       maxWidth={false}
@@ -170,8 +183,16 @@ export default function PostDetailPage() {
         paddingRight: { xs: 0, sm: 0 },
       }}
     >
-      <Container maxWidth="lg">
-        <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 1 }}>
+      <Container maxWidth="xl">
+        <Box
+          sx={{
+            mb: 3,
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            paddingTop: 2,
+          }}
+        >
           <Button
             component={Link}
             href="/post"
@@ -212,104 +233,132 @@ export default function PostDetailPage() {
                   overflow: "hidden",
                 }}
               >
-                {post.images && post.images.length > 0 && (
+                {sliderMedia.length > 0 && (
                   <>
-                    <Box
-                      component="img"
-                      src={`${process.env.NEXT_PUBLIC_API_URL}${post.images[currentIndex].path}`}
-                      alt={post.post_header}
-                      sx={{
-                        position: "absolute",
-                        inset: 0,
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        transition: "opacity 0.5s ease-in-out",
-                      }}
-                    />
-
-                    {/* Prev Button */}
-                    <IconButton
-                      onClick={() =>
-                        setCurrentIndex((prev) =>
-                          prev === 0 ? post.images!.length - 1 : prev - 1,
-                        )
-                      }
-                      sx={{
-                        position: "absolute",
-                        top: "50%",
-                        left: 16,
-                        transform: "translateY(-50%)",
-                        bgcolor: "rgba(0,0,0,0.4)",
-                        color: "white",
-                        "&:hover": { bgcolor: "rgba(0,0,0,0.6)" },
-                      }}
-                    >
-                      <ArrowBackIosNewIcon fontSize="small" />
-                    </IconButton>
-
-                    {/* Next Button */}
-                    <IconButton
-                      onClick={() =>
-                        setCurrentIndex((prev) =>
-                          prev === post.images!.length - 1 ? 0 : prev + 1,
-                        )
-                      }
-                      sx={{
-                        position: "absolute",
-                        top: "50%",
-                        right: 16,
-                        transform: "translateY(-50%)",
-                        bgcolor: "rgba(0,0,0,0.4)",
-                        color: "white",
-                        "&:hover": { bgcolor: "rgba(0,0,0,0.6)" },
-                      }}
-                    >
-                      <ArrowBackIosNewIcon
-                        fontSize="small"
-                        sx={{ transform: "rotate(180deg)" }}
+                    {sliderMedia[currentIndex].media_type?.startsWith(
+                      "video/",
+                    ) ? (
+                      <Box
+                        component="video"
+                        src={`${process.env.NEXT_PUBLIC_API_URL}${sliderMedia[currentIndex].path}`}
+                        controls
+                        sx={{
+                          position: "absolute",
+                          inset: 0,
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "contain",
+                          bgcolor: "black",
+                        }}
                       />
-                    </IconButton>
+                    ) : (
+                      <Box
+                        component="img"
+                        src={`${process.env.NEXT_PUBLIC_API_URL}${sliderMedia[currentIndex].path}`}
+                        alt={post.post_header}
+                        sx={{
+                          position: "absolute",
+                          inset: 0,
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          transition: "opacity 0.5s ease-in-out",
+                        }}
+                      />
+                    )}
 
-                    {/* Indicator Dots */}
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      sx={{
-                        position: "absolute",
-                        bottom: 16,
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                      }}
-                    >
-                      {post.images.map((_, i) => (
-                        <Box
-                          key={i}
-                          onClick={() => setCurrentIndex(i)}
+                    {sliderMedia.length > 1 && (
+                      <>
+                        {/* Prev Button */}
+                        <IconButton
+                          onClick={() =>
+                            setCurrentIndex((prev) =>
+                              prev === 0 ? sliderMedia.length - 1 : prev - 1,
+                            )
+                          }
                           sx={{
-                            width: 10,
-                            height: 10,
-                            borderRadius: "50%",
-                            bgcolor:
-                              i === currentIndex
-                                ? "primary.main"
-                                : "rgba(255,255,255,0.6)",
-                            cursor: "pointer",
+                            position: "absolute",
+                            top: "50%",
+                            left: 16,
+                            transform: "translateY(-50%)",
+                            bgcolor: "rgba(0,0,0,0.4)",
+                            color: "white",
+                            "&:hover": { bgcolor: "rgba(0,0,0,0.6)" },
                           }}
-                        />
-                      ))}
-                    </Stack>
+                        >
+                          <ArrowBackIosNewIcon fontSize="small" />
+                        </IconButton>
+
+                        {/* Next Button */}
+                        <IconButton
+                          onClick={() =>
+                            setCurrentIndex((prev) =>
+                              prev === sliderMedia.length - 1 ? 0 : prev + 1,
+                            )
+                          }
+                          sx={{
+                            position: "absolute",
+                            top: "50%",
+                            right: 16,
+                            transform: "translateY(-50%)",
+                            bgcolor: "rgba(0,0,0,0.4)",
+                            color: "white",
+                            "&:hover": { bgcolor: "rgba(0,0,0,0.6)" },
+                          }}
+                        >
+                          <ArrowBackIosNewIcon
+                            fontSize="small"
+                            sx={{ transform: "rotate(180deg)" }}
+                          />
+                        </IconButton>
+
+                        {/* Indicator Dots */}
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          sx={{
+                            position: "absolute",
+                            bottom: 16,
+                            left: "50%",
+                            transform: "translateX(-50%)",
+                          }}
+                        >
+                          {sliderMedia.map((_, i) => (
+                            <Box
+                              key={i}
+                              onClick={() => setCurrentIndex(i)}
+                              sx={{
+                                width: 10,
+                                height: 10,
+                                borderRadius: "50%",
+                                bgcolor:
+                                  i === currentIndex
+                                    ? "primary.main"
+                                    : "rgba(255,255,255,0.6)",
+                                cursor: "pointer",
+                              }}
+                            />
+                          ))}
+                        </Stack>
+                      </>
+                    )}
                   </>
                 )}
 
                 <Chip
-                  label={post.category}
-                  color="primary"
+                  icon={CategoryIcon ? <CategoryIcon /> : undefined}
+                  label={categoryConfig?.label ?? post.category}
                   sx={{
                     position: "absolute",
                     top: 16,
                     right: 16,
                     fontWeight: 700,
+                    textTransform: "capitalize",
+                    bgcolor: categoryConfig?.color ?? "primary.main",
+                    color: "white",
+                    "& .MuiChip-icon": {
+                      color: "white",
+                    },
                   }}
                 />
               </Box>
@@ -420,10 +469,10 @@ export default function PostDetailPage() {
                   overflow: "hidden",
                 }}
               >
-                {post.user?.image?.path ? (
+                {post.user?.media?.path ? (
                   <Box
                     component="img"
-                    src={`${process.env.NEXT_PUBLIC_API_URL}${post.user.image.path}`}
+                    src={`${process.env.NEXT_PUBLIC_API_URL}${post.user.media.path}`}
                     alt={post.user.username}
                     sx={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
@@ -589,7 +638,6 @@ export default function PostDetailPage() {
         </Grid>
         <Box
           sx={{
-            bgcolor: "white",
             width: "100%",
           }}
         >
@@ -609,7 +657,7 @@ export default function PostDetailPage() {
                         title=""
                       />
                     </Grid>
-                    <Grid size={{ xs: 12, md: 4 }}>
+                    <Grid size={{ xs: 12, md: 3 }}>
                       <CreatorCard user={post.user} />
                     </Grid>
                   </Grid>
@@ -628,7 +676,7 @@ export default function PostDetailPage() {
                         title=""
                       />
                     </Grid>
-                    <Grid size={{ xs: 12, md: 4 }}>
+                    <Grid size={{ xs: 12, md: 3 }}>
                       <CreatorCard user={post.user} />
                     </Grid>
                   </Grid>
@@ -646,7 +694,6 @@ export default function PostDetailPage() {
                           alignItems="center"
                           justifyContent="flex-start"
                           spacing={2}
-                          sx={{ mb: 4 }}
                         >
                           {appUser && post.user_id === appUser.id && (
                             <Button
@@ -693,7 +740,7 @@ export default function PostDetailPage() {
                         />
                       </Box>
                     </Grid>
-                    <Grid size={{ xs: 12, md: 4 }}>
+                    <Grid size={{ xs: 12, md: 3 }}>
                       <CreatorCard user={post.user} />
                     </Grid>
                   </Grid>
@@ -713,7 +760,7 @@ export default function PostDetailPage() {
                         clerkId={user?.id}
                       />
                     </Grid>
-                    <Grid size={{ xs: 12, md: 4 }}>
+                    <Grid size={{ xs: 12, md: 3 }}>
                       <CreatorCard user={post.user} />
                     </Grid>
                   </Grid>

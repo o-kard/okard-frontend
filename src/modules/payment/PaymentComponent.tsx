@@ -51,7 +51,7 @@ export default function PaymentComponent({ postId, userId }: Props) {
       post?.images?.[0]?.path
         ? `${process.env.NEXT_PUBLIC_API_URL}${post.images[0].path}`
         : undefined,
-    [post]
+    [post],
   );
 
   const total = Math.max(0, (amount || 0) + (tip || 0));
@@ -67,7 +67,7 @@ export default function PaymentComponent({ postId, userId }: Props) {
     };
     const res = await createPayment(payload, userId);
     if (res) {
-      router.replace(`/post/show/${post.id}`); 
+      router.replace(`/post/show/${post.id}`);
     }
   };
 

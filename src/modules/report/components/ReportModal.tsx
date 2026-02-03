@@ -130,12 +130,12 @@ export default function ReportModal({
             startIcon={<CloudUploadIcon />}
             disabled={loading}
           >
-            Upload Images
+            Upload Files
             <input
               type="file"
               hidden
               multiple
-              accept="image/*"
+              accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               onChange={(e) => {
                 if (e.target.files) {
                   setFiles((prev) => [

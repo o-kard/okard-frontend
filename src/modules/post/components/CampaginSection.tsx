@@ -31,7 +31,7 @@ export default function CampaignSections({
       (campaigns ?? [])
         .slice()
         .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)),
-    [campaigns]
+    [campaigns],
   );
 
   const sectionRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -45,7 +45,7 @@ export default function CampaignSections({
   if (!data.length) return null;
 
   return (
-    <Box sx={{ mt: 6 }}>
+    <Box>
       <Typography variant="h4" fontWeight={900} sx={{ mb: 2 }}>
         {title}
       </Typography>
@@ -87,8 +87,8 @@ export default function CampaignSections({
         <Grid size={{ xs: 12, md: 9 }}>
           <Stack spacing={6}>
             {data.map((c, i) => {
-              const img = c.images?.[0]?.path
-                ? `${apiBaseUrl}${c.images[0].path}`
+              const img = c.media?.[0]?.path
+                ? `${apiBaseUrl}${c.media[0].path}`
                 : undefined;
               const anchorId = `${i + 1}-${slugify(c.campaign_header)}`;
 
@@ -124,8 +124,10 @@ export default function CampaignSections({
                       src={img}
                       alt={c.campaign_header || `Campaign #${i + 1}`}
                       sx={{
-                        width: "30%",
+                        width: "60%",
                         height: "auto",
+                        aspectRatio: "4/3",
+                        objectFit: "cover",
                         borderRadius: 2,
                         boxShadow: 1,
                         display: "block",

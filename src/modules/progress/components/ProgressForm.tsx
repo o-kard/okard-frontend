@@ -69,8 +69,8 @@ export default function ProgressForm({
         setValue("images", []);
 
         // existing images
-        if (initialData.images && initialData.images.length > 0) {
-          const img = initialData.images[0];
+        if (initialData.media && initialData.media.length > 0) {
+          const img = initialData.media[0];
           setImagePreviews([
             {
               preview: `${process.env.NEXT_PUBLIC_API_URL}${img.path}`,

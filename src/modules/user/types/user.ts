@@ -1,4 +1,4 @@
-import { Image } from "@/modules/post/types/post";
+import { Media } from "@/modules/post/types/post";
 
 export type User = {
   id: string;
@@ -14,13 +14,13 @@ export type User = {
   country?: string | null;
   birth_date?: Date | null;
   role: string | null;
-  image?: Image | null;
   contribution_number: number;
   status: string;
   created_at: Date;
   updated_at: Date;
   user_description?: string;
   creator?: any; // Avoiding circular dependency or complex import for now, or import properly if possible.
+  media?: Media | null;
 };
 
 export type UserPublicResponse = {
@@ -32,5 +32,5 @@ export type UserPublicResponse = {
   user_description?: string;
   campaign_number?: number;
   contribution_number?: number;
-  image: Image | null;
+  media: Media | null;
 };
