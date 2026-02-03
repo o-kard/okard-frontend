@@ -54,14 +54,14 @@ export default function EditRequestModal({
               {
                 method: "POST",
                 body: fd,
-              }
+              },
             );
 
             if (!res.ok) throw new Error("Failed to upload image");
             const imgData = await res.json();
 
             return { order, image_id: imgData.id, image_path: imgData.path };
-          }
+          },
         );
 
         const uploadedImages = await Promise.all(uploadPromises);
@@ -69,13 +69,13 @@ export default function EditRequestModal({
         finalProposed.rewards_payload = finalProposed.rewards_payload.map(
           (r: any) => {
             const match = uploadedImages.find(
-              (u) => String(u.order) === String(r.display_order)
+              (u) => String(u.order) === String(r.display_order),
             );
             if (match) {
               return { ...r, image_id: match.image_id };
             }
             return r;
-          }
+          },
         );
 
         delete finalProposed.files_map;
@@ -94,7 +94,7 @@ export default function EditRequestModal({
             proposed_changes: finalProposed,
             expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
           }),
-        }
+        },
       );
 
       if (!res.ok) {

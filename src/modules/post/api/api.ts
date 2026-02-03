@@ -3,6 +3,7 @@ import { LikeResp, Post, PostComment } from "../types/post";
 
 const API_PATH = "/api/post";
 const API_PATH_COMMENT = "/api/comment";
+const API_URL = "http://localhost:8000/api/post";
 
 export const fetchPosts = async (
   category?: string,
@@ -144,15 +145,19 @@ export async function reorderPostImages(
   );
 }
 
-export async function changeStatus(postId: string, status: string, token: string | null) {
+export async function changeStatus(
+  postId: string,
+  status: string,
+  token: string | null,
+) {
   return request<Post>(
     `${API_PATH}/${postId}/status?status=${encodeURIComponent(status)}`,
     {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
 }
 export async function getForYouCampaigns(token: string
@@ -186,5 +191,5 @@ export async function getForYouCampaigns(token: string
     );
   });
 
-  return data.campaigns.map(c => c.campaign);
+  return data.campaigns.map((c) => c.campaign);
 }

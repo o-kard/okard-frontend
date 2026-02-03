@@ -16,14 +16,15 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
-import { createProgress } from "../api/api";
-import { CreateProgressPayload } from "../types";
+import { createProgress, updateProgress } from "../api/api";
+import { CreateProgressPayload, Progress } from "../types";
 
 type Props = {
   open: boolean;
   onClose: () => void;
   postId: string;
   onSuccess: () => void;
+  initialData?: Progress | null;
 };
 
 type FormValues = {
@@ -37,6 +38,7 @@ export default function ProgressForm({
   onClose,
   postId,
   onSuccess,
+  initialData,
 }: Props) {
   const {
     register,
@@ -53,67 +55,98 @@ export default function ProgressForm({
   });
 
   const [imagePreviews, setImagePreviews] = useState<
-    { file: File; preview: string }[]
+    { file?: File; preview: string }[]
   >([]);
 
   useEffect(() => {
     if (open) {
-      reset();
-      setImagePreviews([]);
+      if (initialData) {
+        setValue("progress_header", initialData.progress_header);
+        setValue(
+          "progress_description",
+          initialData.progress_description || "",
+        );
+        setValue("images", []);
+
+        // existing images
+        if (initialData.images && initialData.images.length > 0) {
+          const img = initialData.images[0];
+          setImagePreviews([
+            {
+              preview: `${process.env.NEXT_PUBLIC_API_URL}${img.path}`,
+            },
+          ]);
+        } else {
+          setImagePreviews([]);
+        }
+      } else {
+        reset();
+        setImagePreviews([]);
+      }
     }
-  }, [open, reset]);
+  }, [open, initialData, reset, setValue]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      const newPreviews = newFiles.map((file) => ({
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      // Replace existing image
+      const newPreview = {
         file,
         preview: URL.createObjectURL(file),
-      }));
-      setImagePreviews((prev) => [...prev, ...newPreviews]);
-      setValue("images", [...imagePreviews.map((p) => p.file), ...newFiles]);
+      };
+      // Revoke old object url if it was a blob
+      if (imagePreviews.length > 0 && imagePreviews[0].file) {
+        URL.revokeObjectURL(imagePreviews[0].preview);
+      }
+
+      setImagePreviews([newPreview]);
+      setValue("images", [file]);
     }
   };
 
   const handleRemoveImage = (index: number) => {
-    setImagePreviews((prev) => {
-      const newPreviews = [...prev];
-      URL.revokeObjectURL(newPreviews[index].preview);
-      newPreviews.splice(index, 1);
-      setValue(
-        "images",
-        newPreviews.map((p) => p.file),
-      );
-      return newPreviews;
-    });
+    if (imagePreviews[index].file) {
+      URL.revokeObjectURL(imagePreviews[index].preview);
+    }
+    setImagePreviews([]);
+    setValue("images", []);
   };
 
   const onSubmit: SubmitHandler<FormValues> = async (values) => {
     try {
       const fd = new FormData();
-      const payload: CreateProgressPayload = {
+      const payload: any = {
         progress_header: values.progress_header,
         progress_description: values.progress_description,
-        post_id: postId,
       };
+
+      if (!initialData) {
+        payload.post_id = postId;
+      }
+
       fd.append("progress_data", JSON.stringify(payload));
 
-      imagePreviews.forEach((item) => {
-        fd.append("images", item.file);
-      });
+      if (values.images && values.images.length > 0) {
+        fd.append("images", values.images[0]);
+      }
 
-      await createProgress(fd);
+      if (initialData) {
+        await updateProgress(initialData.id, fd);
+      } else {
+        await createProgress(fd);
+      }
       onSuccess();
       onClose();
     } catch (err) {
-      console.error("Failed to create progress", err);
-      // You might want to show an error toast here
+      console.error("Failed to save progress", err);
     }
   };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle fontWeight={800}>Add Progress Update</DialogTitle>
+      <DialogTitle fontWeight={800}>
+        {initialData ? "Edit Progress Update" : "Add Progress Update"}
+      </DialogTitle>
       <form onSubmit={handleSubmit(onSubmit)}>
         <DialogContent dividers>
           <Stack spacing={3}>
@@ -125,6 +158,7 @@ export default function ProgressForm({
               })}
               error={!!errors.progress_header}
               helperText={errors.progress_header?.message}
+              slotProps={{ inputLabel: { shrink: true } }}
             />
             <TextField
               label="Description"
@@ -132,11 +166,12 @@ export default function ProgressForm({
               multiline
               rows={4}
               {...register("progress_description")}
+              slotProps={{ inputLabel: { shrink: true } }}
             />
 
             <Box>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Images
+                Image (Max 1)
               </Typography>
               <Stack direction="row" flexWrap="wrap" gap={2}>
                 {imagePreviews.map((item, index) => (
@@ -176,33 +211,34 @@ export default function ProgressForm({
                   </Box>
                 ))}
 
-                <Button
-                  component="label"
-                  variant="outlined"
-                  sx={{
-                    width: 100,
-                    height: 100,
-                    borderRadius: 1,
-                    borderStyle: "dashed",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 0.5,
-                  }}
-                >
-                  <AddPhotoAlternateIcon color="action" />
-                  <Typography variant="caption" color="text.secondary">
-                    Add
-                  </Typography>
-                  <input
-                    type="file"
-                    hidden
-                    multiple
-                    accept="image/*"
-                    onChange={handleFileChange}
-                  />
-                </Button>
+                {imagePreviews.length === 0 && (
+                  <Button
+                    component="label"
+                    variant="outlined"
+                    sx={{
+                      width: 100,
+                      height: 100,
+                      borderRadius: 1,
+                      borderStyle: "dashed",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 0.5,
+                    }}
+                  >
+                    <AddPhotoAlternateIcon color="action" />
+                    <Typography variant="caption" color="text.secondary">
+                      Add
+                    </Typography>
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={handleFileChange}
+                    />
+                  </Button>
+                )}
               </Stack>
             </Box>
           </Stack>
@@ -212,7 +248,11 @@ export default function ProgressForm({
             Cancel
           </Button>
           <Button type="submit" variant="contained" disabled={isSubmitting}>
-            {isSubmitting ? "Submitting..." : "Post Update"}
+            {isSubmitting
+              ? "Submitting..."
+              : initialData
+                ? "Save Changes"
+                : "Post Update"}
           </Button>
         </DialogActions>
       </form>

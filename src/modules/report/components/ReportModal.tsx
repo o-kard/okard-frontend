@@ -11,7 +11,15 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  Box,
 } from "@mui/material";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 interface ReportModalProps {
   open: boolean;
@@ -29,6 +37,7 @@ export default function ReportModal({
   const [type, setType] = useState("problem");
   const [header, setHeader] = useState("");
   const [description, setDescription] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,20 +47,22 @@ export default function ReportModal({
     setError(null);
 
     try {
+      const formData = new FormData();
+      formData.append("post_id", postId);
+      formData.append("type", type);
+      if (header) formData.append("header", header);
+      formData.append("description", description);
+
+      files.forEach((file) => {
+        formData.append("files", file);
+      });
+
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/reports/?clerk_id=${clerkId}`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            post_id: postId,
-            type: type,
-            header: header,
-            description: description,
-          }),
-        }
+          body: formData,
+        },
       );
 
       if (!res.ok) {
@@ -62,6 +73,7 @@ export default function ReportModal({
       onClose();
       setDescription("");
       setHeader("");
+      setFiles([]);
       alert("Report submitted successfully!");
     } catch (e: any) {
       setError(e.message);
@@ -110,6 +122,54 @@ export default function ReportModal({
           disabled={loading}
           required
         />
+
+        <Box sx={{ mt: 2, mb: 1 }}>
+          <Button
+            component="label"
+            variant="outlined"
+            startIcon={<CloudUploadIcon />}
+            disabled={loading}
+          >
+            Upload Images
+            <input
+              type="file"
+              hidden
+              multiple
+              accept="image/*"
+              onChange={(e) => {
+                if (e.target.files) {
+                  setFiles((prev) => [
+                    ...prev,
+                    ...Array.from(e.target.files || []),
+                  ]);
+                }
+              }}
+            />
+          </Button>
+
+          <List dense>
+            {files.map((file, index) => (
+              <ListItem key={index}>
+                <ListItemText
+                  primary={file.name}
+                  secondary={`${(file.size / 1024).toFixed(2)} KB`}
+                />
+                <ListItemSecondaryAction>
+                  <IconButton
+                    edge="end"
+                    aria-label="delete"
+                    onClick={() =>
+                      setFiles((prev) => prev.filter((_, i) => i !== index))
+                    }
+                    disabled={loading}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </ListItemSecondaryAction>
+              </ListItem>
+            ))}
+          </List>
+        </Box>
         {error && (
           <Typography color="error" variant="caption">
             {error}

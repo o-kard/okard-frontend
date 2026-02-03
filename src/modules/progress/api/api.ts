@@ -8,6 +8,13 @@ export function createProgress(data: FormData): Promise<Progress> {
   });
 }
 
+export function updateProgress(id: string, data: FormData): Promise<Progress> {
+  return request<Progress>(`/api/progress/${id}`, {
+    method: "PUT",
+    body: data,
+  });
+}
+
 export function getProgressByPostId(postId: string): Promise<Progress[]> {
   return request<Progress[]>(`/api/progress?post_id=${postId}`);
 }

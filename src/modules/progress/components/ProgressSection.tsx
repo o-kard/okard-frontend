@@ -1,16 +1,27 @@
 "use client";
 
 import { useMemo, useRef } from "react";
-import { Box, Button, Grid, Stack, Typography, Chip } from "@mui/material";
+import {
+  Box,
+  Button,
+  Grid,
+  Stack,
+  Typography,
+  Chip,
+  IconButton,
+} from "@mui/material";
 import { Progress } from "../types";
 import { useActiveSection } from "@/modules/post/hooks/useActiveSection";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import EditIcon from "@mui/icons-material/Edit";
 
 type Props = {
   items?: Progress[];
   apiBaseUrl?: string;
   scrollMarginTop?: number;
   title?: string;
+  isOwner?: boolean;
+  onEdit?: (item: Progress) => void;
 };
 
 const formatDate = (dateStr?: string) => {
@@ -27,6 +38,8 @@ export default function ProgressSection({
   apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "",
   scrollMarginTop = 100,
   title = "Progress Updates",
+  isOwner,
+  onEdit,
 }: Props) {
   const data = useMemo(
     () =>
@@ -35,7 +48,7 @@ export default function ProgressSection({
         .sort(
           (a, b) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-        ), // Newest first
+        ),
     [items],
   );
 
@@ -67,10 +80,6 @@ export default function ProgressSection({
 
   return (
     <Box sx={{ mt: 6 }}>
-      <Typography variant="h4" fontWeight={900} sx={{ mb: 2 }}>
-        {title}
-      </Typography>
-
       <Grid container spacing={3} alignItems="flex-start">
         {/* LEFT: TOC */}
         <Grid size={{ xs: 12, md: 3 }}>
@@ -78,7 +87,6 @@ export default function ProgressSection({
             <Stack component="nav" spacing={1.2} sx={{ pr: { md: 2 } }}>
               {data.map((item, i) => {
                 const isActive = i === activeIdx;
-                const label = formatDate(item.created_at);
                 return (
                   <Button
                     key={item.id}
@@ -88,14 +96,16 @@ export default function ProgressSection({
                       justifyContent: "flex-start",
                       textTransform: "none",
                       fontWeight: 800,
-                      color: isActive ? "primary.main" : "text.primary",
-                      bgcolor: isActive ? "primary.50" : "transparent",
+                      color: isActive ? "#e91e63" : "text.primary",
+                      bgcolor: isActive
+                        ? "rgba(233,30,99,0.08)"
+                        : "transparent",
                       borderRadius: 2,
                       px: 1,
-                      "&:hover": { bgcolor: "primary.50" },
+                      "&:hover": { bgcolor: "rgba(233,30,99,0.12)" },
                     }}
                   >
-                    {label}
+                    {item.progress_header || `Progress #${i + 1}`}
                   </Button>
                 );
               })}
@@ -104,7 +114,7 @@ export default function ProgressSection({
         </Grid>
 
         {/* RIGHT: Sections */}
-        <Grid size={{ xs: 12, md: 9 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Stack spacing={4}>
             {data.map((item, i) => {
               const img = item.images?.[0]?.path
@@ -121,16 +131,18 @@ export default function ProgressSection({
                 >
                   <Box
                     sx={{
-                      border: "1px solid",
+                      border: "2px solid",
                       borderColor: "divider",
                       borderRadius: 4,
-                      p: 3,
+                      p: 2.5,
                       boxShadow: 1,
+                      position: "relative",
                       bgcolor: "background.paper",
                     }}
                   >
-                    <Stack spacing={2}>
-                      <Stack
+                    <Grid container spacing={2} alignItems="stretch">
+                      <Grid
+                        size={{ xs: 12, md: 12 }}
                         direction="row"
                         justifyContent="space-between"
                         alignItems="center"
@@ -141,48 +153,65 @@ export default function ProgressSection({
                           sx={{
                             display: "flex",
                             alignItems: "center",
+                            justifyContent: "space-between",
                             gap: 0.5,
                           }}
                         >
-                          <AccessTimeIcon fontSize="inherit" />
-                          {formatDate(item.created_at)}
+                          <Box>
+                            <AccessTimeIcon fontSize="inherit" />
+                            {formatDate(item.created_at)}
+                            {item.updated_at && (
+                              <span style={{ marginLeft: 12 }}>
+                                (Updated {formatDate(item.updated_at)})
+                              </span>
+                            )}
+                          </Box>
+                          {isOwner && onEdit && (
+                            <IconButton
+                              size="small"
+                              onClick={() => onEdit(item)}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          )}
                         </Typography>
-                      </Stack>
+                      </Grid>
 
-                      <Typography variant="h5" fontWeight={900}>
-                        {item.progress_header}
-                      </Typography>
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        {img && (
+                          <Box
+                            component="img"
+                            src={img}
+                            alt={item.progress_header}
+                            sx={{
+                              width: "100%",
+                              maxHeight: 200,
+                              objectFit: "cover",
+                              borderRadius: 2,
+                              display: "block",
+                            }}
+                          />
+                        )}
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <Stack spacing={1}>
+                          <Typography variant="h5" fontWeight={900}>
+                            {item.progress_header}
+                          </Typography>
 
-                      {img && (
-                        <Box
-                          component="img"
-                          src={img}
-                          alt={item.progress_header}
-                          sx={{
-                            width: "100%",
-                            maxHeight: 400,
-                            objectFit: "contain", // Use contain for user clarity, or cover for aesthetics. Let's start with cover but maxheight.
-                            borderRadius: 2,
-                            bgcolor: "grey.100",
-                          }}
-                        />
-                      )}
-
-                      {item.progress_description && (
-                        <Typography
-                          sx={{
-                            whiteSpace: "pre-line",
-                            color: "text.secondary",
-                          }}
-                        >
-                          {item.progress_description}
-                        </Typography>
-                      )}
-
-                      {/* If multiple images, show gallery? For now, just show first one as per simple implementation. 
-                            If we want to support multiple, we can check item.images.length > 1.
-                        */}
-                    </Stack>
+                          {item.progress_description && (
+                            <Typography
+                              sx={{
+                                whiteSpace: "pre-line",
+                                color: "text.secondary",
+                              }}
+                            >
+                              {item.progress_description}
+                            </Typography>
+                          )}
+                        </Stack>
+                      </Grid>
+                    </Grid>
                   </Box>
                 </Box>
               );

@@ -20,7 +20,14 @@ export default function PostDetailTabs({ sections, stickyTop = 64 }: Props) {
   if (!sections?.length) return null;
 
   return (
-    <Box sx={{ mt: 4, bgcolor: "white", borderRadius: 2 }}>
+    <Box
+      sx={{
+        mt: 4,
+        bgcolor: "white",
+        borderRadius: 4,
+        boxShadow: "0 8px 40px rgba(0,0,0,0.08)",
+      }}
+    >
       <Box
         sx={{
           position: "sticky",
@@ -37,17 +44,26 @@ export default function PostDetailTabs({ sections, stickyTop = 64 }: Props) {
           variant="scrollable"
           scrollButtons="auto"
           sx={{
+            px: 2,
             "& .MuiTab-root": {
               textTransform: "none",
               fontWeight: 800,
               minHeight: 48,
+              fontSize: 16,
+              mr: 4, // Increase spacing between tabs
+              color: "text.secondary",
+              "&:hover": { color: "primary.main" },
             },
-            "& .MuiTabs-indicator": { bgcolor: "#e91e63" },
-            "& .Mui-selected": { color: "#e91e63 !important" },
+            "& .MuiTabs-indicator": {
+              bgcolor: "#18C59B", // Match primary color
+              height: 3,
+              borderRadius: "3px 3px 0 0",
+            },
+            "& .Mui-selected": { color: "#18C59B !important" },
           }}
         >
           {sections.map((s) => (
-            <Tab key={s.key} label={s.label} />
+            <Tab key={s.key} label={s.label} disableRipple />
           ))}
         </Tabs>
       </Box>

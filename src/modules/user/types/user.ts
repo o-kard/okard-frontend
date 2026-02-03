@@ -20,6 +20,12 @@ export type User = {
 
 export type UserPublicResponse = {
   id: string;
+  //TODO:
   username: string;
+  first_name?: string;
+  surname?: string;
+  user_description?: string;
+  campaign_number?: number;
+  contribution_number?: number;
   image: Image | null;
-}
+};
