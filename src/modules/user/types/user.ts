@@ -10,12 +10,15 @@ export type User = {
   surname: string;
   tel: string;
   address: string;
-  user_description: string;
   country_id: string | null;
   country?: string | null;
-  birth_date?: string | null;
+  birth_date?: Date | null;
   role: string | null;
   image?: Image | null;
+  contribution_number: number;
+  status: string;
+  created_at: Date;
+  updated_at: Date;
 };
 
 export type UserPublicResponse = {

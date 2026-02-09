@@ -1,6 +1,6 @@
 "use client";
 
-import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
+import { SignedIn, SignedOut, RedirectToSignIn, useAuth } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { createUser } from "@/modules/user/api/api";
@@ -20,6 +20,7 @@ function UserSetupContent() {
   const router = useRouter();
   const sp = useSearchParams();
   const returnTo = sanitize(sp.get("returnTo"));
+  const { getToken } = useAuth();
 
   const clerk_id = user?.id || null;
   const username = user?.username || null;
@@ -33,7 +34,8 @@ function UserSetupContent() {
 
     const imageFile = fd.get("image") ?? null;
     try {
-      const ok = await createUser(fd);
+      const token = await getToken();
+      const ok = await createUser(fd, token);
       if (ok) {
         if (imageFile instanceof File) {
           await user.setProfileImage({ file: imageFile });
@@ -49,15 +51,12 @@ function UserSetupContent() {
   return (
     <>
       <SignedIn>
-        <div className="max-w-lg mx-auto mt-10">
-          <h1 className="text-2xl font-bold mb-4">Setup your profile</h1>
           <UserForm
             onSubmit={handleSubmit}
             clerk_id={clerk_id}
             username={username}
             email={email}
           />
-        </div>
       </SignedIn>
 
       <SignedOut>

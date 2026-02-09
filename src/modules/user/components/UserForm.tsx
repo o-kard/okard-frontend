@@ -1,5 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Grid, Box, Button, TextField, Typography } from "@mui/material";
+import { useState } from "react";
+import {
+  Grid,
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Avatar,
+  IconButton,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+} from "@mui/material";
+import { Camera, User, Phone, MapPin, X } from "lucide-react";
 import { useCountryOptions } from "@/hooks/useCountryOptions";
 import { SubmitHandler, useForm } from "react-hook-form";
 
@@ -37,23 +50,22 @@ export default function UserForm({
   username,
   email,
 }: Props) {
-  const { control, register, handleSubmit, setValue, watch } =
-    useForm<FormValues>({
-      defaultValues: {
-        clerk_id: "",
-        email: null,
-        username: "",
-        first_name: "",
-        middle_name: null,
-        surname: "",
-        tel: "",
-        address: "",
-        user_description: null,
-        country_id: "",
-        birth_date: null,
-        user_image: null,
-      },
-    });
+  const { register, handleSubmit, setValue } = useForm<FormValues>({
+    defaultValues: {
+      clerk_id: "",
+      email: null,
+      username: "",
+      first_name: "",
+      middle_name: null,
+      surname: "",
+      tel: "",
+      address: "",
+      user_description: null,
+      country_id: "",
+      birth_date: null,
+      user_image: null,
+    },
+  });
 
   const [submitting, setSubmitting] = useState(false);
   const [imagePreviewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -70,6 +82,7 @@ export default function UserForm({
 
   const handleFormSubmit: SubmitHandler<FormValues> = async (values) => {
     try {
+      setSubmitting(true);
       const fd = new FormData();
 
       const payload = {
@@ -102,141 +115,298 @@ export default function UserForm({
 
   return (
     <Box
-      component="form"
-      onSubmit={handleSubmit(handleFormSubmit)}
       sx={{
-        maxWidth: 600,
+        maxWidth: 900,
         mx: "auto",
-        p: 4,
-        borderRadius: 3,
-        boxShadow: 2,
-        bgcolor: "background.paper",
+        py: 6,
       }}
     >
-      <Typography variant="h4" fontWeight={700} mb={3} textAlign="center">
-        Set Up Your Profile
-      </Typography>
-
-      {/* Name Fields */}
-      <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
-        <TextField
-          label="First Name"
-          fullWidth
-          {...register("first_name", { required: true })}
-        />
-        <TextField label="Middle Name" fullWidth {...register("middle_name")} />
-        <TextField
-          label="Surname"
-          fullWidth
-          {...register("surname", { required: true })}
-        />
+      {/* Header */}
+      <Box sx={{ textAlign: "center", mb: 4 }}>
+        <Typography variant="h4" fontWeight={700} sx={{ mb: 1 }}>
+          Set Up Your Profile
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Tell us a bit about yourself to get started
+        </Typography>
       </Box>
 
-      {/* Address and Tel */}
-      <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
-        <TextField
-          label="Address"
-          fullWidth
-          {...register("address", { required: true })}
-        />
-        <TextField
-          label="Tel"
-          fullWidth
-          {...register("tel", { required: true })}
-        />
-      </Box>
+      {/* Profile Image Upload */}
 
-      {/* Country and Birth Date */}
-      <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
-        <Box flex={1}>
-          <Typography mb={1}>Country</Typography>
-          <select
-            {...register("country_id", { required: "Please select country" })}
-            className="border rounded px-3 py-2 w-full"
-            disabled={countryLoading}
-          >
-            <option value="">
-              {countryLoading ? "Loading..." : "— Select Country —"}
-            </option>
-            {countryOptions.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-          {countryError && (
-            <Typography color="error" variant="caption">
-              {countryError}
-            </Typography>
-          )}
-        </Box>
-        <TextField
-          label="Birth Date"
-          type="date"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-          {...register("birth_date")}
-        />
-      </Box>
 
-      {/* Profile Image */}
-      <Box mb={2}>
-        <Typography mb={1}>Profile Image</Typography>
-        {imagePreviewUrl && (
-          <Box mb={1}>
-            <img
-              src={imagePreviewUrl}
-              alt="preview"
-              style={{
-                width: 200,
-                height: 200,
-                objectFit: "cover",
-                borderRadius: 8,
-                border: "1px solid #ccc",
+      {/* Form */}
+      <Box
+        component="form"
+        onSubmit={handleSubmit(handleFormSubmit)}
+        sx={{
+          bgcolor: "white",
+          borderRadius: 4,
+          p: 4,
+          boxShadow: "0 2px 24px rgba(0, 0, 0, 0.08)",
+          border: "1px solid",
+          borderColor: "grey.300",
+        }}
+      >
+        <Box sx={{ display: "flex", justifyContent: "center", mb: 4 }}>
+          <Box sx={{ position: "relative" }}>
+            <Box
+              component="label"
+              sx={{
+                cursor: "pointer",
+                display: "inline-block",
+                position: "relative",
+                "&:hover": { opacity: 0.9 },
               }}
-            />
+            >
+              <Avatar
+                src={imagePreviewUrl || undefined}
+                sx={{
+                  width: 120,
+                  height: 120,
+                  border: "3px dashed",
+                  borderColor: imagePreviewUrl ? "primary.main" : "grey.300",
+                  bgcolor: imagePreviewUrl ? "transparent" : "grey.100",
+                }}
+              >
+                {!imagePreviewUrl && <Camera size={40} color="#9e9e9e" />}
+              </Avatar>
+              <input
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={handleFilesChange}
+              />
+            </Box>
+
+            <IconButton
+              component="label"
+              sx={{
+                position: "absolute",
+                bottom: 0,
+                right: 0,
+                bgcolor: "primary.main",
+                color: "white",
+                width: 36,
+                height: 36,
+                "&:hover": {
+                  bgcolor: "primary.dark",
+                },
+              }}
+            >
+              <Camera size={18} />
+              <input
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={handleFilesChange}
+              />
+            </IconButton>
+
+            {imagePreviewUrl && (
+              <IconButton
+                onClick={() => {
+                  setPreviewUrl(null);
+                  setValue("user_image", null);
+                }}
+                sx={{
+                  position: "absolute",
+                  top: 0,
+                  right: 0,
+                  bgcolor: "error.main",
+                  color: "white",
+                  width: 28,
+                  height: 28,
+                  "&:hover": {
+                    bgcolor: "error.dark",
+                  },
+                }}
+              >
+                <X size={16} />
+              </IconButton>
+            )}
           </Box>
-        )}
-        <Box display="flex" gap={2}>
-          <Button
-            variant="outlined"
-            onClick={() => {
-              setPreviewUrl(null);
-              setValue("user_image", null);
-            }}
-          >
-            Clear Image
-          </Button>
-          <Button variant="outlined" component="label">
-            Upload Image
-            <input
-              type="file"
-              hidden
-              accept="image/*"
-              onChange={handleFilesChange}
-            />
-          </Button>
         </Box>
-      </Box>
+        {/* Personal Information Section */}
+        <Box sx={{ mb: 4 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: "50%",
+                bgcolor: "#ffe0f0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <User size={20} color="#e91e63" />
+            </Box>
+            <Typography variant="h6" fontWeight={600}>
+              Personal Information
+            </Typography>
+          </Box>
 
-      {/* Description */}
-      <TextField
-        label="Description"
-        fullWidth
-        multiline
-        rows={3}
-        {...register("user_description")}
-      />
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <TextField
+                label="First Name"
+                fullWidth
+                required
+                size="small"
+                {...register("first_name", { required: true })}
+                sx={{ bgcolor: "white" }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <TextField
+                label="Middle Name"
+                fullWidth
+                size="small"
+                {...register("middle_name")}
+                sx={{ bgcolor: "white" }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <TextField
+                label="Surname"
+                fullWidth
+                required
+                size="small"
+                {...register("surname", { required: true })}
+                sx={{ bgcolor: "white" }}
+              />
+            </Grid>
+          </Grid>
+        </Box>
 
-      {/* Buttons */}
-      <Box display="flex" justifyContent="flex-end" gap={2} mt={3}>
-        {onCancel && (
-          <Button variant="outlined" onClick={onCancel}>
-            Cancel
-          </Button>
-        )}
-        <Button type="submit" variant="contained" disabled={submitting}>
-          {submitting ? "Saving..." : "Save"}
+        {/* Contact Details Section */}
+        <Box sx={{ mb: 4 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: "50%",
+                bgcolor: "#fff9e0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Phone size={20} color="#ffa000" />
+            </Box>
+            <Typography variant="h6" fontWeight={600}>
+              Contact Details
+            </Typography>
+          </Box>
+
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="Phone Number"
+                fullWidth
+                required
+                size="small"
+                {...register("tel", { required: true })}
+                sx={{ bgcolor: "white" }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="Birth Date"
+                type="date"
+                fullWidth
+                size="small"
+                InputLabelProps={{ shrink: true }}
+                {...register("birth_date")}
+                sx={{ bgcolor: "white" }}
+              />
+            </Grid>
+          </Grid>
+        </Box>
+
+        {/* Location Section */}
+        <Box sx={{ mb: 4 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: "50%",
+                bgcolor: "#e0f5e9",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <MapPin size={20} color="#4caf50" />
+            </Box>
+            <Typography variant="h6" fontWeight={600}>
+              Location
+            </Typography>
+          </Box>
+
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth size="small" required>
+                <InputLabel>Country</InputLabel>
+                <Select
+                  label="Country"
+                  defaultValue=""
+                  {...register("country_id", {
+                    required: "Please select country",
+                  })}
+                  disabled={countryLoading}
+                  sx={{ bgcolor: "white" }}
+                >
+                  <MenuItem value="">
+                    {countryLoading ? "Loading..." : "— Select Country —"}
+                  </MenuItem>
+                  {countryOptions.map((c) => (
+                    <MenuItem key={c.value} value={c.value}>
+                      {c.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {countryError && (
+                <Typography color="error" variant="caption" sx={{ mt: 0.5 }}>
+                  {countryError}
+                </Typography>
+              )}
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="Address"
+                fullWidth
+                required
+                size="small"
+                {...register("address", { required: true })}
+                sx={{ bgcolor: "white" }}
+              />
+            </Grid>
+          </Grid>
+        </Box>
+
+        {/* Submit Button */}
+        <Button
+          type="submit"
+          variant="contained"
+          fullWidth
+          disabled={submitting}
+          sx={{
+            py: 1.5,
+            textTransform: "uppercase",
+            fontWeight: 600,
+            fontSize: "0.9rem",
+            bgcolor: "#1976d2",
+            "&:hover": {
+              bgcolor: "#1565c0",
+            },
+          }}
+        >
+          {submitting ? "Saving..." : "Complete Setup"}
         </Button>
       </Box>
     </Box>

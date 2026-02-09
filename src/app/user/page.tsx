@@ -46,7 +46,7 @@ import ProfilePanel from "@/modules/user/components/UserShowPanel";
 import EditPanel from "@/modules/user/components/UserEditPanel";
 import ContributionsPanel from "@/modules/user/components/UserContributionsPanel";
 import CampaignsPanel from "@/modules/user/components/UserCampaignsPanel";
-import { getUserById, updateUser } from "@/modules/user/api/api";
+import { getUser, updateUser } from "@/modules/user/api/api";
 import {
   isClerkAPIResponseError,
   isClerkRuntimeError,
@@ -316,14 +316,18 @@ function UserContent() {
     let abort = false;
     (async () => {
       try {
-        const r = await getUserById(user.id);
         const token = await getToken();
+        if (!token) throw new Error("No token available");
+        const r = await getUser(token);
         console.log("Clerk token:", token);
         if (r) {
           console.log("Fetched user profile:", r);
           if (!abort) setProfile(r);
         }
-      } catch { }
+        // router.replace("/");
+      } catch (err) {
+        console.error("Failed to fetch user with token:", err);
+      }
     })();
     return () => {
       abort = true;
@@ -408,8 +412,11 @@ function UserContent() {
           await user.setProfileImage({ file: pendingAvatar.file });
         if (pendingAvatar?.clear) await user.setProfileImage({ file: null });
         await user.reload();
-        const refreshed = await getUserById(user.id);
-        setProfile(refreshed);
+        const token = await getToken();
+        if (token) {
+          const refreshed = await getUser(token);
+          setProfile(refreshed);
+        }
 
         router.replace(buildTabHref("profile"));
       }
