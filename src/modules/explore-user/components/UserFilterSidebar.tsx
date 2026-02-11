@@ -18,9 +18,10 @@ interface UserFilterSidebarProps {
     selectedRole: string;
     onRoleChange: (value: string) => void;
     hideSearch?: boolean;
+    onClose?: () => void;
 }
 
-export default function UserFilterSidebar({ searchQuery, onSearchChange, selectedRole, onRoleChange, hideSearch = false }: UserFilterSidebarProps) {
+export default function UserFilterSidebar({ searchQuery, onSearchChange, selectedRole, onRoleChange, hideSearch = false, onClose }: UserFilterSidebarProps) {
     return (
         <Box
             sx={{
@@ -77,7 +78,10 @@ export default function UserFilterSidebar({ searchQuery, onSearchChange, selecte
 
             <RadioGroup
                 value={selectedRole}
-                onChange={(e) => onRoleChange(e.target.value)}
+                onChange={(e) => {
+                    onRoleChange(e.target.value);
+                    if (onClose) onClose();
+                }}
                 name="role-radio-group"
             >
                 <FormControlLabel
@@ -91,7 +95,7 @@ export default function UserFilterSidebar({ searchQuery, onSearchChange, selecte
                     label={<Typography variant="body2">Creators</Typography>}
                 />
                 <FormControlLabel
-                    value="supporter"
+                    value="user"
                     control={<Radio size="small" sx={{ color: "#12C998", '&.Mui-checked': { color: "#12C998" } }} />}
                     label={<Typography variant="body2">Backers</Typography>}
                 />

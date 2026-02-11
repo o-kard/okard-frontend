@@ -41,6 +41,7 @@ import { getAllPosts } from "./api/api";
 import { Post } from "../post/types/post";
 import { CATEGORIES_LIST } from "../home/utils/categoryColors";
 import { useUser } from "@clerk/nextjs";
+import CustomUserButton from "./CustomUserButton";
 
 const NotificationComponent = dynamic(
   () => import("@/modules/notification/NotificationComponent"),
@@ -50,11 +51,12 @@ const NotificationComponent = dynamic(
 
 
 export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
-  const { openSignIn, openSignUp } = useClerk();
+  const { openSignIn, openSignUp, signOut } = useClerk();
 
   const [isHovered, setIsHovered] = useState(false);
 
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const [popularPosts, setPopularPosts] = useState<Post[]>([])
 
@@ -103,6 +105,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
   useEffect(() => {
     setIsHovered(false);
     setMobileOpen(false);
+    setIsSearchOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -135,16 +138,10 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
         <SignedIn>
           <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
             <Box sx={{ mb: 1 }}>
-              <UserButton
-                appearance={{
-                  elements: {
-                    userButtonAvatarBox: { width: 64, height: 64 },
-                  }
-                }}
-              />
+              <CustomUserButton size={64} />
             </Box>
             <Typography variant="h6" fontWeight="bold">
-              {user?.fullName || "Welcome back"}
+              {"WELCOME BACK !"}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {user?.username ? `@${user.username}` : ""}
@@ -232,22 +229,41 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
           START A CAMPAIGN
         </Button>
 
+        <SignedIn>
+          <Button
+            variant="outlined"
+            color="error"
+            fullWidth
+            sx={{ borderRadius: 3, py: 1.25, fontWeight: "bold" }}
+            onClick={() => {
+              signOut();
+              setMobileOpen(false);
+            }}
+          >
+            Sign Out
+          </Button>
+        </SignedIn>
+
         <SignedOut>
           <Box display="flex" gap={2}>
             <Button
+              component={NextLink}
+              href="/sign-in"
               variant="outlined"
               color="inherit"
               fullWidth
               sx={{ borderRadius: 3, py: 1.25, borderColor: "#ddd" }}
-              onClick={() => { setMobileOpen(false); openSignIn({}); }}
+              onClick={() => setMobileOpen(false)}
             >
               Login
             </Button>
             <Button
+              component={NextLink}
+              href="/sign-up"
               variant="contained"
               fullWidth
               sx={{ borderRadius: 3, bgcolor: "black", color: "white", py: 1.25, fontWeight: "bold" }}
-              onClick={() => { setMobileOpen(false); openSignUp({}); }}
+              onClick={() => setMobileOpen(false)}
             >
               Sign Up
             </Button>
@@ -263,11 +279,13 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
         position="absolute"
         elevation={0}
         onMouseEnter={() => {
-          setIsHovered(true);
-          setLastMoveTime(Date.now());
+          if (!isSearchOpen) {
+            setIsHovered(true);
+            setLastMoveTime(Date.now());
+          }
         }}
         onMouseLeave={() => {
-          // ไม่ปิดทันที เพราะอาจไป hover mega navbar ต่อ
+          setIsHovered(false);
         }}
         sx={{
           top: 0,
@@ -288,14 +306,14 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
           transition: "all 0.3s ease",
           height: {
             xs: "64px",
-            md: isHovered ? "auto" : "70px",
-            lg: isHovered ? "auto" : "70px"
+            md: "70px",
+            lg: "70px"
           },
           paddingBottom: isHovered ? { md: 0.5 } : 0,
-          overflow: "hidden",
+          overflow: "visible",
           borderRadius: {
             xs: "none",
-            md: isHovered ? "0 0 24px 24px" : "none"
+            // md: isHovered ? "0 0 24px 24px" : "none"
           },
         }}
       >
@@ -333,10 +351,12 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
             </Typography>
             <Box>
               <SignedIn>
-                <UserButton />
+                <CustomUserButton />
               </SignedIn>
               <SignedOut>
                 <Button variant="outlined"
+                  component={NextLink}
+                  href="/sign-in"
                   sx={{
                     borderRadius: 2,
                     borderColor: "white",
@@ -350,7 +370,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                       borderWidth: 2
                     }
                   }}
-                  onClick={() => openSignIn({})}>Login</Button>
+                  onClick={() => setMobileOpen(false)}>Login</Button>
               </SignedOut>
             </Box>
           </Grid>
@@ -362,12 +382,11 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
           <Box sx={{ display: { xs: "none", md: "block" }, height: "100%" }}>
             <Grid container alignItems="center" sx={{ height: "70px" }}>
               <Grid
-                size={{ xs: 4, md: 4 }}
+                size={{ xs: 4, md: 3 }}
                 sx={{
                   display: "flex",
-                  justifyContent: { xs: "center", md: "flex-start", lg: "center" },
+                  justifyContent: { xs: "center", md: "flex-start", lg: "flex-start" },
                   alignItems: "center",
-                  gap: { xs: 2, md: 1, lg: 4 },
                   pl: { md: 2, lg: 0 }
                 }}
               >
@@ -387,9 +406,27 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                   }}
                 >
                   <img src="/Logo_sun.svg" alt="Logo" width="40" height="40" style={{ marginRight: '8px' }} />
-                  kard
+                  <Box component="span" sx={{ display: { xs: "none", md: "inline", lg: "inline" } }}>
+                    kard
+                  </Box>
                 </Typography>
+              </Grid>
 
+              <Grid
+                size={{ xs: 4, md: 6 }}
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: { xs: 2, md: 2, lg: 4 },
+                }}
+              >
+                <IconButton sx={{ backgroundColor: isSearchOpen ? "rgba(0, 0, 0, 0.1)" : "transparent", backdropFilter: isSearchOpen ? "blur(4px)" : "none" }} onClick={() => {
+                  setIsSearchOpen(!isSearchOpen);
+                  if (!isSearchOpen) setIsHovered(false);
+                }}>
+                  <SearchIcon sx={{ color: isHome ? (isHovered ? "black" : "white") : "black" }} />
+                </IconButton>
                 <Button
                   component={NextLink}
                   href="/post"
@@ -398,6 +435,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                     fontFamily: "var(--font-montserrat)",
                     fontSize: { xs: "1rem", md: "1rem", lg: "1.2rem" },
                     textTransform: "none",
+                    whiteSpace: "nowrap",
                     "&:hover": {
                       border: "none",
                       color: "#12C998",
@@ -446,24 +484,12 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
               </Grid>
 
               <Grid
-                size={{ xs: 4, md: 4 }}
+                size={{ xs: 4, md: 3 }}
                 sx={{
                   display: "flex",
-                  justifyContent: "center",
+                  justifyContent: { xs: "center", md: "flex-end", lg: "flex-end" },
                   alignItems: "center",
-                  zIndex: 999
-                }}
-              >
-                <SearchBar isHome={isHome} closeMegaMenu={() => setIsHovered(false)} />
-              </Grid>
-
-              <Grid
-                size={{ xs: 4, md: 4 }}
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: 2,
+                  gap: { xs: 2, md: 2, lg: 2 },
                 }}
               >
                 <Button
@@ -472,12 +498,16 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                   variant="contained"
                   color="success"
                   size="medium"
-                  sx={{ borderRadius: 2, whiteSpace: "nowrap" }}
+                  sx={{
+                    borderRadius: 2,
+                    whiteSpace: "nowrap",
+                    px: { md: 4, lg: 3 }
+                  }}
                 >
                   <Typography
                     sx={{
                       fontFamily: "var(--font-montserrat)",
-                      fontSize: "0.9rem",
+                      fontSize: { xs: "0.9rem", md: "0.7rem", lg: "0.9rem" },
                       fontWeight: 500,
                     }}
                   >
@@ -492,11 +522,13 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                 <SignedOut>
                   <Box display="flex" gap={2}>
                     <Button
+                      component={NextLink}
+                      href="/sign-in"
                       variant="text"
                       sx={{
                         color: isHovered ? "black" : isHome ? "white" : "black",
                         fontFamily: "var(--font-montserrat)",
-                        fontSize: "1.2rem",
+                        fontSize: { xs: "1rem", md: "0.9rem", lg: "1.2rem" },
                         textTransform: "none",
                         whiteSpace: "nowrap",
                         "&:hover": {
@@ -505,16 +537,17 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                           backgroundColor: "transparent"
                         }
                       }}
-                      onClick={() => openSignIn({})}
+                      onClick={() => setMobileOpen(false)}
                     >
                       Login
                     </Button>
                     <Button
-                      variant="text"
+                      component={NextLink}
+                      href="/sign-up"
                       sx={{
                         color: isHovered ? "black" : isHome ? "white" : "black",
                         fontFamily: "var(--font-montserrat)",
-                        fontSize: "1.2rem",
+                        fontSize: { xs: "1rem", md: "0.9rem", lg: "1.2rem" },
                         textTransform: "none",
                         whiteSpace: "nowrap",
                         "&:hover": {
@@ -523,7 +556,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                           backgroundColor: "transparent"
                         }
                       }}
-                      onClick={() => openSignUp({})}
+                      onClick={() => setMobileOpen(false)}
                     >
                       Sign Up
                     </Button>
@@ -531,18 +564,30 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                 </SignedOut>
 
                 <SignedIn>
-                  <UserButton
-                    userProfileMode="navigation"
-                    userProfileUrl="/user"
-                    appearance={{
-                      elements: {
-                        avatarBox: { width: "40px", height: "40px" },
-                      },
-                    }}
-                  />
+                  <CustomUserButton />
                 </SignedIn>
               </Grid>
             </Grid>
+
+            {/* Floating Search Bar */}
+            {isSearchOpen && (
+              <Box sx={{
+                position: "absolute",
+                top: "100%", // Just below Navbar
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: "600px", // Fixed width as requested "large"
+                maxWidth: "90vw",
+                zIndex: 1200,
+                pointerEvents: "auto", // Ensure interactivity
+                bgcolor: "transparent", // No full width bg
+                mt: 2, // Slight gap from navbar
+                boxShadow: "0 10px 40px rgba(0,0,0,0.1)", // Shadow on the bar container itself
+                borderRadius: 4
+              }}>
+                <SearchBar isHome={isHome} closeMegaMenu={() => setIsSearchOpen(false)} />
+              </Box>
+            )}
 
             {/* ================= MEGA MENU CONTENT (Desktop Only) ================= */}
             <Box
@@ -554,17 +599,27 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                 setIsHovered(false);
               }}
               sx={{
-                transition: "opacity 0.3s ease 0.1s, transform 0.3s ease",
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                width: "100%",
+                zIndex: 1100,
+                transition: `opacity 0.3s ease, transform 0.3s ease, visibility 0s linear ${isHovered ? "0s" : "0.3s"}`,
                 px: 8,
+                pb: 4,
+                pt: 2,
                 color: "black",
                 opacity: isHovered ? 1 : 0,
                 pointerEvents: isHovered ? "auto" : "none",
-                bgcolor: "white"
+                visibility: isHovered ? "visible" : "hidden",
+                bgcolor: "white",
+                borderRadius: "0 0 24px 24px",
+                boxShadow: "0 15px 40px rgba(0, 0, 0, 0.1)"
               }}
             >
               <Box sx={{
                 transition: "opacity 0.3s ease 0.1s, transform 0.3s ease",
-                pt: 2, pb: 4, px: 8,
+                px: 8,
                 color: "black",
               }}>
                 <Box
@@ -754,7 +809,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
           </Box>
 
         </Container>
-      </AppBar>
+      </AppBar >
 
       {/*DRAWER COMPONENT (Mobile Slide Menu) */}
       <Drawer

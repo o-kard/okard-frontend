@@ -48,8 +48,10 @@ import EditPanel from "@/modules/user/components/UserEditPanel";
 import ContributionsPanel from "@/modules/user/components/UserContributionsPanel";
 import CampaignsPanel from "@/modules/user/components/UserCampaignsPanel";
 import { getUser, updateUser } from "@/modules/user/api/api";
-import { updateCreator } from "@/modules/creator/api/api";
+import { fetchPosts } from "@/modules/post/api/api";
+import { Post } from "@/modules/post/types/post";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
+import { updateCreator } from "@/modules/creator/api/api";
 import { useRequireUserInDb } from "@/hooks/useRequireUserDb";
 import { useUpdateUsername } from "@/hooks/useUpdateUsername";
 import {
@@ -96,6 +98,8 @@ function UserContent() {
   const { getToken } = useAuth();
 
   const [profile, setProfile] = useState<any | null>(null);
+  const [campaigns, setCampaigns] = useState<Post[]>([]);
+  const [campaignsLoading, setCampaignsLoading] = useState(true);
 
   // Username management
   const { updateUsername } = useUpdateUsername();
@@ -274,9 +278,20 @@ function UserContent() {
           console.log("Fetched user profile:", r);
           if (!abort) setProfile(r);
         }
+
+        // Fetch campaigns
+        if (user?.id) {
+          const userCampaigns = await fetchPosts(undefined, undefined, "newest", "all", "active", user.id);
+          if (!abort) {
+            setCampaigns(userCampaigns || []);
+            setCampaignsLoading(false);
+          }
+        }
+
         // router.replace("/");
       } catch (err) {
-        console.error("Failed to fetch user with token:", err);
+        console.error("Failed to fetch user or campaigns:", err);
+        if (!abort) setCampaignsLoading(false);
       }
     })();
     return () => {
@@ -575,12 +590,12 @@ function UserContent() {
 
             {/* Main content area (same page; only component changes) */}
             <Grid size={{ xs: 12, md: 9, lg: 9 }}>
-              {tab === "profile" && <ProfilePanel />}
+              {tab === "profile" && <ProfilePanel campaignCount={campaigns.length} />}
               {tab === "edit" && (
                 <EditPanel onSubmit={handleEditSubmit} initial={profile} />
               )}
               {tab === "contributions" && <ContributionsPanel />}
-              {tab === "campaigns" && <CampaignsPanel />}
+              {tab === "campaigns" && <CampaignsPanel campaigns={campaigns} loading={campaignsLoading} />}
             </Grid>
           </Grid>
         </MuiBox>

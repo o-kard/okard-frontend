@@ -54,8 +54,14 @@ export default function SideFilters(props: Props) {
   return (
     <Box
       sx={{
-        p: 2,
+        p: 3,
         position: { md: "sticky" },
+        top: { md: 100 },
+        background: "rgba(255, 255, 255, 0.7)",
+        backdropFilter: "blur(10px)",
+        borderRadius: 4,
+        border: "1px solid rgba(255, 255, 255, 0.3)",
+        boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
       }}
     >
       <Typography variant="body2" fontWeight={600} sx={{ mb: 2 }}>
@@ -63,14 +69,14 @@ export default function SideFilters(props: Props) {
       </Typography>
 
       <RadioGroup value={viewMode} onChange={(e) => onViewModeChange(e.target.value as ViewMode)} sx={{ mb: 2 }}>
-        <FormControlLabel value="popular" control={<Radio size="small" />} label={<Typography variant="body2">Explore All</Typography>} />
-        <FormControlLabel value="recommended" control={<Radio size="small" />} label={<Typography variant="body2">For You</Typography>} />
+        <FormControlLabel value="popular" control={<Radio size="small" sx={{ color: "#12C998", '&.Mui-checked': { color: "#12C998" } }} />} label={<Typography variant="body2">Explore All</Typography>} />
+        <FormControlLabel value="recommended" control={<Radio size="small" sx={{ color: "#12C998", '&.Mui-checked': { color: "#12C998" } }} />} label={<Typography variant="body2">For You</Typography>} />
       </RadioGroup>
 
       <Divider sx={{ my: 1 }} />
 
       {/* Sort Accordion */}
-      <Accordion defaultExpanded disableGutters elevation={0} sx={{ '&:before': { display: 'none' } }}>
+      <Accordion defaultExpanded disableGutters elevation={0} sx={{ '&:before': { display: 'none' }, background: 'transparent' }}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0 }}>
           <Typography variant="body2" fontWeight={600}>Sort By</Typography>
         </AccordionSummary>
@@ -79,10 +85,10 @@ export default function SideFilters(props: Props) {
             value={props.sort || "popular"}
             onChange={(e) => props.onSortChange?.(e.target.value)}
           >
-            <FormControlLabel value="popular" control={<Radio size="small" />} label={<Typography variant="body2">Most Popular</Typography>} />
-            <FormControlLabel value="newest" control={<Radio size="small" />} label={<Typography variant="body2">Newest</Typography>} />
-            <FormControlLabel value="ending_soon" control={<Radio size="small" />} label={<Typography variant="body2">Ending Soon</Typography>} />
-            <FormControlLabel value="updated" control={<Radio size="small" />} label={<Typography variant="body2">Recently Updated</Typography>} />
+            <FormControlLabel value="popular" control={<Radio size="small" sx={{ color: "#12C998", '&.Mui-checked': { color: "#12C998" } }} />} label={<Typography variant="body2">Most Popular</Typography>} />
+            <FormControlLabel value="newest" control={<Radio size="small" sx={{ color: "#12C998", '&.Mui-checked': { color: "#12C998" } }} />} label={<Typography variant="body2">Newest</Typography>} />
+            <FormControlLabel value="ending_soon" control={<Radio size="small" sx={{ color: "#12C998", '&.Mui-checked': { color: "#12C998" } }} />} label={<Typography variant="body2">Ending Soon</Typography>} />
+            <FormControlLabel value="updated" control={<Radio size="small" sx={{ color: "#12C998", '&.Mui-checked': { color: "#12C998" } }} />} label={<Typography variant="body2">Recently Updated</Typography>} />
           </RadioGroup>
         </AccordionDetails>
       </Accordion>
@@ -90,7 +96,7 @@ export default function SideFilters(props: Props) {
       <Divider sx={{ my: 1 }} />
 
       {/* Category Accordion */}
-      <Accordion disableGutters elevation={0} sx={{ '&:before': { display: 'none' } }}>
+      <Accordion disableGutters elevation={0} sx={{ '&:before': { display: 'none' }, background: 'transparent' }}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0 }}>
           <Typography variant="body2" fontWeight={600}>Category</Typography>
         </AccordionSummary>
@@ -120,7 +126,7 @@ export default function SideFilters(props: Props) {
       <Divider sx={{ my: 1 }} />
 
       {/* Status Accordion */}
-      <Accordion disableGutters elevation={0} sx={{ '&:before': { display: 'none' } }}>
+      <Accordion disableGutters elevation={0} sx={{ '&:before': { display: 'none' }, background: 'transparent' }}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0 }}>
           <Typography variant="body2" fontWeight={600}>Status & Timing</Typography>
         </AccordionSummary>
@@ -129,10 +135,10 @@ export default function SideFilters(props: Props) {
             value={timing}
             onChange={(e) => onTimingChange(e.target.value as Timing)}
           >
-            <FormControlLabel value="all" control={<Radio size="small" />} label={<Typography variant="body2">All Status</Typography>} />
-            <FormControlLabel value="draft" control={<Radio size="small" />} label={<Typography variant="body2">Draft</Typography>} />
-            <FormControlLabel value="published" control={<Radio size="small" />} label={<Typography variant="body2">Published</Typography>} />
-            <FormControlLabel value="archived" control={<Radio size="small" />} label={<Typography variant="body2">Archived</Typography>} />
+            <FormControlLabel value="all" control={<Radio size="small" sx={{ color: "#12C998", '&.Mui-checked': { color: "#12C998" } }} />} label={<Typography variant="body2">All Status</Typography>} />
+            <FormControlLabel value="draft" control={<Radio size="small" sx={{ color: "#12C998", '&.Mui-checked': { color: "#12C998" } }} />} label={<Typography variant="body2">Draft</Typography>} />
+            <FormControlLabel value="published" control={<Radio size="small" sx={{ color: "#12C998", '&.Mui-checked': { color: "#12C998" } }} />} label={<Typography variant="body2">Published</Typography>} />
+            <FormControlLabel value="archived" control={<Radio size="small" sx={{ color: "#12C998", '&.Mui-checked': { color: "#12C998" } }} />} label={<Typography variant="body2">Archived</Typography>} />
           </RadioGroup>
 
           <Box mt={2}>
@@ -141,6 +147,7 @@ export default function SideFilters(props: Props) {
                 control={
                   <Checkbox
                     size="small"
+                    sx={{ color: "#12C998", '&.Mui-checked': { color: "#12C998" } }}
                     checked={includeClosed}
                     onChange={(e) => onToggleClosed(e.target.checked)}
                   />

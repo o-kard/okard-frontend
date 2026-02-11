@@ -51,7 +51,10 @@ const getSocialIcon = (platform: string) => {
 };
 
 // Profile (read-only)
-export default function ProfilePanel() {
+interface ProfilePanelProps {
+  campaignCount?: number;
+}
+export default function ProfilePanel({ campaignCount }: ProfilePanelProps) {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
   const [profile, setProfile] = useState<any | null>(null);
@@ -296,7 +299,7 @@ export default function ProfilePanel() {
                   <CampaignIcon sx={{ color: "#fff" }} />
                 </Box>
                 <Typography variant="h4" fontWeight={700}>
-                  {profile?.campaignCount ?? 0}
+                  {campaignCount ?? profile?.campaignCount ?? 0}
                 </Typography>
               </Stack>
               <Typography color="text.secondary">My Campaign(s)</Typography>

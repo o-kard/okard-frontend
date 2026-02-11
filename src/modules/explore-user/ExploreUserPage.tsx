@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Container, Grid, Typography, Box, CircularProgress, IconButton, Drawer, useMediaQuery, TextField, InputAdornment } from "@mui/material";
+import { Container, Grid, Typography, Box, CircularProgress, IconButton, Drawer, useMediaQuery, TextField, InputAdornment, Pagination } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
 import { listUsers } from "@/modules/user/api/api";
@@ -17,6 +17,13 @@ export default function ExploreUserPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [roleFilter, setRoleFilter] = useState("all");
     const isMdUp = useMediaQuery("(min-width:900px)");
+
+    // Close mobile menu when screen size increases
+    useEffect(() => {
+        if (isMdUp) {
+            setMobileOpen(false);
+        }
+    }, [isMdUp]);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -42,10 +49,21 @@ export default function ExploreUserPage() {
 
         const matchesRole = roleFilter === "all" ||
             (roleFilter === "creator" && user.role?.toLowerCase() === "creator") ||
-            (roleFilter === "supporter" && user.role?.toLowerCase() === "supporter");
+            (roleFilter === "user" && user.role?.toLowerCase() === "user");
 
         return matchesSearch && matchesRole;
     });
+
+    // Pagination
+    const [page, setPage] = useState(1);
+    const usersPerPage = 12;
+    const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+    const paginatedUsers = filteredUsers.slice((page - 1) * usersPerPage, page * usersPerPage);
+
+    // Reset pagination when filter changes
+    useEffect(() => {
+        setPage(1);
+    }, [searchQuery, roleFilter]);
 
     if (loading) {
         return (
@@ -115,11 +133,11 @@ export default function ExploreUserPage() {
 
                 {/* User Grid */}
                 <Grid size={{ xs: 12, md: 9, lg: 9.5 }}>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" mb={2}>
                         Found : {filteredUsers.length} Users
                     </Typography>
                     <Grid container spacing={3}>
-                        {filteredUsers.map((user) => (
+                        {paginatedUsers.map((user) => (
                             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={user.id}>
                                 <UserCard user={user} />
                             </Grid>
@@ -132,6 +150,37 @@ export default function ExploreUserPage() {
                             </Grid>
                         )}
                     </Grid>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <Box display="flex" justifyContent="center" mt={4}>
+                            <Pagination
+                                count={totalPages}
+                                page={page}
+                                onChange={(event, value) => {
+                                    setPage(value);
+                                    window.scrollTo({ top: 0, behavior: "smooth" });
+                                }}
+                                color="primary"
+                                shape="circular"
+                                size="large"
+                                sx={{
+                                    "& .MuiPaginationItem-root": {
+                                        fontWeight: 600,
+                                        color: "#888",
+                                        "&.Mui-selected": {
+                                            bgcolor: "rgba(0, 0, 0, 0.12)",
+                                            color: "#333",
+                                            backdropFilter: "blur(4px)",
+                                            "&:hover": {
+                                                bgcolor: "rgba(0, 0, 0, 0.20)",
+                                            },
+                                        },
+                                    },
+                                }}
+                            />
+                        </Box>
+                    )}
                 </Grid>
             </Grid>
 
@@ -148,6 +197,7 @@ export default function ExploreUserPage() {
                         selectedRole={roleFilter}
                         onRoleChange={setRoleFilter}
                         hideSearch={true}
+                        onClose={() => setMobileOpen(false)}
                     />
                 </Box>
             </Drawer>

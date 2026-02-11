@@ -191,15 +191,16 @@ export default function PostComponent() {
               justifyContent="space-between"
             >
               {!isMdUp && (
-                <IconButton onClick={() => setMobileOpen(true)}>
+                <IconButton onClick={() => setMobileOpen(true)} sx={{ border: '1px solid #ddd', borderRadius: 2 }}>
                   <MenuIcon />
+                  <Typography variant="button" sx={{ ml: 1, fontWeight: 600 }}>Filters</Typography>
                 </IconButton>
               )}
             </Box>
           </Grid>
 
           {isMdUp && (
-            <Grid size={{ xs: 12, md: 3 }}>
+            <Grid py={2} size={{ xs: 12, md: 3 }}>
               <SideFilters
                 categories={categories}
                 selectedCategory={category}

@@ -1,4 +1,4 @@
-import { request } from "@/api/api";
+ import { request } from "@/api/api";
 import { LikeResp, Post, PostComment } from "../types/post";
 
 const API_PATH = "/api/post";
@@ -10,7 +10,8 @@ export const fetchPosts = async (
   searchQuery?: string,
   sort?: string,
   state?: string,
-  status?: string
+  status?: string,
+  clerkId?: string
 ): Promise<Post[]> => {
   const params = new URLSearchParams();
   if (category) params.append("category", category);
@@ -18,6 +19,7 @@ export const fetchPosts = async (
   if (sort) params.append("sort", sort);
   if (state) params.append("state", state);
   if (status) params.append("status", status);
+  if (clerkId) params.append("clerk_id", clerkId);
 
   const qs = params.toString();
   return request<Post[]>(`${API_PATH}?${qs}`);

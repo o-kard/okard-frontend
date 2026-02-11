@@ -149,7 +149,7 @@ function SortableThumb({
   );
 }
 
-const categoryOptions = [
+export const categoryOptions = [
   { value: "art", label: "Art" },
   { value: "comics", label: "Comics" },
   { value: "crafts", label: "Crafts" },

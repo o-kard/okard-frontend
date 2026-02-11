@@ -45,45 +45,45 @@ export default function CategoryDashboardSection() {
 
   return (
     <Box
-    sx={{
+      sx={{
         width: "100%",
-        py: { xs: 6, md: 10 },   
-        
-    }}
+        py: { xs: 6, md: 10 },
+
+      }}
     >
-    <Box
+      <Box
         sx={{
-        width: "100%",
-        maxWidth: "80%",
-        mx: "auto",            
-        px: { xs: 2, md: 0 },
+          width: "100%",
+          maxWidth: { xs: "100%", md: "80%" },
+          mx: "auto",
+          px: { xs: 2, md: 0 },
         }}
-    >
+      >
         <Typography fontSize={{ xs: "2rem", sm: "3rem", md: "3.5rem" }} fontWeight={700} mb={1}>
-            Category Insights
+          Category Insights
         </Typography>
         <Typography color="text.secondary" mb={4}>
-            Compare crowdfunding performance by category
+          Compare crowdfunding performance by category
         </Typography>
 
         <CategorySelector
-            categories={categories}
-            selected={selected}
-            onToggle={toggleCategory}
+          categories={categories}
+          selected={selected}
+          onToggle={toggleCategory}
         />
 
         <SummaryCards stats={filteredStats} />
 
         <Box
-            mt={6}
-            display="grid"
-            gridTemplateColumns={{ xs: "1fr", md: "2fr 1fr" }}
-            gap={4}
+          mt={6}
+          display="grid"
+          gridTemplateColumns={{ xs: "1fr", md: "2fr 1fr" }}
+          gap={4}
         >
-            <CategoryBarChart stats={filteredStats} />
-            <CategoryPieChart stats={filteredStats} />
+          <CategoryBarChart stats={filteredStats} />
+          <CategoryPieChart stats={filteredStats} />
         </Box>
-        </Box>
+      </Box>
     </Box>
   );
 }

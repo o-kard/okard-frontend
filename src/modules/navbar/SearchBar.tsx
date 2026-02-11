@@ -109,7 +109,7 @@ export default function SearchBar({ isHome, closeMegaMenu, closeSidebar, isOpen 
                 console.log("SEARCH DATA:", data);
                 setResults(data.results);
                 if (data.results.length > 0) {
-                    closeMegaMenu?.(); // Close mega menu if results found
+                    // Do not close mega menu implicitly here
                 }
             } catch (err) {
                 console.error("Search Error:", err);
@@ -247,7 +247,7 @@ export default function SearchBar({ isHome, closeMegaMenu, closeSidebar, isOpen 
             </Box>
 
             {/* SEARCH INPUT */}
-            <Box ref={barRef} sx={{ width: "100%", maxWidth: 500, display: { xs: "none", md: "block" } }}>
+            <Box ref={barRef} sx={{ width: "100%", maxWidth: "100%", display: { xs: "none", md: "block" } }}>
                 <InputBase
                     placeholder="searching..."
                     value={query}
@@ -263,11 +263,18 @@ export default function SearchBar({ isHome, closeMegaMenu, closeSidebar, isOpen 
                         />
                     }
                     sx={{
-                        backgroundColor: "#F3F4F6",
+                        backgroundColor: isHome ? "#F3F4F6" : "rgba(255, 255, 255, 0.15)",
+                        backdropFilter: isHome ? "none" : "blur(12px)",
+                        border: isHome ? "1px solid transparent" : "1px solid rgba(255, 255, 255, 0.3)",
+                        boxShadow: isHome ? "none" : "0 4px 30px rgba(0, 0, 0, 0.1)",
+                        "&:hover": {
+                            backgroundColor: isHome ? "#E5E7EB" : "rgba(255, 255, 255, 0.25)",
+                            borderColor: isHome ? "transparent" : "rgba(255, 255, 255, 0.5)",
+                        },
                         px: 1,
                         borderRadius: 4,
                         fontSize: 14,
-                        height: 36,
+                        height: 42,
                         width: "100%",
                     }}
                 />

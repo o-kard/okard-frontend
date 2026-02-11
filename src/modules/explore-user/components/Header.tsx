@@ -1,9 +1,11 @@
 "use client";
 import Link from "next/link";
-import { Box, Container, Typography } from "@mui/material";
+import { Box, Button, Container, Typography } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import { useRouter } from "next/navigation";
 
 export default function ExploreHeader() {
+  const router = useRouter();
   return (
     <Box
       sx={{
@@ -15,22 +17,13 @@ export default function ExploreHeader() {
       }}
     >
       <Container maxWidth={false} sx={{ py: { xs: 3, md: 5 } }}>
-        <Box
-          component={Link}
-          href="/"
-          sx={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 1,
-            color: "inherit",
-            textDecoration: "none",
-            opacity: 0.95,
-            "&:hover": { opacity: 1, textDecoration: "underline" },
-          }}
-        >
-          <ArrowBackIosNewIcon sx={{ fontSize: 18 }} />
-          <Typography sx={{ fontWeight: 500 }}>Back</Typography>
-        </Box>
+          <Button
+              startIcon={<ArrowBackIosNewIcon />}
+              onClick={() => router.back()}
+              sx={{ mb: 3, color: "white", textTransform: "none", fontSize: "1rem" }}
+          >
+              Back
+          </Button>
 
         <Typography
           variant="h3"

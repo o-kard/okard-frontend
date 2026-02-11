@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useState } from "react";
 import { createPostWithCampaigns } from "@/modules/post/api/api";
-import PostForm from "@/modules/post/components/PostForm";
+import PostForm, { categoryOptions } from "@/modules/post/components/PostForm";
 import { Container, Typography, Box } from "@mui/material";
 import type { FormValues } from "@/modules/post/components/PostForm";
 import type { PredictInput } from "@/modules/predict/types/predictTypes";
@@ -42,6 +42,8 @@ export default function PostCreatePage() {
       const countryLabel =
         countryOptions.find((c) => c.value === userCountryId)?.label || "Unknown";
 
+      const category_group = categoryOptions.find((opt) => opt.value === values.category)?.label || "Technology";
+
       const input: PredictInput = {
         goal: values.goal_amount,
         name: values.post_header,
@@ -49,17 +51,18 @@ export default function PostCreatePage() {
         start_date: values.effective_start_from || "",
         end_date: values.effective_end_date || "",
         country_displayable_name: countryLabel,
+        category_group,
         has_video: 0,
         has_photo: (values.post_images?.length ?? 0) > 0 ? 1 : 0,
       };
-      
-      const result = await predictPost(input, clerkUser.id); 
-      
+
+      const result = await predictPost(input, clerkUser.id);
+
       console.log("🔮 Prediction result received:", result);
-      
+
       setPredictResult(result);
-      
-      return result; 
+
+      return result;
     } catch (err) {
       console.error("Predict error", err);
       return { message: "Predict failed" };
