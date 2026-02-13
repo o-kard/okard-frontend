@@ -39,8 +39,8 @@ function UserSetupContent() {
       if (ok) {
         if (imageFile instanceof File) {
           await user.setProfileImage({ file: imageFile });
-          await user.reload();
         }
+        await user.reload();
         router.replace(returnTo ?? "/");
       }
     } catch (e) {
@@ -51,12 +51,13 @@ function UserSetupContent() {
   return (
     <>
       <SignedIn>
-          <UserForm
-            onSubmit={handleSubmit}
-            clerk_id={clerk_id}
-            username={username}
-            email={email}
-          />
+        <UserForm
+          onSubmit={handleSubmit}
+          clerk_id={clerk_id}
+          username={username}
+          email={email}
+          isUserHavePassword={user?.passwordEnabled}
+        />
       </SignedIn>
 
       <SignedOut>

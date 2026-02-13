@@ -12,7 +12,7 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
-import { Camera, User, Phone, MapPin, X } from "lucide-react";
+import { Camera, User, Phone, MapPin, X, Lock } from "lucide-react";
 import { useCountryOptions } from "@/hooks/useCountryOptions";
 import { SubmitHandler, useForm } from "react-hook-form";
 
@@ -29,6 +29,7 @@ type FormValues = {
   country_id: string | null;
   birth_date: string | null;
   user_image: File | null;
+  password?: string | null;
 };
 
 type Props = {
@@ -38,6 +39,7 @@ type Props = {
   clerk_id: string | null;
   username: string | null;
   email: string | null;
+  isUserHavePassword?: boolean;
 };
 
 export type CountryOption = { id: string; name: string };
@@ -49,6 +51,7 @@ export default function UserForm({
   clerk_id,
   username,
   email,
+  isUserHavePassword,
 }: Props) {
   const { register, handleSubmit, setValue } = useForm<FormValues>({
     defaultValues: {
@@ -64,6 +67,7 @@ export default function UserForm({
       country_id: "",
       birth_date: null,
       user_image: null,
+      password: null,
     },
   });
 
@@ -101,6 +105,9 @@ export default function UserForm({
       fd.append("data", JSON.stringify(payload));
       if (values.user_image) {
         fd.append("image", values.user_image);
+      }
+      if (values.password) {
+        fd.append("password", values.password);
       }
 
       await onSubmit?.(fd);
@@ -323,6 +330,7 @@ export default function UserForm({
                 sx={{ bgcolor: "white" }}
               />
             </Grid>
+
           </Grid>
         </Box>
 
@@ -388,6 +396,50 @@ export default function UserForm({
             </Grid>
           </Grid>
         </Box>
+
+        {/* Account Security Section */}
+        {!isUserHavePassword && (
+          <Box sx={{ mb: 4 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+              <Box
+                sx={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  bgcolor: "#e3f2fd",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Lock size={20} color="#2196f3" />
+              </Box>
+              <Typography variant="h6" fontWeight={600}>
+                Account Security
+              </Typography>
+            </Box>
+
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  label="Set Password"
+                  type="password"
+                  fullWidth
+                  size="small"
+                  placeholder="Create a password for your account"
+                  {...register("password", {
+                    minLength: {
+                      value: 8,
+                      message: "Password must be at least 8 characters",
+                    },
+                  })}
+                  sx={{ bgcolor: "white" }}
+                  helperText="You currently use social login. Set a password to enable email/password login."
+                />
+              </Grid>
+            </Grid>
+          </Box>
+        )}
 
         {/* Submit Button */}
         <Button
