@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Grid,
   Box,
@@ -30,6 +30,7 @@ type FormValues = {
   birth_date: string | null;
   user_image: File | null;
   password?: string | null;
+  remove_image?: boolean;
 };
 
 type Props = {
@@ -40,6 +41,7 @@ type Props = {
   username: string | null;
   email: string | null;
   isUserHavePassword?: boolean;
+  imageUrl?: string | null;
 };
 
 export type CountryOption = { id: string; name: string };
@@ -52,6 +54,7 @@ export default function UserForm({
   username,
   email,
   isUserHavePassword,
+  imageUrl,
 }: Props) {
   const { register, handleSubmit, setValue } = useForm<FormValues>({
     defaultValues: {
@@ -68,11 +71,28 @@ export default function UserForm({
       birth_date: null,
       user_image: null,
       password: null,
+      remove_image: false,
     },
   });
 
   const [submitting, setSubmitting] = useState(false);
-  const [imagePreviewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [imagePreviewUrl, setPreviewUrl] = useState<string | null>(imageUrl || null);
+
+  useEffect(() => {
+    const initImage = async () => {
+      if (imageUrl) {
+        try {
+          const response = await fetch(imageUrl);
+          const blob = await response.blob();
+          const file = new File([blob], "profile.jpg", { type: blob.type });
+          setValue("user_image", file);
+        } catch (e) {
+          console.error("Failed to load Clerk image", e);
+        }
+      }
+    };
+    initImage();
+  }, [imageUrl, setValue]);
 
   const { countryOptions, countryLoading, countryError } = useCountryOptions();
 
@@ -80,6 +100,7 @@ export default function UserForm({
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setValue("user_image", selectedFile);
+      setValue("remove_image", false);
       setPreviewUrl(URL.createObjectURL(selectedFile));
     }
   };
@@ -103,6 +124,8 @@ export default function UserForm({
         birth_date: values.birth_date! || null,
       };
       fd.append("data", JSON.stringify(payload));
+      fd.append("remove_image", values.remove_image ? "true" : "false");
+
       if (values.user_image) {
         fd.append("image", values.user_image);
       }
@@ -214,6 +237,7 @@ export default function UserForm({
                 onClick={() => {
                   setPreviewUrl(null);
                   setValue("user_image", null);
+                  setValue("remove_image", true);
                 }}
                 sx={{
                   position: "absolute",
@@ -233,6 +257,7 @@ export default function UserForm({
             )}
           </Box>
         </Box>
+
         {/* Personal Information Section */}
         <Box sx={{ mb: 4 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>

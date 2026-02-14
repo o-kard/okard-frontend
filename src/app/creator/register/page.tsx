@@ -102,6 +102,8 @@ export default function CreatorRegisterPage() {
           onSubmit={handleSubmit}
           onSuccess={handleSuccess}
           initial={profile}
+          // isUserHaveImage={user?.hasImage}
+          imageUrl={user?.hasImage ? user?.imageUrl : null}
         />
       </SignedIn>
       <SignedOut>

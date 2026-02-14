@@ -33,12 +33,16 @@ function UserSetupContent() {
     if (!user) return;
 
     const imageFile = fd.get("image") ?? null;
+    const removeImage = fd.get("remove_image") === "true";
+
     try {
       const token = await getToken();
       const ok = await createUser(fd, token);
       if (ok) {
         if (imageFile instanceof File) {
           await user.setProfileImage({ file: imageFile });
+        } else if (removeImage) {
+          await user.setProfileImage({ file: null });
         }
         await user.reload();
         router.replace(returnTo ?? "/");
@@ -57,6 +61,7 @@ function UserSetupContent() {
           username={username}
           email={email}
           isUserHavePassword={user?.passwordEnabled}
+          imageUrl={user?.hasImage ? user?.imageUrl : null}
         />
       </SignedIn>
 

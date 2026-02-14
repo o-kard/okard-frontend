@@ -336,10 +336,9 @@ function UserContent() {
 
   useEffect(() => {
     if (tab === "edit") {
-      setPreviewUrl(user?.imageUrl ?? null);
+      setPreviewUrl(user?.hasImage ? user?.imageUrl : null);
     } else {
       setPreviewUrl(user?.imageUrl ?? null);
-      null;
     }
   }, [tab, user?.imageUrl]);
 
@@ -530,7 +529,7 @@ function UserContent() {
                       >
                         Upload image
                       </Button>
-                      <Button
+                      {(user?.hasImage || pendingAvatar) && (<Button
                         variant="text"
                         size="small"
                         color="error"
@@ -538,7 +537,7 @@ function UserContent() {
                         disabled={uploadingAvatar}
                       >
                         Clear profile image
-                      </Button>
+                      </Button>)}
                     </Stack>
                   </MuiBox>
                 ) : (

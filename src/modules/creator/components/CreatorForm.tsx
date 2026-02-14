@@ -79,6 +79,7 @@ type Props = {
   onSubmit?: (fd: FormData) => Promise<void> | void;
   onSuccess?: (pendingAvatar?: { file?: File; clear?: boolean } | null) => void;
   onCancel?: () => void;
+  imageUrl?: string | null;
 };
 
 // --- Constants ---
@@ -120,6 +121,7 @@ export default function CreatorRegisterForm({
   onSuccess,
   onCancel,
   initial,
+  imageUrl,
 }: Props) {
   const {
     register,
@@ -190,7 +192,7 @@ export default function CreatorRegisterForm({
           social_links: [],
         },
       });
-      setImagePreviewUrl(user?.imageUrl ?? null);
+      setImagePreviewUrl(imageUrl ?? null);
       setRemoveImage(false);
       setRemoveEmail(false);
       setPendingAvatar(null);
