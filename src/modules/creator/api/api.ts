@@ -13,3 +13,13 @@ export async function createCreator(fd: FormData, token: string | null) {
     timeout: 60000,
   });
 }
+
+export async function updateCreator(id: string, fd: FormData, token: string | null) {
+  return await request<Creator>(`${API_URL}/${id}`, {
+    method: "PUT",
+    body: fd,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}

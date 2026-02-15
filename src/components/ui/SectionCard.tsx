@@ -28,8 +28,8 @@ export const SectionCard = ({ title, children, icon: Icon }: SectionCardProps) =
                     sx={{
                         p: 0.8,
                         borderRadius: 1.5,
-                        bgcolor: "primary.light",
-                        color: "primary.main",
+                        bgcolor: "#E9F5E9", // Light Green Faint
+                        color: "#2E7D32",   // Green Darker
                         display: "flex",
                     }}
                 >

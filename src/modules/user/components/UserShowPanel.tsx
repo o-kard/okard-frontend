@@ -111,7 +111,7 @@ export default function ProfilePanel() {
       <Grid container spacing={3}>
         {/* Personal Information Card */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <SectionCard title="Personal Information">
+          <SectionCard title="Personal Information" icon={UserIcon}>
             <InfoItem
               icon={UserIcon}
               label="Full Name"
@@ -153,7 +153,7 @@ export default function ProfilePanel() {
 
         {/* Contact Information Card */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <SectionCard title="Contact Details">
+          <SectionCard title="Contact Details" icon={Phone}>
             <InfoItem
               icon={Mail}
               label="Email Address"
@@ -222,7 +222,7 @@ export default function ProfilePanel() {
         </Grid>
 
         {/* Bio Section */}
-        <Grid size={{ xs: 12 }}>
+        {isCreator && creatorData?.bio && (<Grid size={{ xs: 12 }}>
           <Typography variant="h6" fontWeight={700} gutterBottom sx={{ mt: 1 }}>
             About
           </Typography>
@@ -245,7 +245,7 @@ export default function ProfilePanel() {
                 "No description provided."}
             </Typography>
           </Paper>
-        </Grid>
+        </Grid>)}
       </Grid>
 
       <Divider sx={{ my: 3 }} />
