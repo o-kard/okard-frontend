@@ -1,4 +1,4 @@
- import { request } from "@/api/api";
+import { request } from "@/api/api";
 import { LikeResp, Post, PostComment } from "../types/post";
 
 const API_PATH = "/api/post";
@@ -194,4 +194,12 @@ export async function getForYouCampaigns(token: string
   });
 
   return data.campaigns.map((c) => c.campaign);
+}
+
+export async function fetchPostById(postId: string): Promise<Post> {
+  return request<Post>(`${API_PATH}/${postId}`);
+}
+
+export async function fetchPostsByUserId(userId: string): Promise<Post[]> {
+  return request<Post[]>(`${API_PATH}/campaign-by-user/${userId}`);
 }

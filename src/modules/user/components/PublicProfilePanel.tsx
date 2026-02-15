@@ -29,6 +29,7 @@ import CampaignList from "./CampaignList";
 import CreatorBadge from "./CreatorBadge";
 import { Stack, Chip } from "@mui/material";
 import VerifiedIcon from "@mui/icons-material/Verified";
+import { fetchPostsByUserId } from "@/modules/post/api/api";
 
 interface PublicProfilePanelProps {
     userId: string;
@@ -49,7 +50,7 @@ export default function PublicProfilePanel({ userId }: PublicProfilePanelProps) 
         post.post_description.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-
+    console.log(profile);
     useEffect(() => {
         let abort = false;
         (async () => {
@@ -72,9 +73,9 @@ export default function PublicProfilePanel({ userId }: PublicProfilePanelProps) 
     }, [userId]);
 
     useEffect(() => {
-        if (profile?.clerk_id) {
+        if (profile?.id) {
             setCampaignsLoading(true);
-            fetchPosts(undefined, undefined, "newest", "all", "active", profile.clerk_id)
+            fetchPostsByUserId(profile.id)
                 .then((res) => {
                     setCampaigns(res);
                 })
