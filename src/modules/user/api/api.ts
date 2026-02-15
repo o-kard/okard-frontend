@@ -13,8 +13,8 @@ export async function createUser(fd: FormData, token: string | null) {
   });
 }
 
-export async function getUserById(clerk_id: string) {
-  return request<User>(`${API_URL}/${clerk_id}`);
+export async function getUserById(id: string) {
+  return request<User>(`${API_URL}/${id}`);
 }
 
 export async function getUser(token: string) {

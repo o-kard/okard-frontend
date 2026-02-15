@@ -100,7 +100,7 @@ export default function UserCard({ user }: UserCardProps) {
                 <Box mt="auto" width="100%">
                     <Button
                         component={Link}
-                        href={`/user/${user.clerk_id}`}
+                        href={`/user/${user.id}`}
                         variant="outlined"
                         fullWidth
                         sx={{
