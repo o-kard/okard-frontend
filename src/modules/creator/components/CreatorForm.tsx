@@ -523,6 +523,7 @@ export default function CreatorRegisterForm({
                           variant="outlined"
                           size="small"
                           type="email"
+                          disabled
                           {...register("user.email")}
                           sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
                         />
@@ -829,9 +830,11 @@ export default function CreatorRegisterForm({
                       variant="caption"
                       color="text.secondary"
                       display="block"
-                      sx={{ mb: 2 }}
                     >
                       External links to verify your identity.
+                    </Typography>
+                    <Typography variant="caption" color="error" display="block" sx={{ mb: 2 }}>
+                      At least one link is required.
                     </Typography>
 
                     {socialLinks.length < 5 && (

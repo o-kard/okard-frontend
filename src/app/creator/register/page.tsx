@@ -9,13 +9,15 @@ import { useEffect, useState } from "react";
 import { useRequireUserInDb } from "@/hooks/useRequireUserDb";
 import { getUser } from "@/modules/user/api/api";
 import { User } from "@/modules/user/types/user";
+import { useUpdateUsername } from "@/hooks/useUpdateUsername";
 
 export default function CreatorRegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const haveUserDb = useRequireUserInDb();
   const { getToken } = useAuth();
   const { user, isLoaded } = useUser();
-  const haveUserDb = useRequireUserInDb();
+  const { updateUsername } = useUpdateUsername();
 
   const [profile, setProfile] = useState<User | null | undefined>(undefined);
 
@@ -26,6 +28,32 @@ export default function CreatorRegisterPage() {
     console.log("ID Card:", fd.get("id_card"));
     console.log("House Registration:", fd.get("house_registration"));
     console.log("Bank Statement:", fd.get("bank_statement"));
+
+    // Check for username update
+    const rawData = fd.get("data");
+    if (rawData) {
+      try {
+        const data = JSON.parse(String(rawData));
+        const userData = data.user;
+        const newUsername = userData.username ? String(userData.username).trim() : null;
+        const currentUsername = user?.username;
+
+        if (newUsername && currentUsername && newUsername !== currentUsername) {
+          console.log(`Username changed from ${currentUsername} to ${newUsername}. Updating...`);
+          const updatedUser = await updateUsername(newUsername);
+
+          if (!updatedUser) {
+            console.error("Failed to update username. Aborting creator registration.");
+            throw new Error("Failed to update username");
+          }
+        }
+      } catch (e) {
+        console.error("Error parsing data or updating username:", e);
+        if ((e as Error).message === "Failed to update username") {
+          throw e;
+        }
+      }
+    }
 
     try {
       const token = await getToken();

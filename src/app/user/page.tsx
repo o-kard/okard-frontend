@@ -47,12 +47,13 @@ import EditPanel from "@/modules/user/components/UserEditPanel";
 import ContributionsPanel from "@/modules/user/components/UserContributionsPanel";
 import CampaignsPanel from "@/modules/user/components/UserCampaignsPanel";
 import { getUser, updateUser } from "@/modules/user/api/api";
-import {
-  isClerkAPIResponseError,
-  isClerkRuntimeError,
-  isReverificationCancelledError,
-} from "@clerk/nextjs/errors";
+import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { useRequireUserInDb } from "@/hooks/useRequireUserDb";
+import { useUpdateUsername } from "@/hooks/useUpdateUsername";
+import {
+  validateEmail,
+  validatePwdPair,
+} from "@/utils/validation";
 
 // Optional: gate page behind DB user check
 // import { useRequireUserInDb } from "@/hooks/useRequireUserInDb";
@@ -76,18 +77,6 @@ export function isActiveTab(current: Tab, tab: Tab) {
   return current === tab;
 }
 
-export function validateUsername(u: string) {
-  const v = u.trim();
-  if (v.length < 4 || v.length > 64)
-    return "Username must be between 4 and 64 characters long.";
-  if (!/^[a-zA-Z0-9._]+$/.test(v))
-    return "Use only letters, numbers, dot or underscore";
-  return null;
-}
-
-function validateEmail(s: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
-}
 // -------------------------------
 // Main page
 // -------------------------------
@@ -107,40 +96,7 @@ function UserContent() {
   const [profile, setProfile] = useState<any | null>(null);
 
   // Username management
-  const changeUsername = useReverification(async (uname: string) => {
-    if (!user) throw new Error("No user");
-    console.log("Changing username to", uname);
-    return user.update({ username: uname });
-  });
-
-  async function onSubmitUsername(uname: string) {
-    if (!isLoaded || !user) return;
-
-    const vErr = validateUsername(uname);
-    console.log("Validated username", uname, vErr);
-    if (vErr) {
-      alert(vErr);
-      return false; // ❗ สำคัญ: บอกว่าไม่ผ่าน
-    }
-    try {
-      console.log("Updating username to", uname);
-      await changeUsername(uname); // useReverification ห่อไว้แล้ว
-      await user.reload();
-      alert("Username updated");
-      return true; // ผ่าน
-    } catch (e: any) {
-      if (isClerkAPIResponseError(e)) {
-        const msg =
-          e.errors?.map((er: any) => er.longMessage || er.message).join("\n") ||
-          "Username update failed";
-        alert(msg);
-        return false;
-      }
-      console.error(e);
-      alert("Username update failed");
-      return false;
-    }
-  }
+  const { updateUsername } = useUpdateUsername();
 
   // Email management
   const addEmail = useReverification((email: string) =>
@@ -270,14 +226,6 @@ function UserContent() {
     }
   );
 
-  function validatePwdPair(newPw: string, confirmPw: string) {
-    if (!newPw && !confirmPw) return null; // ไม่ได้ตั้งใจเปลี่ยน
-    if (!newPw || !confirmPw) return "Please fill both password fields";
-    if (newPw.length < 8) return "Password must be at least 8 characters";
-    if (newPw !== confirmPw) return "Passwords do not match";
-    return null;
-  }
-
   // Profile Image
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -357,7 +305,7 @@ function UserContent() {
     try {
       // Username
       if (newUsername && newUsername !== user.username) {
-        const okU = await onSubmitUsername(newUsername);
+        const okU = await updateUsername(newUsername);
         if (!okU) return; // ถ้า username ไม่ผ่าน validation หรืออัพเดตไม่สำเร็จ ให้หยุด
       }
 
