@@ -9,6 +9,8 @@ import {
   Avatar,
   Button,
   Chip,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import Link from "next/link";
 import Grid from "@mui/material/Grid";
@@ -17,6 +19,36 @@ import { getUser } from "../api/api";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import VerifiedIcon from "@mui/icons-material/Verified";
+import {
+  User as UserIcon,
+  Phone,
+  MapPin,
+  Mail,
+  Calendar,
+  ShieldCheck,
+  Link2,
+  Instagram,
+  Youtube,
+  Twitter,
+  Globe,
+  ExternalLink,
+} from "lucide-react";
+import { SocialLink } from "@/modules/creator/types/creator";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { InfoItem } from "@/components/ui/InfoItem";
+
+// Helper for Social Icons (moved for clarity)
+// Helper for social icons
+const getSocialIcon = (platform: string) => {
+  switch (platform.toLowerCase()) {
+    case "instagram": return <Instagram size={20} color="#E1306C" />;
+    case "youtube": return <Youtube size={20} color="#FF0000" />;
+    case "twitter": return <Twitter size={20} color="#1DA1F2" />;
+    case "tiktok": return <Globe size={20} color="#000000" />; // Lucide doesn't have TikTok yet
+    case "website": return <Globe size={20} color="#24292e" />;
+    default: return <Link2 size={20} color="#666" />;
+  }
+};
 
 // Profile (read-only)
 export default function ProfilePanel() {
@@ -50,6 +82,7 @@ export default function ProfilePanel() {
   }, [isLoaded, user]);
 
   const isCreator = profile?.role === 'creator';
+  const creatorData = profile?.creator;
 
   return (
     <Paper sx={{ p: 3, borderRadius: 3 }}>
@@ -75,53 +108,144 @@ export default function ProfilePanel() {
         )}
       </Box>
 
-      <Grid container spacing={2}>
+      <Grid container spacing={3}>
+        {/* Personal Information Card */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <MuiBox>
-            <Typography variant="subtitle2" color="text.secondary">
-              Name
-            </Typography>
-            <Typography mb={2} ml={1.5}>
-              {[profile?.first_name, profile?.middle_name, profile?.surname]
+          <SectionCard title="Personal Information">
+            <InfoItem
+              icon={UserIcon}
+              label="Full Name"
+              value={[profile?.first_name, profile?.middle_name, profile?.surname]
                 .filter(Boolean)
-                .join(" ") || "—"}
-            </Typography>
-            {/* change to fname + mname + sname */}
-            <Typography variant="subtitle2" color="text.secondary">
-              Contact
-            </Typography>
-            <Typography mb={2} ml={1.5}>{profile?.tel ?? "—"}</Typography>
-            <Typography variant="subtitle2" color="text.secondary">
-              Country
-            </Typography>
-            <Typography mb={2} ml={1.5}>{profile?.country?.en_name ?? "—"}</Typography>
-          </MuiBox>
+                .join(" ")}
+            />
+            <InfoItem
+              icon={Calendar}
+              label="Birth Date"
+              value={
+                profile?.birth_date
+                  ? new Date(profile.birth_date).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })
+                  : "—"
+              }
+            />
+            <InfoItem
+              icon={Globe}
+              label="Country"
+              value={profile?.country?.en_name}
+            />
+            {isCreator && creatorData?.verified_at && (
+              <InfoItem
+                icon={ShieldCheck}
+                label="Verified Since"
+                value={new Date(creatorData.verified_at).toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              />
+            )}
+          </SectionCard>
         </Grid>
 
+        {/* Contact Information Card */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Typography variant="subtitle2" color="text.secondary">
-            Email
-          </Typography>
-          <Typography mb={2} ml={1.5}>
-            {user?.primaryEmailAddress?.emailAddress ?? "—"}
-          </Typography>
-          <Typography variant="subtitle2" color="text.secondary">
-            Address
-          </Typography>
-          <Typography mb={2} ml={1.5}>{profile?.address ?? "—"}</Typography>
-          <Typography variant="subtitle2" color="text.secondary">
-            Birthdate
-          </Typography>
-          <Typography mb={2} ml={1.5}>{profile?.birth_date ?? "—"}</Typography>
+          <SectionCard title="Contact Details">
+            <InfoItem
+              icon={Mail}
+              label="Email Address"
+              value={user?.primaryEmailAddress?.emailAddress}
+            />
+            <InfoItem
+              icon={Phone}
+              label="Phone Number"
+              value={profile?.tel}
+            />
+            <InfoItem
+              icon={MapPin}
+              label="Address"
+              value={profile?.address}
+            />
+
+            {/* Social Links inside Contact Card */}
+            {isCreator && creatorData?.social_links && creatorData.social_links.length > 0 && (
+              <Stack direction="row" spacing={2} alignItems="flex-start" sx={{ pt: 1 }}>
+                <Box
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: "50%",
+                    bgcolor: "rgb(243, 246, 249)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#64748b",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Link2 size={18} />
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" mb={0.5}>
+                    Social Links
+                  </Typography>
+                  <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                    {creatorData.social_links.map((link: SocialLink, index: number) => (
+                      <Tooltip key={index} title={link.platform} arrow>
+                        <IconButton
+                          component="a"
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          size="small"
+                          sx={{
+                            bgcolor: "white",
+                            border: "1px solid",
+                            borderColor: "divider",
+                            width: 32,
+                            height: 32,
+                            "&:hover": { bgcolor: "#f1f5f9", borderColor: "primary.main" },
+                          }}
+                        >
+                          {getSocialIcon(link.platform)}
+                        </IconButton>
+                      </Tooltip>
+                    ))}
+                  </Stack>
+                </Box>
+              </Stack>
+            )}
+          </SectionCard>
         </Grid>
-      </Grid>
-      <Grid size={{ xs: 12, md: 12 }}>
-        <Typography variant="subtitle2" color="text.secondary">
-          About me
-        </Typography>
-        <Typography sx={{ whiteSpace: "pre-line" }} ml={1.5}>
-          {profile?.user_description ?? "—"}
-        </Typography>
+
+        {/* Bio Section */}
+        <Grid size={{ xs: 12 }}>
+          <Typography variant="h6" fontWeight={700} gutterBottom sx={{ mt: 1 }}>
+            About
+          </Typography>
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 3,
+              borderRadius: 3,
+              bgcolor: "rgb(250, 250, 250)",
+              minHeight: 100,
+              borderStyle: "dashed",
+            }}
+          >
+            <Typography
+              variant="body1"
+              color="text.secondary"
+              sx={{ whiteSpace: "pre-line", lineHeight: 1.6 }}
+            >
+              {(isCreator ? creatorData?.bio : profile?.user_description) ||
+                "No description provided."}
+            </Typography>
+          </Paper>
+        </Grid>
       </Grid>
 
       <Divider sx={{ my: 3 }} />

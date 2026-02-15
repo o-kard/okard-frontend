@@ -367,18 +367,6 @@ export default function EditPanel({
               helperText={errors.confirm_password?.message || " "}
             />
           </Grid>
-
-          {/* Description */}
-          <Grid size={{ xs: 12, md: 12 }}>
-            <TextField
-              label="About me"
-              fullWidth
-              slotProps={{ inputLabel: { shrink: true } }}
-              multiline
-              minRows={4}
-              {...register("user_description")}
-            />
-          </Grid>
         </Grid>
 
         <Box mt={3} display="flex" gap={1}>

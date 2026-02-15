@@ -19,6 +19,8 @@ export type User = {
   status: string;
   created_at: Date;
   updated_at: Date;
+  user_description?: string;
+  creator?: any; // Avoiding circular dependency or complex import for now, or import properly if possible.
 };
 
 export type UserPublicResponse = {
