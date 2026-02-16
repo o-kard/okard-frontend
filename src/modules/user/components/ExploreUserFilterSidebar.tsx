@@ -21,7 +21,7 @@ interface UserFilterSidebarProps {
     onClose?: () => void;
 }
 
-export default function UserFilterSidebar({ searchQuery, onSearchChange, selectedRole, onRoleChange, hideSearch = false, onClose }: UserFilterSidebarProps) {
+export default function ExploreUserFilterSidebar({ searchQuery, onSearchChange, selectedRole, onRoleChange, hideSearch = false, onClose }: UserFilterSidebarProps) {
     return (
         <Box
             sx={{

@@ -1,4 +1,4 @@
-import ExploreUserPage from "@/modules/explore-user/ExploreUserPage";
+import ExploreUserPage from "@/modules/user/ExploreUserPage";
 
 export default function Page() {
     return (

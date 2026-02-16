@@ -16,7 +16,7 @@ function PublicProfileContent() {
                 <Button
                     startIcon={<ArrowBackIosIcon />}
                     onClick={() => router.back()}
-                    sx={{ mb: 3, color: "black", textTransform: "none", fontSize: "1rem" }}
+                    sx={{color: "black", textTransform: "none", fontSize: "1rem" }}
                 >
                     Back
                 </Button>

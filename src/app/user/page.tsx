@@ -58,6 +58,9 @@ import {
   validateEmail,
   validatePwdPair,
 } from "@/utils/validation";
+import { getContributeByUserId } from "@/modules/contributor/api/api";
+import { ContributorWithPost } from "@/modules/contributor/types";
+import { fetchPostById } from "@/modules/post/api/api";
 
 // Optional: gate page behind DB user check
 // import { useRequireUserInDb } from "@/hooks/useRequireUserInDb";
@@ -100,6 +103,8 @@ function UserContent() {
   const [profile, setProfile] = useState<any | null>(null);
   const [campaigns, setCampaigns] = useState<Post[]>([]);
   const [campaignsLoading, setCampaignsLoading] = useState(true);
+  const [contributions, setContributions] = useState<ContributorWithPost[]>([]);
+  const [contributionsLoading, setContributionsLoading] = useState(true);
 
   // Username management
   const { updateUsername } = useUpdateUsername();
@@ -286,6 +291,18 @@ function UserContent() {
             setCampaigns(userCampaigns || []);
             setCampaignsLoading(false);
           }
+        }
+
+        // Fetch contributions
+        if (profile?.id || r?.id) {
+          const userId_ = profile?.id || r?.id;
+          const userContribs = await getContributeByUserId(userId_);
+          if (!abort) {
+            setContributions(userContribs || []);
+            setContributionsLoading(false);
+          }
+        } else {
+          if (!abort) setContributionsLoading(false);
         }
 
         // router.replace("/");
@@ -590,11 +607,11 @@ function UserContent() {
 
             {/* Main content area (same page; only component changes) */}
             <Grid size={{ xs: 12, md: 9, lg: 9 }}>
-              {tab === "profile" && <ProfilePanel campaignCount={campaigns.length} />}
+              {tab === "profile" && <ProfilePanel campaignCount={campaigns.length} contributionsCount={contributions.length} />}
               {tab === "edit" && (
                 <EditPanel onSubmit={handleEditSubmit} initial={profile} />
               )}
-              {tab === "contributions" && <ContributionsPanel />}
+              {tab === "contributions" && <ContributionsPanel contributions={contributions} loading={contributionsLoading} />}
               {tab === "campaigns" && <CampaignsPanel campaigns={campaigns} loading={campaignsLoading} />}
             </Grid>
           </Grid>

@@ -37,6 +37,7 @@ import { SocialLink } from "@/modules/creator/types/creator";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { InfoItem } from "@/components/ui/InfoItem";
 
+
 // Helper for Social Icons (moved for clarity)
 // Helper for social icons
 const getSocialIcon = (platform: string) => {
@@ -53,8 +54,9 @@ const getSocialIcon = (platform: string) => {
 // Profile (read-only)
 interface ProfilePanelProps {
   campaignCount?: number;
+  contributionsCount?: number;
 }
-export default function ProfilePanel({ campaignCount }: ProfilePanelProps) {
+export default function ProfilePanel({ campaignCount, contributionsCount }: ProfilePanelProps) {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
   const [profile, setProfile] = useState<any | null>(null);
@@ -83,6 +85,7 @@ export default function ProfilePanel({ campaignCount }: ProfilePanelProps) {
       abort = true;
     };
   }, [isLoaded, user]);
+
 
   const isCreator = profile?.role === 'creator';
   const creatorData = profile?.creator;
@@ -274,7 +277,7 @@ export default function ProfilePanel({ campaignCount }: ProfilePanelProps) {
                 <VolunteerActivismIcon sx={{ color: "#fff" }} />
               </Box>
               <Typography variant="h4" fontWeight={700}>
-                {profile?.contributionCount ?? 0}
+                {contributionsCount}
               </Typography>
             </Stack>
             <Typography color="text.secondary">Contribution(s)</Typography>

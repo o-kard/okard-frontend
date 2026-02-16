@@ -10,7 +10,7 @@ interface UserCardProps {
     user: User;
 }
 
-export default function UserCard({ user }: UserCardProps) {
+export default function ExploreUserCard({ user }: UserCardProps) {
     return (
         <Card
             sx={{
@@ -64,11 +64,11 @@ export default function UserCard({ user }: UserCardProps) {
                     sx={{
                         width: 90,
                         height: 90,
-                        mt: -5, 
+                        mt: -5,
                         mb: 2,
                         border: "4px solid white",
                         boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                        bgcolor: user.image?.path ? "#fff" : "#9e9e9e", 
+                        bgcolor: user.image?.path ? "#fff" : "#9e9e9e",
                         color: "#fff",
                         fontSize: "2.5rem",
                         fontWeight: 700,

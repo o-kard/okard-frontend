@@ -6,9 +6,9 @@ import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
 import { listUsers } from "@/modules/user/api/api";
 import { User } from "@/modules/user/types/user";
-import UserCard from "./components/UserCard";
-import Header from "./components/Header";
-import UserFilterSidebar from "./components/UserFilterSidebar";
+import ExploreUserCard from "./components/ExploreUserCard";
+import ExploreUserHeader from "./components/ExploreUserHeader";
+import ExploreUserFilterSidebar from "./components/ExploreUserFilterSidebar";
 
 export default function ExploreUserPage() {
     const [users, setUsers] = useState<User[]>([]);
@@ -75,7 +75,7 @@ export default function ExploreUserPage() {
 
     return (
         <Container maxWidth="xl" sx={{ mb: 10 }}>
-            <Header />
+            <ExploreUserHeader />
             <Grid container spacing={4} sx={{ mt: 10 }}>
 
                 {/* Mobile Menu Button & Search */}
@@ -122,7 +122,7 @@ export default function ExploreUserPage() {
                 {/* Sidebar (Desktop) */}
                 {isMdUp && (
                     <Grid size={{ xs: 12, md: 3, lg: 2.5 }}>
-                        <UserFilterSidebar
+                        <ExploreUserFilterSidebar
                             searchQuery={searchQuery}
                             onSearchChange={setSearchQuery}
                             selectedRole={roleFilter}
@@ -139,7 +139,7 @@ export default function ExploreUserPage() {
                     <Grid container spacing={3}>
                         {paginatedUsers.map((user) => (
                             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={user.id}>
-                                <UserCard user={user} />
+                                <ExploreUserCard user={user} />
                             </Grid>
                         ))}
                         {filteredUsers.length === 0 && (
@@ -191,7 +191,7 @@ export default function ExploreUserPage() {
                 onClose={() => setMobileOpen(false)}
             >
                 <Box sx={{ width: 300, p: 2, height: "100%", bgcolor: "#fff" }}>
-                    <UserFilterSidebar
+                    <ExploreUserFilterSidebar
                         searchQuery={searchQuery}
                         onSearchChange={setSearchQuery}
                         selectedRole={roleFilter}

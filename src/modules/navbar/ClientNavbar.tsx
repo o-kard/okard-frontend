@@ -32,6 +32,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import ExploreIcon from "@mui/icons-material/Explore";
 import InfoIcon from "@mui/icons-material/Info";
 import PersonIcon from "@mui/icons-material/Person";
+import AddIcon from "@mui/icons-material/Add";
+import CampaignIcon from "@mui/icons-material/Campaign";
 
 import dynamic from "next/dynamic";
 import SearchBar from "./SearchBar";
@@ -216,13 +218,21 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
           href="/post/create"
           variant="contained"
           onClick={() => setMobileOpen(false)}
+          startIcon={<CampaignIcon />}
           sx={{
             borderRadius: 3,
             py: 1.5,
-            bgcolor: "#12C998",
+            background: "linear-gradient(45deg, #12c998 30%, #f070a1 90%)",
             boxShadow: "0 4px 14px rgba(18, 201, 152, 0.4)",
-            fontWeight: "bold",
-            "&:hover": { bgcolor: "#0eb387" }
+            fontWeight: 800,
+            textTransform: "none",
+            fontSize: "1rem",
+            transition: "all 0.3s ease",
+            "&:hover": {
+              transform: "translateY(-2px)",
+              boxShadow: "0 6px 20px rgba(18, 201, 152, 0.5)",
+              opacity: 0.9,
+            }
           }}
           fullWidth
         >
@@ -496,22 +506,50 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                   component={NextLink}
                   href="/post/create"
                   variant="contained"
-                  color="success"
-                  size="medium"
+                  size="small"
+                  startIcon={<AddIcon sx={{
+                    "@media (min-width: 1351px)": {
+                      display: "none"
+                    }
+                  }} />}
                   sx={{
-                    borderRadius: 2,
+                    borderRadius: 3,
                     whiteSpace: "nowrap",
-                    px: { md: 4, lg: 3 }
+                    px: { md: 1.5, lg: 3 },
+                    py: { md: 0.8, lg: 1 },
+                    background: "linear-gradient(45deg, #12c998 30%, #0fb488 90%)",
+                    boxShadow: "0 4px 10px rgba(18, 201, 152, 0.3)",
+                    transition: "all 0.3s ease",
+                    textTransform: "none",
+                    minWidth: "auto",
+                    "&:hover": {
+                      transform: "scale(1.05)",
+                      boxShadow: "0 6px 15px rgba(18, 201, 152, 0.4)",
+                      background: "linear-gradient(45deg, #12c998 10%, #f070a1 90%)",
+                    }
                   }}
                 >
                   <Typography
                     sx={{
                       fontFamily: "var(--font-montserrat)",
-                      fontSize: { xs: "0.9rem", md: "0.7rem", lg: "0.9rem" },
-                      fontWeight: 500,
+                      fontSize: { md: "0.8rem", lg: "1rem" },
+                      fontWeight: 700,
+                      display: "flex",
+                      alignItems: "center"
                     }}
                   >
-                    START A CAMPAIGN
+                    <Box component="span" sx={{
+                      display: {
+                        md: "none",
+                        lg: "none",
+                      },
+                      "@media (min-width: 1351px)": {
+                        display: "inline"
+                      }
+                    }}>
+                      START A&nbsp;
+                    </Box>
+                    CAMPAIGN
                   </Typography>
                 </Button>
 
@@ -650,7 +688,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                 </Box>
 
                 <Grid container spacing={4}>
-                  <Grid size={{ xs: 12, sm: 12, md: 3, lg: 3 }} sx={{ borderRight: "2px solid #eee", mb: { xs: 3, md: 0 } }}>
+                  <Grid size={{ xs: 12, sm: 12, md: 4, lg: 4 }} sx={{ borderRight: "2px solid #eee", mb: { xs: 3, md: 0 } }}>
                     <Typography variant="subtitle2" color="text.secondary" fontWeight="bold" mb={2}
                       sx={{
                         fontFamily: "var(--font-montserrat)",
@@ -678,34 +716,8 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                       ))}
                     </Box>
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 12, md: 3, lg: 3 }} sx={{ borderRight: "2px solid #eee", mb: { xs: 3, md: 0 } }}>
-                    <Typography variant="subtitle2" color="text.secondary" fontWeight="bold" mb={2}
-                      sx={{
-                        fontFamily: "var(--font-montserrat)",
-                        fontSize: "1.2rem"
-                      }}>
-                      POPULAR SEARCH
-                    </Typography>
-                    <Box display="flex" flexDirection="column" gap={1.5}>
-                      {[
-                        { text: "Console", href: "/post?q=Console" },
-                        { text: "Machine", href: "/post?q=Machine" },
-                        { text: "Documentary", href: "/post?q=Documentary" },
-                        { text: "Electric-Bike", href: "/post?q=Electric-Bike" }
-                      ].map(item => (
-                        <Typography
-                          key={item.text}
-                          component={NextLink}
-                          href={item.href}
-                          color="text.secondary"
-                          sx={{ textDecoration: "none", cursor: "pointer", "&:hover": { color: "#12C998" }, fontSize: "0.95rem" }}
-                        >
-                          {item.text}
-                        </Typography>
-                      ))}
-                    </Box>
-                  </Grid>
-                  <Grid size={{ md: 6, lg: 3 }}>
+
+                  <Grid size={{ md: 4, lg: 4 }}>
                     <Card
                       component={NextLink}
                       href={popularPosts[0] ? `/post/show/${popularPosts[0].id}` : "#"}
@@ -752,14 +764,14 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                       </CardContent>
                     </Card>
                   </Grid>
-                  <Grid size={{ lg: 3 }}>
+                  <Grid size={{ md: 4, lg: 4 }}>
                     <Card
                       component={NextLink}
                       href={popularPosts[1] ? `/post/show/${popularPosts[1].id}` : "#"}
                       sx={{
                         display: {
                           xs: "none",
-                          md: "none",
+                          md: "flex",
                           lg: "flex"
                         },
                         height: "100%",
