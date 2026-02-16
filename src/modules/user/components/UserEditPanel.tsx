@@ -18,29 +18,29 @@ import { useCountryOptions } from "@/hooks/useCountryOptions";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Trash2, Plus, User as UserIcon, Calendar, Globe, Mail, Phone, MapPin, Link2 } from "lucide-react";
 import { SocialLink } from "@/modules/creator/types/creator";
-
-// Helper for social icons
-const socialPlatforms = ["Instagram", "Youtube", "Twitter", "Tiktok", "Website"];
+import { socialPlatforms } from "@/utils/constants";
 
 type FormValues = {
-  id: string;
-  clerk_id: string;
-  email: string | null;
-  username: string;
-  first_name: string | null;
-  middle_name: string | null;
-  surname: string | null;
-  tel: string | null;
-  address: string | null;
-  user_description: string | null;
-  country_id: string | null;
-  birth_date: string | null; // ISO "YYYY-MM-DD"
-  user_image: File | null;
-  new_password?: string;
-  confirm_password?: string;
-  // Creator fields
-  creator_bio?: string | null;
-  social_links?: SocialLink[];
+  user: {
+    id: string;
+    clerk_id: string;
+    email: string | null;
+    username: string;
+    first_name: string | null;
+    middle_name: string | null;
+    surname: string | null;
+    tel: string | null;
+    address: string | null;
+    country_id: string | null;
+    birth_date: string | null; // ISO "YYYY-MM-DD"
+    image: File | null;
+    new_password?: string;
+    confirm_password?: string;
+  };
+  creator: {
+    bio?: string | null;
+    social_links?: SocialLink[];
+  };
 };
 
 type InitialValues = any; // Allow flexible initial values including nested creator data
@@ -64,32 +64,37 @@ export default function EditPanel({
     register,
     handleSubmit,
     setValue,
+    watch,
     reset,
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
-      clerk_id: "",
-      email: null,
-      username: "",
-      first_name: "",
-      middle_name: null,
-      surname: "",
-      tel: "",
-      address: "",
-      user_description: null,
-      country_id: "",
-      birth_date: null,
-      user_image: null,
-      new_password: "",
-      confirm_password: "",
-      creator_bio: "",
-      social_links: [],
+      user: {
+        id: "",
+        clerk_id: "",
+        email: null,
+        username: "",
+        first_name: "",
+        middle_name: null,
+        surname: "",
+        tel: "",
+        address: "",
+        country_id: "",
+        birth_date: null,
+        image: null,
+        new_password: "",
+        confirm_password: "",
+      },
+      creator: {
+        bio: "",
+        social_links: [],
+      },
     },
   });
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "social_links",
+    name: "creator.social_links",
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -105,30 +110,46 @@ export default function EditPanel({
   useEffect(() => {
     if (initial) {
       reset({
-        clerk_id: initial.clerk_id ?? "",
-        email: initial.email ?? null,
-        username: initial.username ?? "",
-        first_name: initial.first_name ?? "",
-        middle_name: initial.middle_name ?? null,
-        surname: initial.surname ?? "",
-        tel: initial.tel ?? "",
-        address: initial.address ?? "",
-        user_description: initial.user_description ?? null,
-        country_id: initial.country_id ?? "",
-        birth_date: initial.birth_date ? (initial.birth_date instanceof Date ? initial.birth_date.toISOString().split('T')[0] : initial.birth_date) : null,
-        user_image: null,
-        new_password: "",
-        confirm_password: "",
-        creator_bio: creatorData?.bio ?? "",
-        social_links: creatorData?.social_links ?? [],
+        user: {
+          id: initial.id ?? "",
+          clerk_id: initial.clerk_id ?? "",
+          email: initial.email ?? null,
+          username: initial.username ?? "",
+          first_name: initial.first_name ?? "",
+          middle_name: initial.middle_name ?? null,
+          surname: initial.surname ?? "",
+          tel: initial.tel ?? "",
+          address: initial.address ?? "",
+          country_id: initial.country_id ?? "",
+          birth_date: initial.birth_date ? (initial.birth_date instanceof Date ? initial.birth_date.toISOString().split('T')[0] : initial.birth_date) : null,
+          image: null,
+          new_password: "",
+          confirm_password: "",
+        },
+        creator: {
+          bio: creatorData?.bio ?? "",
+          social_links: creatorData?.social_links ?? [],
+        }
       });
+      console.log("social_links: ", creatorData?.social_links);
       setPreviewUrl(initial.image?.url ?? initial.image_url ?? null);
       setRemoveImage(false);
       setRemoveEmail(false);
     }
   }, [initial, reset, creatorData]);
 
-  // Handle file changes removed (handled in parent/page now for avatar)
+  const handleAddLink = () => {
+    const currentLinks = watch("creator.social_links") || [];
+    if (currentLinks.length < socialPlatforms.length) {
+      const usedPlatforms = currentLinks.map((l) => l.platform);
+      const availablePlatform = socialPlatforms.find(
+        (p) => !usedPlatforms.includes(p.value)
+      );
+      if (availablePlatform) {
+        append({ platform: availablePlatform.value, url: "" });
+      }
+    }
+  };
 
   const handleFormSubmit: SubmitHandler<FormValues> = async (values) => {
     try {
@@ -136,30 +157,32 @@ export default function EditPanel({
       const fd = new FormData();
 
       const payload = {
-        id: initial?.id ?? null,
-        clerk_id: initial?.clerk_id,
-        email: values.email || null,
-        username: values.username,
-        first_name: values.first_name,
-        middle_name: values.middle_name || null,
-        surname: values.surname,
-        tel: values.tel,
-        address: values.address,
-        user_description: values.user_description || null,
-        country_id: values.country_id || null,
-        birth_date: values.birth_date || null,
-        remove_image: removeImage,
-        remove_email: removeEmail,
-        // Creator fields
-        creator_bio: values.creator_bio,
-        social_links: values.social_links,
+        user: {
+          id: initial?.id ?? null,
+          clerk_id: initial?.clerk_id,
+          email: values.user.email || null,
+          username: values.user.username,
+          first_name: values.user.first_name,
+          middle_name: values.user.middle_name || null,
+          surname: values.user.surname,
+          tel: values.user.tel,
+          address: values.user.address,
+          country_id: values.user.country_id || null,
+          birth_date: values.user.birth_date || null,
+          remove_image: removeImage,
+          remove_email: removeEmail,
+        },
+        creator: {
+          bio: values.creator.bio,
+          social_links: values.creator.social_links,
+        },
       };
 
       fd.append("data", JSON.stringify(payload));
 
-      if (values.user_image) fd.append("image", values.user_image);
-      if (values.new_password) fd.append("password_new", values.new_password);
-      if (values.confirm_password) fd.append("password_confirm", values.confirm_password);
+      if (values.user.image) fd.append("image", values.user.image);
+      if (values.user.new_password) fd.append("password_new", values.user.new_password);
+      if (values.user.confirm_password) fd.append("password_confirm", values.user.confirm_password);
 
       console.log("Submitting with payload:", payload);
       await onSubmit?.(fd);
@@ -191,7 +214,7 @@ export default function EditPanel({
                     label="Username (Clerk)"
                     fullWidth
                     slotProps={{ inputLabel: { shrink: true } }}
-                    {...register("username", { required: true })}
+                    {...register("user.username", { required: true })}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -199,7 +222,7 @@ export default function EditPanel({
                     label="First name"
                     fullWidth
                     slotProps={{ inputLabel: { shrink: true } }}
-                    {...register("first_name")}
+                    {...register("user.first_name")}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -207,7 +230,7 @@ export default function EditPanel({
                     label="Middle name"
                     fullWidth
                     slotProps={{ inputLabel: { shrink: true } }}
-                    {...register("middle_name")}
+                    {...register("user.middle_name")}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -215,7 +238,7 @@ export default function EditPanel({
                     label="Surname"
                     fullWidth
                     slotProps={{ inputLabel: { shrink: true } }}
-                    {...register("surname")}
+                    {...register("user.surname")}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -224,12 +247,12 @@ export default function EditPanel({
                     type="date"
                     fullWidth
                     slotProps={{ inputLabel: { shrink: true } }}
-                    {...register("birth_date")}
+                    {...register("user.birth_date")}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <Controller
-                    name="country_id"
+                    name="user.country_id"
                     control={control}
                     rules={{ required: "Please select country" }}
                     render={({ field, fieldState }) => {
@@ -283,7 +306,7 @@ export default function EditPanel({
                     label="Email (Clerk)"
                     fullWidth
                     slotProps={{ inputLabel: { shrink: true } }}
-                    {...register("email")}
+                    {...register("user.email")}
                     disabled={hasEmail && !removeEmail}
                     helperText={
                       hasEmail
@@ -295,10 +318,10 @@ export default function EditPanel({
                   />
                   <Box mt={1}>
                     {hasEmail && !removeEmail && (
-                      <Button size="small" color="error" onClick={() => { setRemoveEmail(true); setValue("email", ""); }}>Remove this email</Button>
+                      <Button size="small" color="error" onClick={() => { setRemoveEmail(true); setValue("user.email", ""); }}>Remove this email</Button>
                     )}
                     {hasEmail && removeEmail && (
-                      <Button size="small" onClick={() => { setRemoveEmail(false); setValue("email", initial?.email ?? ""); }}>Undo remove</Button>
+                      <Button size="small" onClick={() => { setRemoveEmail(false); setValue("user.email", initial?.email ?? ""); }}>Undo remove</Button>
                     )}
                   </Box>
                 </Grid>
@@ -307,7 +330,7 @@ export default function EditPanel({
                     label="Tel"
                     fullWidth
                     slotProps={{ inputLabel: { shrink: true } }}
-                    {...register("tel", { required: true })}
+                    {...register("user.tel", { required: true })}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -315,7 +338,7 @@ export default function EditPanel({
                     label="Address"
                     fullWidth
                     slotProps={{ inputLabel: { shrink: true } }}
-                    {...register("address")}
+                    {...register("user.address")}
                     multiline
                     rows={3}
                   />
@@ -336,11 +359,11 @@ export default function EditPanel({
                     fullWidth
                     autoComplete="new-password"
                     slotProps={{ inputLabel: { shrink: true } }}
-                    {...register("new_password", {
+                    {...register("user.new_password", {
                       minLength: { value: 8, message: "At least 8 characters" },
                     })}
-                    error={!!errors.new_password}
-                    helperText={errors.new_password?.message || " "}
+                    error={!!errors.user?.new_password}
+                    helperText={errors.user?.new_password?.message || " "}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
@@ -350,12 +373,12 @@ export default function EditPanel({
                     fullWidth
                     autoComplete="new-password"
                     slotProps={{ inputLabel: { shrink: true } }}
-                    {...register("confirm_password", {
+                    {...register("user.confirm_password", {
                       validate: (v, f) =>
-                        v === f.new_password || "Passwords do not match",
+                        v === f.user.new_password || "Passwords do not match",
                     })}
-                    error={!!errors.confirm_password}
-                    helperText={errors.confirm_password?.message || " "}
+                    error={!!errors.user?.confirm_password}
+                    helperText={errors.user?.confirm_password?.message || " "}
                   />
                 </Grid>
               </Grid>
@@ -370,7 +393,7 @@ export default function EditPanel({
                 fullWidth
                 multiline
                 rows={4}
-                {...register("creator_bio")}
+                {...register("creator.bio")}
                 placeholder="Tell us about yourself..."
               />
             </SectionCard>
@@ -381,46 +404,98 @@ export default function EditPanel({
             <Grid size={{ xs: 12 }}>
               <SectionCard title="Creator Social Links" icon={Link2}>
                 <Stack spacing={2}>
-                  {fields.map((field, index) => (
-                    <Grid container spacing={2} key={field.id} alignItems="center">
-                      <Grid size={{ xs: 4, sm: 3 }}>
-                        <TextField
-                          select
-                          label="Platform"
-                          fullWidth
-                          size="small"
-                          {...register(`social_links.${index}.platform` as const, { required: true })}
-                          defaultValue={field.platform}
+                  {fields.map((field, index) => {
+                    const currentPlatform = watch(`creator.social_links.${index}.platform`);
+                    const PlatformIcon =
+                      socialPlatforms.find((p) => p.value === currentPlatform)?.icon ||
+                      Globe;
+
+                    return (
+                      <Grid
+                        container
+                        spacing={2}
+                        key={field.id}
+                        alignItems="flex-start"
+                      >
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                          <Controller
+                            control={control}
+                            name={`creator.social_links.${index}.platform`}
+                            render={({ field }) => (
+                              <TextField
+                                {...field}
+                                select
+                                label="Platform"
+                                fullWidth
+                                size="small"
+                                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
+                              >
+                                {socialPlatforms.map((p) => (
+                                  <MenuItem
+                                    key={p.value}
+                                    value={p.value}
+                                    disabled={fields.some(
+                                      (f, i) =>
+                                        i !== index &&
+                                        watch(`creator.social_links.${i}.platform`) === p.value
+                                    )}
+                                  >
+                                    <Stack
+                                      direction="row"
+                                      spacing={1}
+                                      alignItems="center"
+                                    >
+                                      <p.icon size={16} />
+                                      <Typography>{p.label}</Typography>
+                                    </Stack>
+                                  </MenuItem>
+                                ))}
+                              </TextField>
+                            )}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 7 }}>
+                          <TextField
+                            label="URL"
+                            fullWidth
+                            size="small"
+                            {...register(`creator.social_links.${index}.url` as const, {
+                              required: true,
+                            })}
+                            defaultValue={field.url}
+                          />
+                        </Grid>
+                        <Grid
+                          size={{ xs: 12, sm: 1 }}
+                          display="flex"
+                          justifyContent="center"
+                          alignItems="center"
+                          sx={{ pt: { xs: 0, sm: 0 } }}
                         >
-                          {socialPlatforms.map((p) => (
-                            <MenuItem key={p} value={p}>{p}</MenuItem>
-                          ))}
-                        </TextField>
+                          <IconButton
+                            color="error"
+                            onClick={() => remove(index)}
+                            disabled={fields.length <= 1}
+                            sx={{
+                              opacity: fields.length <= 1 ? 0.3 : 1,
+                            }}
+                          >
+                            <Trash2 size={20} />
+                          </IconButton>
+                        </Grid>
                       </Grid>
-                      <Grid size={{ xs: 6, sm: 8 }}>
-                        <TextField
-                          label="URL"
-                          fullWidth
-                          size="small"
-                          {...register(`social_links.${index}.url` as const, { required: true })}
-                          defaultValue={field.url}
-                        />
-                      </Grid>
-                      <Grid size={{ xs: 2, sm: 1 }} display="flex" justifyContent="center">
-                        <IconButton color="error" onClick={() => remove(index)}>
-                          <Trash2 size={20} />
-                        </IconButton>
-                      </Grid>
-                    </Grid>
-                  ))}
-                  <Button
-                    startIcon={<Plus size={18} />}
-                    variant="outlined"
-                    onClick={() => append({ platform: "Website", url: "" })}
-                    sx={{ alignSelf: "flex-start" }}
-                  >
-                    Add Link
-                  </Button>
+                    );
+                  })}
+                  {fields.length < socialPlatforms.length && (
+                    <Button
+                      startIcon={<Plus size={18} />}
+                      variant="outlined"
+                      onClick={handleAddLink}
+                      sx={{ alignSelf: "flex-start", borderRadius: 1.5 }}
+                    >
+                      Add Link
+                    </Button>
+                  )}
                 </Stack>
               </SectionCard>
             </Grid>
@@ -446,4 +521,3 @@ export default function EditPanel({
     </Box>
   );
 }
-

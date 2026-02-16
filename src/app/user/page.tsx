@@ -388,24 +388,11 @@ function UserContent() {
         fd.set("data", JSON.stringify(data));
       }
 
-      // Handle Creator Update
-      if (profile?.creator?.id && (data.creator_bio !== undefined || data.social_links !== undefined)) {
-        const creatorPayload = {
-          bio: data.creator_bio,
-          social_links: data.social_links,
-        };
-        const creatorFd = new FormData();
-        creatorFd.append("data", JSON.stringify(creatorPayload));
-
-        console.log("Updating creator:", creatorPayload);
-        await updateCreator(profile.creator.id, creatorFd, token);
-      }
-
       // User DB
-      const ok = await updateUser(profile.id, fd); // Note: updateUser might need token fix if it fails, but leaving as is for now
+      const ok = await updateUser(fd, token); // Note: updateUser might need token fix if it fails, but leaving as is for now
       console.log("Submitting updated profile data:", data, fd);
 
-      if (ok || profile?.creator?.id) { // Consider success if at least one worked? simplified for now
+      if (ok) { // Consider success if at least one worked? simplified for now
         if (pendingAvatar?.file)
           await user.setProfileImage({ file: pendingAvatar.file });
         if (pendingAvatar?.clear) await user.setProfileImage({ file: null });

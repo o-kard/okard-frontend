@@ -30,10 +30,13 @@ export async function checkUserExists(clerk_id: string) {
   return r.exists
 }
 
-export async function updateUser(id: string, fd: FormData) {
-  return request<User>(`${API_URL}/update/${id}`, {
+export async function updateUser(fd: FormData, token: string | null) {
+  return request<User>(`${API_URL}/update`, {
     method: "PUT",
     body: fd,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 }
 
