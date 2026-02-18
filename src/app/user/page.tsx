@@ -54,8 +54,8 @@ import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { updateCreator } from "@/modules/creator/api/api";
 import { useRequireUserInDb } from "@/hooks/useRequireUserDb";
 import { useUpdateUsername } from "@/hooks/useUpdateUsername";
+import { useAddEmailAddress } from "@/hooks/useAddEmailAddress";
 import {
-  validateEmail,
   validatePwdPair,
 } from "@/utils/validation";
 import { getContributeByUserId } from "@/modules/contributor/api/api";
@@ -106,125 +106,8 @@ function UserContent() {
   const [contributions, setContributions] = useState<ContributorWithPost[]>([]);
   const [contributionsLoading, setContributionsLoading] = useState(true);
 
-  // Username management
   const { updateUsername } = useUpdateUsername();
-
-  // Email management
-  const addEmail = useReverification((email: string) =>
-    user!.createEmailAddress({ email })
-  );
-  const setPrimaryEmail = useReverification((id: string) =>
-    user!.update({ primaryEmailAddressId: id })
-  );
-  const destroyEmail = useReverification((emailObj: any) => emailObj.destroy());
-  async function handleEmailFlowFromPayload(payload: any): Promise<boolean> {
-    if (!isLoaded || !user) return false;
-
-    const desired = (payload?.email ?? "").trim(); // ค่าใหม่จากฟอร์ม (อาจเป็น "" ถ้ากด remove)
-    const wantRemove = !!payload?.remove_email; // ธงจากฟอร์ม
-    const currentPrimary = user.primaryEmailAddress?.emailAddress ?? "";
-    const currentPrimaryId = user.primaryEmailAddress?.id ?? "";
-    const all = user.emailAddresses ?? [];
-
-    // ---- REMOVE ----
-    if (wantRemove) {
-      if (!currentPrimaryId) return true; // ไม่มีอยู่แล้ว
-      try {
-        // ถ้ามีอีเมลอื่น ให้สลับ primary ไปอันอื่นก่อน (ให้เลือก verified ก่อน)
-        const others = all.filter((a) => a.id !== currentPrimaryId);
-        if (others.length > 0) {
-          const next =
-            others.find((a) => a.verification?.status === "verified") ??
-            others[0];
-          await setPrimaryEmail(next.id);
-        }
-        // ลบอันเดิม
-        await destroyEmail(user.primaryEmailAddress!);
-        await user.reload();
-        return true;
-      } catch (e: any) {
-        if (isClerkAPIResponseError(e)) {
-          const msg = e.errors
-            ?.map((er: any) => er.longMessage || er.message)
-            .join("\n");
-          alert(msg ?? "Failed to remove email");
-          return false;
-        }
-        console.error(e);
-        alert("Failed to remove email");
-        return false;
-      }
-    }
-
-    // ถ้าไม่ตั้งใจ remove:
-    // - ถ้า desired ว่าง และไม่มี current → ถือว่า ok (ไม่มีอะไรทำ)
-    // - ถ้า desired = current → ok
-    if (!desired || desired === currentPrimary) return true;
-
-    // ---- ADD or CHANGE ----
-    if (!validateEmail(desired)) {
-      alert("Invalid email format");
-      return false;
-    }
-
-    try {
-      // 1) สร้างอีเมลใหม่
-      const created = await addEmail(desired);
-      await user.reload();
-
-      // หา object อีเมลที่เพิ่งสร้าง
-      const after = user.emailAddresses ?? [];
-      const emailObj =
-        after.find((a) => a.id === created?.id) ||
-        after.find((a) => a.emailAddress === desired);
-      if (!emailObj) {
-        alert("Email object not found after creation");
-        return false;
-      }
-
-      // 2) ส่งโค้ดยืนยัน
-      await emailObj.prepareVerification({ strategy: "email_code" });
-      const code = window.prompt(`Enter the 6-digit code sent to ${desired}`);
-      if (!code) {
-        alert("Verification cancelled");
-        return false;
-      }
-      const res = await emailObj.attemptVerification({ code });
-      if (res?.verification?.status !== "verified") {
-        alert("Verification failed");
-        return false;
-      }
-
-      // 3) ตั้งเป็น primary
-      await setPrimaryEmail(emailObj.id);
-
-      // 4) (ออปชัน) ถ้าเป็นการเปลี่ยนจากอีเมลเก่า → ลบอีเมลเก่าออก
-      if (currentPrimaryId) {
-        const old = (user.emailAddresses ?? []).find(
-          (a) => a.id === currentPrimaryId
-        );
-        if (old) {
-          try {
-            await destroyEmail(old);
-          } catch { }
-        }
-      }
-
-      await user.reload();
-      return true;
-    } catch (e: any) {
-      if (isClerkAPIResponseError(e)) {
-        const msg = e.errors
-          ?.map((er: any) => er.longMessage || er.message)
-          .join("\n");
-        alert(msg ?? "Failed to add/verify email");
-        return false;
-      }
-      console.error(e);
-      alert("Failed to add/verify email");
-      return false;
-    }
-  }
+  const { addEmail, cancelPendingEmail } = useAddEmailAddress();
 
   // Password management
   const changePassword = useReverification(
@@ -374,9 +257,12 @@ function UserContent() {
       fd.delete("password_new");
       fd.delete("password_confirm");
 
-      // Email
-      const okE = await handleEmailFlowFromPayload(data);
-      if (!okE) return; // ❗ ถ้าไม่ผ่าน -> ยกเลิก ไม่อัปเดต DB
+      // Email (add-only — only runs if user has no email yet and typed one)
+      const desiredEmail = (data?.user?.email ?? "").trim();
+      if (desiredEmail && !user.primaryEmailAddress) {
+        const okE = await addEmail(desiredEmail);
+        if (!okE) return;
+      }
 
       if (pendingAvatar?.file) {
         fd.append("image", pendingAvatar.file);
@@ -596,7 +482,14 @@ function UserContent() {
             <Grid size={{ xs: 12, md: 9, lg: 9 }}>
               {tab === "profile" && <ProfilePanel campaignCount={campaigns.length} contributionsCount={contributions.length} />}
               {tab === "edit" && (
-                <EditPanel onSubmit={handleEditSubmit} initial={profile} />
+                <EditPanel
+                  onSubmit={handleEditSubmit}
+                  initial={profile}
+                  onCancel={async () => {
+                    await cancelPendingEmail();
+                    router.replace(buildTabHref("profile"));
+                  }}
+                />
               )}
               {tab === "contributions" && <ContributionsPanel contributions={contributions} loading={contributionsLoading} />}
               {tab === "campaigns" && <CampaignsPanel campaigns={campaigns} loading={campaignsLoading} />}

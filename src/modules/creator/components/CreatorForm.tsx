@@ -490,7 +490,7 @@ export default function CreatorRegisterForm({
                           variant="outlined"
                           size="small"
                           type="email"
-                          disabled
+                          disabled={!!initial?.email}
                           {...register("user.email")}
                           sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
                         />

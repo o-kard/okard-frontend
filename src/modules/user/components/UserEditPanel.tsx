@@ -100,7 +100,6 @@ export default function EditPanel({
   const [submitting, setSubmitting] = useState(false);
   const [imagePreviewUrl, setPreviewUrl] = useState<string | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
-  const [removeEmail, setRemoveEmail] = useState(false);
 
   const { countryOptions, countryLoading, countryError } = useCountryOptions();
 
@@ -134,7 +133,6 @@ export default function EditPanel({
       console.log("social_links: ", creatorData?.social_links);
       setPreviewUrl(initial.image?.url ?? initial.image_url ?? null);
       setRemoveImage(false);
-      setRemoveEmail(false);
     }
   }, [initial, reset, creatorData]);
 
@@ -170,7 +168,6 @@ export default function EditPanel({
           country_id: values.user.country_id || null,
           birth_date: values.user.birth_date || null,
           remove_image: removeImage,
-          remove_email: removeEmail,
         },
         creator: {
           bio: values.creator.bio,
@@ -307,23 +304,13 @@ export default function EditPanel({
                     fullWidth
                     slotProps={{ inputLabel: { shrink: true } }}
                     {...register("user.email")}
-                    disabled={hasEmail && !removeEmail}
+                    disabled={hasEmail}
                     helperText={
                       hasEmail
-                        ? removeEmail
-                          ? "This email will be removed"
-                          : "Connected"
-                        : "No email connected — add one"
+                        ? "Email connected"
+                        : "No email connected — enter one to add"
                     }
                   />
-                  <Box mt={1}>
-                    {hasEmail && !removeEmail && (
-                      <Button size="small" color="error" onClick={() => { setRemoveEmail(true); setValue("user.email", ""); }}>Remove this email</Button>
-                    )}
-                    {hasEmail && removeEmail && (
-                      <Button size="small" onClick={() => { setRemoveEmail(false); setValue("user.email", initial?.email ?? ""); }}>Undo remove</Button>
-                    )}
-                  </Box>
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <TextField

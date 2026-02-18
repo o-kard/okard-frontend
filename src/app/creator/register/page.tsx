@@ -10,6 +10,7 @@ import { useRequireUserInDb } from "@/hooks/useRequireUserDb";
 import { getUser } from "@/modules/user/api/api";
 import { User } from "@/modules/user/types/user";
 import { useUpdateUsername } from "@/hooks/useUpdateUsername";
+import { useAddEmailAddress } from "@/hooks/useAddEmailAddress";
 
 export default function CreatorRegisterPage() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function CreatorRegisterPage() {
   const { getToken } = useAuth();
   const { user, isLoaded } = useUser();
   const { updateUsername } = useUpdateUsername();
+  const { addEmail } = useAddEmailAddress();
 
   const [profile, setProfile] = useState<User | null | undefined>(undefined);
 
@@ -47,9 +49,20 @@ export default function CreatorRegisterPage() {
             throw new Error("Failed to update username");
           }
         }
+        const desiredEmail = (userData?.email ?? "").trim();
+        if (desiredEmail && !user?.primaryEmailAddress) {
+          const okE = await addEmail(desiredEmail);
+          if (!okE) {
+            console.error("Failed to add/verify email. Aborting creator registration.");
+            throw new Error("Failed to add/verify email");
+          }
+        }
       } catch (e) {
-        console.error("Error parsing data or updating username:", e);
-        if ((e as Error).message === "Failed to update username") {
+        console.error("Error parsing data or updating username/email:", e);
+        if (
+          (e as Error).message === "Failed to update username" ||
+          (e as Error).message === "Failed to add/verify email"
+        ) {
           throw e;
         }
       }
