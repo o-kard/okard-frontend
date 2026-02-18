@@ -329,7 +329,7 @@ function UserContent() {
 
     const raw = fd.get("data");
     const data = raw ? JSON.parse(String(raw)) : {};
-    const newUsername = data?.username as string | undefined;
+    const newUsername = data?.user?.username as string | undefined;
 
     const newPw = String(fd.get("password_new") ?? "");
     const confirmPw = String(fd.get("password_confirm") ?? "");
@@ -341,7 +341,7 @@ function UserContent() {
     // const imageFile = pendingAvatar?.file ?? null;
     try {
       // Username
-      if (newUsername && newUsername !== user.username) {
+      if (newUsername && newUsername !== user?.username) {
         const okU = await updateUsername(newUsername);
         if (!okU) return; // ถ้า username ไม่ผ่าน validation หรืออัพเดตไม่สำเร็จ ให้หยุด
       }
@@ -384,7 +384,7 @@ function UserContent() {
       if (pendingAvatar?.clear) {
         const raw = fd.get("data");
         const data = raw ? JSON.parse(String(raw)) : {};
-        data.remove_image = true;
+        data.user.remove_image = true;
         fd.set("data", JSON.stringify(data));
       }
 
