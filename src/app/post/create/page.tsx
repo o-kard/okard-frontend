@@ -2,7 +2,7 @@
 
 "use client";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { useState } from "react";
 import { createPostWithCampaigns } from "@/modules/post/api/api";
 import PostForm, { categoryOptions } from "@/modules/post/components/PostForm";
@@ -11,9 +11,10 @@ import type { FormValues } from "@/modules/post/components/PostForm";
 import type { PredictInput } from "@/modules/predict/types/predictTypes";
 import { predictPost } from "@/modules/predict/api/api";
 import { useCountryOptions } from "@/hooks/useCountryOptions";
-import { getUserById } from "@/modules/user/api/api";
+import { getUser } from "@/modules/user/api/api";
 
 export default function PostCreatePage() {
+  const { getToken } = useAuth();
   const { user: clerkUser } = useUser();
   const router = useRouter();
   const { countryOptions } = useCountryOptions();
@@ -37,7 +38,9 @@ export default function PostCreatePage() {
     if (!clerkUser) return;
 
     try {
-      const dbUser = await getUserById(clerkUser.id);
+      const token = await getToken();
+      if (!token) return { message: "Predict failed: no token" };
+      const dbUser = await getUser(token);
       const userCountryId = dbUser.country_id;
       const countryLabel =
         countryOptions.find((c) => c.value === userCountryId)?.label || "Unknown";
