@@ -2,7 +2,12 @@
 import AdminLayout from "../AdminLayout";
 import { useState, useEffect } from "react";
 import SearchIcon from "@mui/icons-material/Search";
-import { Button, TextField, InputAdornment, Chip } from "@mui/material";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import {
+  Button, TextField, InputAdornment, Chip, IconButton, Menu, MenuItem,
+  Box, Typography, Stack, Avatar, Paper, TableContainer, Table,
+  TableHead, TableRow, TableCell, TableBody
+} from "@mui/material";
 import { fetchPosts, changeStatus } from "@/modules/post/api/api";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -11,9 +16,58 @@ import DialogActions from "@mui/material/DialogActions";
 import { useAuth } from "@clerk/nextjs";
 
 const statusColors: Record<string, string> = {
-  active: "#1de9b6",
+  active: "#12C998",
   suspended: "#ff5252",
   pending: "#ffd600",
+};
+
+const ActionMenu = ({ onSuspend }: { onSuspend: () => void }) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    setAnchorEl(null);
+  };
+
+  return (
+    <>
+      <IconButton
+        onClick={handleClick}
+        size="small"
+        sx={{
+          color: '#666666',
+          '&:hover': { background: 'rgba(0,0,0,0.05)', color: '#222222' }
+        }}
+      >
+        <MoreVertIcon fontSize="small" />
+      </IconButton>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        onClick={(e) => e.stopPropagation()}
+        PaperProps={{
+          style: {
+            borderRadius: '0.75rem',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            border: '1px solid rgba(0,0,0,0.05)',
+            minWidth: '120px',
+            marginTop: '0.25rem',
+          }
+        }}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+      >
+        <MenuItem onClick={handleClose} sx={{ fontSize: '0.9rem', color: '#222222', '&:hover': { background: 'rgba(18, 201, 152, 0.08)', color: '#12C998' } }}>View</MenuItem>
+        <MenuItem onClick={(e) => { handleClose(e); onSuspend(); }} sx={{ fontSize: '0.9rem', color: '#222222', '&:hover': { background: 'rgba(244, 114, 182, 0.08)', color: '#F472B6' } }}>Toggle Status</MenuItem>
+        <MenuItem onClick={handleClose} sx={{ fontSize: '0.9rem', color: '#ff5252', '&:hover': { background: 'rgba(255, 82, 82, 0.08)' } }}>Delete</MenuItem>
+      </Menu>
+    </>
+  );
 };
 
 export default function CampaignsPage() {
@@ -89,276 +143,229 @@ export default function CampaignsPage() {
 
   return (
     <AdminLayout>
-      <h1
-        style={{
-          fontSize: "1.7rem",
-          fontWeight: 700,
-          marginBottom: "2rem",
-          color: "#1de9b6",
-        }}
-      >
-        Campaigns
-      </h1>
-      <div
-        style={{
-          marginBottom: 24,
-          display: "flex",
-          alignItems: "center",
-          gap: 16,
-        }}
-      >
-        <TextField
-          variant="outlined"
-          size="small"
-          placeholder="Search campaigns or creators..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon style={{ color: "#7de2d1" }} />
-              </InputAdornment>
-            ),
-            style: { background: "#22304a", color: "#e6f7fa", borderRadius: 8 },
-          }}
-          sx={{ width: 320 }}
-        />
-      </div>
-      <div
-        style={{
-          background: "#22304a",
-          borderRadius: 16,
-          padding: 0,
-          overflow: "auto",
-          boxShadow: "0 2px 16px 0 #10151f33",
-        }}
-      >
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "separate",
-            borderSpacing: 0,
-            color: "#e6f7fa",
-            fontSize: 15,
+      <Box sx={{
+        maxWidth: "1200px",
+        mx: "auto",
+        animation: "fadeIn 0.5s ease-out",
+        "@keyframes fadeIn": { from: { opacity: 0, transform: "translateY(10px)" }, to: { opacity: 1, transform: "translateY(0)" } }
+      }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 800, color: "#222222", m: 0, letterSpacing: "-0.02em" }}>
+              Campaigns
+            </Typography>
+            <Typography variant="body1" sx={{ color: "#666666", mt: 1, fontWeight: 400 }}>
+              View and manage all campaigns in the system.
+            </Typography>
+          </Box>
+        </Stack>
+
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={2}
+          sx={{
+            mb: 3,
+            bgcolor: "#ffffff",
+            p: 2.5,
+            borderRadius: 4,
+            border: "1px solid rgba(0, 0, 0, 0.15)",
+            boxShadow: "0 4px 15px rgba(0, 0, 0, 0.02)",
           }}
         >
-          <thead>
-            <tr style={{ background: "rgba(29,233,182,0.08)" }}>
-              <th
-                style={{
-                  textAlign: "left",
-                  padding: "16px 20px",
-                  fontWeight: 600,
-                  letterSpacing: 0.2,
-                }}
-              >
-                Campaign
-              </th>
-              <th
-                style={{
-                  textAlign: "left",
-                  padding: "16px 20px",
-                  fontWeight: 600,
-                  letterSpacing: 0.2,
-                }}
-              >
-                Creator
-              </th>
-              <th
-                style={{
-                  textAlign: "left",
-                  padding: "16px 20px",
-                  fontWeight: 600,
-                  letterSpacing: 0.2,
-                }}
-              >
-                Category
-              </th>
-              <th
-                style={{
-                  textAlign: "left",
-                  padding: "16px 20px",
-                  fontWeight: 600,
-                  letterSpacing: 0.2,
-                }}
-              >
-                Status
-              </th>
-              <th
-                style={{
-                  textAlign: "right",
-                  padding: "16px 20px",
-                  fontWeight: 600,
-                  letterSpacing: 0.2,
-                }}
-              >
-                Goal
-              </th>
-              <th
-                style={{
-                  textAlign: "right",
-                  padding: "16px 20px",
-                  fontWeight: 600,
-                  letterSpacing: 0.2,
-                }}
-              >
-                Raised
-              </th>
-              <th
-                style={{
-                  textAlign: "center",
-                  padding: "16px 20px",
-                  fontWeight: 600,
-                  letterSpacing: 0.2,
-                }}
-              >
-                Progress
-              </th>
-              <th
-                style={{
-                  textAlign: "center",
-                  padding: "16px 20px",
-                  fontWeight: 600,
-                  letterSpacing: 0.2,
-                }}
-              >
-                Created At
-              </th>
-              <th
-                style={{
-                  textAlign: "center",
-                  padding: "16px 20px",
-                  fontWeight: 600,
-                  letterSpacing: 0.2,
-                }}
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((p) => (
-              <tr
-                key={p.id}
-                style={{
-                  borderTop: "1px solid #26334d",
-                  transition: "background 0.18s cubic-bezier(.4,0,.2,1)",
-                  cursor: "pointer",
-                }}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.background = "#1a2333")
-                }
-                onMouseOut={(e) => (e.currentTarget.style.background = "none")}
-              >
-                <td style={{ padding: "14px 20px", fontWeight: 500 }}>
-                  {p.name}
-                </td>
-                <td style={{ padding: "14px 20px" }}>{p.creator}</td>
-                <td style={{ padding: "14px 20px" }}>{p.category}</td>
-                <td style={{ padding: "14px 20px" }}>
-                  <Chip
-                    label={p.status}
-                    sx={{
-                      background: statusColors[p.status],
-                      color: "#181f2a",
-                      fontWeight: 700,
-                      fontSize: 13,
+          <TextField
+            variant="outlined"
+            size="small"
+            placeholder="Search campaigns or creators..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon style={{ color: "#12C998" }} />
+                </InputAdornment>
+              ),
+              sx: {
+                background: "#f8fafc",
+                color: "#222222",
+                borderRadius: "0.75rem",
+                border: "1px solid rgba(18, 201, 152, 0.4)",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  border: "1px solid rgba(18, 201, 152, 0.6)",
+                },
+                "&.Mui-focused": {
+                  border: "1px solid #12C998",
+                  boxShadow: "0 0 0 3px rgba(18, 201, 152, 0.15)",
+                },
+                "& fieldset": { border: "none" },
+              },
+            }}
+            sx={{ width: 360 }}
+          />
+          <Chip
+            label={`${filtered.length} Campaigns`}
+            sx={{
+              background: "rgba(244, 114, 182, 0.1)",
+              color: "#F472B6",
+              fontWeight: 600,
+              borderRadius: "0.5rem",
+              border: "1px solid rgba(244, 114, 182, 0.4)",
+            }}
+          />
+        </Stack>
+
+        <TableContainer component={Paper} elevation={0} sx={{
+          bgcolor: "#ffffff",
+          borderRadius: 4,
+          border: "1px solid rgba(0, 0, 0, 0.15)",
+          boxShadow: "0 10px 40px rgba(0, 0, 0, 0.04)",
+          overflow: "hidden"
+        }}>
+          <Table sx={{ minWidth: 650 }}>
+            <TableHead>
+              <TableRow sx={{ bgcolor: "#f8fafc" }}>
+                <TableCell sx={{ fontWeight: 600, color: "#666666", textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.05em" }}>Campaign</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: "#666666", textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.05em" }}>Creator</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: "#666666", textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.05em" }}>Category</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: "#666666", textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.05em" }}>Status</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 600, color: "#666666", textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.05em" }}>Goal</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 600, color: "#666666", textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.05em" }}>Raised</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600, color: "#666666", textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.05em" }}>Progress</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600, color: "#666666", textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.05em" }}>Created At</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 600, color: "#666666", textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.05em" }}>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filtered.map((p, index) => (
+                <TableRow
+                  key={p.id}
+                  hover
+                  sx={{
+                    '&:last-child td, &:last-child th': { border: 0 },
+                    transition: "all 0.2s ease",
+                    cursor: "pointer",
+                    '&:hover': { bgcolor: 'rgba(18, 201, 152, 0.04) !important' }
+                  }}
+                >
+                  <TableCell>
+                    <Typography sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px', fontWeight: 600, color: '#222222', fontSize: '0.95rem' }}>
+                      {p.name}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Avatar sx={{
+                        width: 28, height: 28,
+                        background: 'linear-gradient(135deg, #12C998 0%, #F472B6 100%)',
+                        fontWeight: 'bold', fontSize: '0.8rem',
+                        boxShadow: '0 2px 8px rgba(244, 114, 182, 0.3)'
+                      }}>
+                        {p.creator.charAt(0).toUpperCase()}
+                      </Avatar>
+                      <Typography sx={{ color: '#666666', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px', fontSize: '0.9rem' }}>
+                        {p.creator}
+                      </Typography>
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Box component="span" sx={{
+                      bgcolor: 'rgba(18, 201, 152, 0.1)',
+                      color: '#12C998',
                       px: 1.5,
-                      borderRadius: 1.5,
-                      boxShadow: "0 1px 4px #0002",
-                    }}
-                    size="small"
-                  />
-                </td>
-                <td style={{ padding: "14px 20px", textAlign: "right" }}>
-                  ${p.goal.toLocaleString()}
-                </td>
-                <td style={{ padding: "14px 20px", textAlign: "right" }}>
-                  ${p.raised.toLocaleString()}
-                </td>
-                <td style={{ padding: "14px 20px", textAlign: "center" }}>
-                  {p.progress}%
-                </td>
-                <td style={{ padding: "14px 20px", textAlign: "center" }}>
-                  {formatDate(p.created_at)}
-                </td>
-                <td style={{ padding: "14px 20px", textAlign: "center" }}>
-                  <Button
-                    href={`/post/show/${p.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    size="small"
-                    variant="outlined"
-                    sx={{
-                      color: "#1de9b6",
-                      borderColor: "#1de9b6",
-                      mr: 1,
-                      borderRadius: 2,
+                      py: 0.5,
+                      borderRadius: 4,
+                      fontSize: '0.85rem',
                       fontWeight: 600,
-                      transition: "all 0.18s",
-                      "&:hover": {
-                        background: "#1de9b622",
-                        borderColor: "#1de9b6",
-                      },
-                    }}
-                  >
-                    View
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    sx={{
-                      color: p.status === "active" ? "#ffd600" : "#1de9b6",
-                      borderColor: p.status === "active" ? "#ffd600" : "#1de9b6",
-                      mr: 1,
-                      borderRadius: 2,
-                      fontWeight: 600,
-                      transition: "all 0.18s",
-                      "&:hover": {
-                        background:
-                          p.status === "active" ? "#ffd60022" : "#1de9b622",
-                        borderColor: p.status === "active" ? "#ffd600" : "#1de9b6",
-                      },
-                    }}
-                    onClick={() => {
+                      border: '1px solid rgba(18, 201, 152, 0.4)'
+                    }}>
+                      {p.category}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={p.status}
+                      sx={{
+                        background: `${statusColors[p.status]}20`,
+                        color: statusColors[p.status],
+                        fontWeight: 700,
+                        fontSize: '0.85rem',
+                        px: 1,
+                        borderRadius: 1.5,
+                        border: `1px solid ${statusColors[p.status]}50`
+                      }}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell align="right" sx={{ color: "#666666" }}>
+                    ${p.goal.toLocaleString()}
+                  </TableCell>
+                  <TableCell align="right" sx={{ color: "#666666", fontWeight: 600 }}>
+                    ${p.raised.toLocaleString()}
+                  </TableCell>
+                  <TableCell align="center">
+                    <Box sx={{
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      minWidth: '40px', height: '24px', bgcolor: '#f8fafc',
+                      borderRadius: 1, fontWeight: 600, color: '#12C998',
+                      border: '1px solid rgba(0, 0, 0, 0.15)', fontSize: '0.8rem'
+                    }}>
+                      {p.progress}%
+                    </Box>
+                  </TableCell>
+                  <TableCell align="center" sx={{ color: '#666666', fontSize: '0.85rem' }}>
+                    {formatDate(p.created_at)}
+                  </TableCell>
+                  <TableCell align="right">
+                    <ActionMenu onSuspend={() => {
                       setSelectedId(p.id);
                       setConfirmOpen(true);
-                    }}
-                  >
-                    {p.status === "active" ? "Suspend" : "Activate"}
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {filtered.length === 0 && (
-          <div style={{ padding: 32, textAlign: "center", color: "#7de2d1" }}>
-            No campaigns found.
-          </div>
-        )}
-      </div>
-      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-        <DialogTitle>Confirm Admin Action</DialogTitle>
-        <DialogContent>
-          Do you want to suspend this campaign?
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)} color="inherit">
-            Cancel
-          </Button>
-          <Button
-            onClick={() =>
-              changeCampaignStatus(
-                campaigns.find((c) => c.id === selectedId)?.status || ""
-              )
-            }
-            color="warning"
-          >
-            Confirm
-          </Button>
-        </DialogActions>
-      </Dialog>
+                    }} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          {filtered.length === 0 && (
+            <Stack alignItems="center" justifyContent="center" sx={{ p: 8 }}>
+              <Box sx={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                width: 64, height: 64, borderRadius: '50%', bgcolor: '#f8fafc',
+                mb: 2, border: '1px solid rgba(0, 0, 0, 0.15)'
+              }}>
+                <SearchIcon sx={{ color: '#12C998', fontSize: '2rem' }} />
+              </Box>
+              <Typography variant="h6" sx={{ color: '#222222', fontWeight: 600 }}>
+                No campaigns found
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#666666', mt: 0.5 }}>
+                We couldn't find any campaigns matching "{search}"
+              </Typography>
+            </Stack>
+          )}
+        </TableContainer>
+        <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+          <DialogTitle>Confirm Admin Action</DialogTitle>
+          <DialogContent>
+            <Typography>Do you want to suspend this campaign?</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setConfirmOpen(false)} color="inherit">
+              Cancel
+            </Button>
+            <Button
+              onClick={() =>
+                changeCampaignStatus(
+                  campaigns.find((c) => c.id === selectedId)?.status || ""
+                )
+              }
+              color="warning"
+            >
+              Confirm
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
     </AdminLayout>
   );
 }

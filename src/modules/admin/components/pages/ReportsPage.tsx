@@ -2,7 +2,12 @@
 import AdminLayout from '../AdminLayout';
 import { useState } from 'react';
 import SearchIcon from '@mui/icons-material/Search';
-import { Button, TextField, InputAdornment, Chip } from '@mui/material';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import {
+  Button, TextField, InputAdornment, Chip, IconButton, Menu, MenuItem,
+  Box, Typography, Stack, Avatar, Paper, TableContainer, Table,
+  TableHead, TableRow, TableCell, TableBody
+} from '@mui/material';
 
 const mockReports = [
   { id: 1, project: 'Tech for All', reporter: 'Eve', reason: 'Fraudulent activity', status: 'Pending' },
@@ -12,7 +17,57 @@ const mockReports = [
 
 const statusColors: Record<string, string> = {
   Pending: '#ffd600',
-  Reviewed: '#1de9b6',
+  Reviewed: '#12C998',
+};
+
+const ActionMenu = ({ status }: { status: string }) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    setAnchorEl(null);
+  };
+
+  return (
+    <>
+      <IconButton
+        onClick={handleClick}
+        size="small"
+        sx={{
+          color: '#666666',
+          '&:hover': { background: 'rgba(0,0,0,0.05)', color: '#222222' }
+        }}
+      >
+        <MoreVertIcon fontSize="small" />
+      </IconButton>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        onClick={(e) => e.stopPropagation()}
+        PaperProps={{
+          style: {
+            borderRadius: '0.75rem',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            border: '1px solid rgba(0,0,0,0.05)',
+            minWidth: '120px',
+            marginTop: '0.25rem',
+          }
+        }}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+      >
+        {status === 'Pending' && (
+          <MenuItem onClick={handleClose} sx={{ fontSize: '0.9rem', color: '#12C998', '&:hover': { background: 'rgba(18, 201, 152, 0.08)' } }}>Mark Reviewed</MenuItem>
+        )}
+        <MenuItem onClick={handleClose} sx={{ fontSize: '0.9rem', color: '#ff5252', '&:hover': { background: 'rgba(255, 82, 82, 0.08)' } }}>Delete</MenuItem>
+      </Menu>
+    </>
+  );
 };
 
 export default function ReportsPage() {
@@ -24,66 +79,165 @@ export default function ReportsPage() {
   );
   return (
     <AdminLayout>
-      <h1 style={{ fontSize: '1.7rem', fontWeight: 700, marginBottom: '2rem', color: '#1de9b6' }}>Reports</h1>
-      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
-        <TextField
-          variant="outlined"
-          size="small"
-          placeholder="Search reports..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon style={{ color: '#7de2d1' }} />
-              </InputAdornment>
-            ),
-            style: { background: '#22304a', color: '#e6f7fa', borderRadius: 8 },
+      <Box sx={{
+        maxWidth: '1200px',
+        mx: 'auto',
+        animation: 'fadeIn 0.5s ease-out',
+        '@keyframes fadeIn': { from: { opacity: 0, transform: 'translateY(10px)' }, to: { opacity: 1, transform: 'translateY(0)' } }
+      }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 800, color: '#222222', m: 0, letterSpacing: '-0.02em' }}>
+              Reports
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#666666', mt: 1, fontWeight: 400 }}>
+              Review and manage user reported content.
+            </Typography>
+          </Box>
+        </Stack>
+
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{
+            mb: 3,
+            bgcolor: '#ffffff',
+            p: 2.5,
+            borderRadius: 4,
+            border: '1px solid rgba(0, 0, 0, 0.15)',
+            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.02)'
           }}
-          sx={{ width: 320 }}
-        />
-      </div>
-      <div style={{ background: '#22304a', borderRadius: 16, padding: 0, overflow: 'auto', boxShadow: '0 2px 16px 0 #10151f33' }}>
-        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, color: '#e6f7fa', fontSize: 15 }}>
-          <thead>
-            <tr style={{ background: 'rgba(29,233,182,0.08)' }}>
-              <th style={{ textAlign: 'left', padding: '16px 20px', fontWeight: 600, letterSpacing: 0.2 }}>Project</th>
-              <th style={{ textAlign: 'left', padding: '16px 20px', fontWeight: 600, letterSpacing: 0.2 }}>Reporter</th>
-              <th style={{ textAlign: 'left', padding: '16px 20px', fontWeight: 600, letterSpacing: 0.2 }}>Reason</th>
-              <th style={{ textAlign: 'left', padding: '16px 20px', fontWeight: 600, letterSpacing: 0.2 }}>Status</th>
-              <th style={{ textAlign: 'center', padding: '16px 20px', fontWeight: 600, letterSpacing: 0.2 }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((r) => (
-              <tr
-                key={r.id}
-                style={{
-                  borderTop: '1px solid #26334d',
-                  transition: 'background 0.18s cubic-bezier(.4,0,.2,1)',
-                  cursor: 'pointer',
-                }}
-                onMouseOver={e => (e.currentTarget.style.background = '#1a2333')}
-                onMouseOut={e => (e.currentTarget.style.background = 'none')}
-              >
-                <td style={{ padding: '14px 20px', fontWeight: 500 }}>{r.project}</td>
-                <td style={{ padding: '14px 20px' }}>{r.reporter}</td>
-                <td style={{ padding: '14px 20px' }}>{r.reason}</td>
-                <td style={{ padding: '14px 20px' }}>
-                  <Chip label={r.status} sx={{ background: statusColors[r.status], color: '#181f2a', fontWeight: 700, fontSize: 13, px: 1.5, borderRadius: 1.5, boxShadow: '0 1px 4px #0002' }} size="small" />
-                </td>
-                <td style={{ padding: '14px 20px', textAlign: 'center' }}>
-                  <Button size="small" variant="outlined" sx={{ color: '#1de9b6', borderColor: '#1de9b6', mr: 1, borderRadius: 2, fontWeight: 600, transition: 'all 0.18s', '&:hover': { background: '#1de9b622', borderColor: '#1de9b6' } }}>Mark Reviewed</Button>
-                  <Button size="small" variant="outlined" sx={{ color: '#ff5252', borderColor: '#ff5252', borderRadius: 2, fontWeight: 600, transition: 'all 0.18s', '&:hover': { background: '#ff525222', borderColor: '#ff5252' } }}>Delete</Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {filtered.length === 0 && (
-          <div style={{ padding: 32, textAlign: 'center', color: '#7de2d1' }}>No reports found.</div>
-        )}
-      </div>
+        >
+          <TextField
+            variant="outlined"
+            size="small"
+            placeholder="Search reports..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon style={{ color: '#12C998' }} />
+                </InputAdornment>
+              ),
+              sx: {
+                background: '#f8fafc',
+                color: '#222222',
+                borderRadius: '0.75rem',
+                border: '1px solid rgba(18, 201, 152, 0.4)',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  border: '1px solid rgba(18, 201, 152, 0.6)',
+                },
+                '&.Mui-focused': {
+                  border: '1px solid #12C998',
+                  boxShadow: '0 0 0 3px rgba(18, 201, 152, 0.15)'
+                },
+                '& fieldset': { border: 'none' }
+              },
+            }}
+            sx={{ width: 360 }}
+          />
+          <Chip
+            label={`${filtered.length} Reports`}
+            sx={{
+              background: 'rgba(244, 114, 182, 0.1)',
+              color: '#F472B6',
+              fontWeight: 600,
+              borderRadius: '0.5rem',
+              border: '1px solid rgba(244, 114, 182, 0.4)'
+            }}
+          />
+        </Stack>
+
+        <TableContainer component={Paper} elevation={0} sx={{
+          bgcolor: '#ffffff',
+          borderRadius: 4,
+          border: '1px solid rgba(0, 0, 0, 0.15)',
+          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.04)',
+          overflow: 'hidden'
+        }}>
+          <Table sx={{ minWidth: 650 }}>
+            <TableHead>
+              <TableRow sx={{ bgcolor: '#f8fafc' }}>
+                <TableCell sx={{ fontWeight: 600, color: '#666666', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.05em' }}>Project</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#666666', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.05em' }}>Reporter</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#666666', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.05em' }}>Reason</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#666666', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.05em' }}>Status</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 600, color: '#666666', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.05em' }}>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filtered.map((r, index) => (
+                <TableRow
+                  key={r.id}
+                  hover
+                  sx={{
+                    '&:last-child td, &:last-child th': { border: 0 },
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer',
+                    '&:hover': { bgcolor: 'rgba(18, 201, 152, 0.04) !important' }
+                  }}
+                >
+                  <TableCell>
+                    <Stack direction="row" alignItems="center" spacing={1.5}>
+                      <Avatar sx={{
+                        width: 36, height: 36,
+                        background: 'linear-gradient(135deg, #12C998 0%, #F472B6 100%)',
+                        fontWeight: 'bold', fontSize: '1rem',
+                        boxShadow: '0 2px 8px rgba(244, 114, 182, 0.3)'
+                      }}>
+                        {r.project.charAt(0).toUpperCase()}
+                      </Avatar>
+                      <Typography sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px', fontWeight: 600, color: '#222222', fontSize: '0.95rem' }}>
+                        {r.project}
+                      </Typography>
+                    </Stack>
+                  </TableCell>
+                  <TableCell sx={{ color: '#666666' }}>{r.reporter}</TableCell>
+                  <TableCell sx={{ color: '#666666' }}>{r.reason}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={r.status}
+                      sx={{
+                        background: `${statusColors[r.status]}20`,
+                        color: statusColors[r.status],
+                        fontWeight: 700,
+                        fontSize: '0.85rem',
+                        px: 1,
+                        borderRadius: 1.5,
+                        border: `1px solid ${statusColors[r.status]}50`
+                      }}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <ActionMenu status={r.status} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          {filtered.length === 0 && (
+            <Stack alignItems="center" justifyContent="center" sx={{ p: 8 }}>
+              <Box sx={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                width: 64, height: 64, borderRadius: '50%', bgcolor: '#f8fafc',
+                mb: 2, border: '1px solid rgba(0, 0, 0, 0.15)'
+              }}>
+                <SearchIcon sx={{ color: '#12C998', fontSize: '2rem' }} />
+              </Box>
+              <Typography variant="h6" sx={{ color: '#222222', fontWeight: 600 }}>
+                No reports found
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#666666', mt: 0.5 }}>
+                We couldn't find any reports matching "{search}"
+              </Typography>
+            </Stack>
+          )}
+        </TableContainer>
+      </Box>
     </AdminLayout>
   );
 }
