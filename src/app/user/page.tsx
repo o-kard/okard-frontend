@@ -39,6 +39,7 @@ import {
 import Grid from "@mui/material/Grid";
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 import DashboardCustomizeIcon from "@mui/icons-material/DashboardCustomize";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
 import EditIcon from "@mui/icons-material/Edit";
 import PersonIcon from "@mui/icons-material/Person";
 import { Camera, X } from "lucide-react";
@@ -47,6 +48,7 @@ import ProfilePanel from "@/modules/user/components/UserShowPanel";
 import EditPanel from "@/modules/user/components/UserEditPanel";
 import ContributionsPanel from "@/modules/user/components/UserContributionsPanel";
 import CampaignsPanel from "@/modules/user/components/UserCampaignsPanel";
+import UserBookmarksPanel from "@/modules/user/components/UserBookmarksPanel";
 import { getUser, updateUser } from "@/modules/user/api/api";
 import { fetchPosts } from "@/modules/post/api/api";
 import { Post } from "@/modules/post/types/post";
@@ -55,9 +57,7 @@ import { updateCreator } from "@/modules/creator/api/api";
 import { useRequireUserInDb } from "@/hooks/useRequireUserDb";
 import { useUpdateUsername } from "@/hooks/useUpdateUsername";
 import { useAddEmailAddress } from "@/hooks/useAddEmailAddress";
-import {
-  validatePwdPair,
-} from "@/utils/validation";
+import { validatePwdPair } from "@/utils/validation";
 import { getContributeByUserId } from "@/modules/contributor/api/api";
 import { ContributorWithPost } from "@/modules/contributor/types";
 import { fetchPostById } from "@/modules/post/api/api";
@@ -68,11 +68,22 @@ import { fetchPostById } from "@/modules/post/api/api";
 // -------------------------------
 // Tabs helpers (exported for tests)
 // -------------------------------
-export type Tab = "profile" | "edit" | "contributions" | "campaigns";
+export type Tab =
+  | "profile"
+  | "edit"
+  | "contributions"
+  | "campaigns"
+  | "bookmarks";
 
 export function getCurrentTab(sp: ReadonlyURLSearchParams): Tab {
   const t = sp.get("tab");
-  if (t === "edit" || t === "contributions" || t === "campaigns") return t;
+  if (
+    t === "edit" ||
+    t === "contributions" ||
+    t === "campaigns" ||
+    t === "bookmarks"
+  )
+    return t;
   return "profile"; // default
 }
 
@@ -117,7 +128,7 @@ function UserContent() {
         newPassword: p.newPassword,
         signOutOfOtherSessions: true,
       });
-    }
+    },
   );
 
   // Profile Image
@@ -169,7 +180,14 @@ function UserContent() {
 
         // Fetch campaigns
         if (user?.id) {
-          const userCampaigns = await fetchPosts(undefined, undefined, "newest", "all", "active", user.id);
+          const userCampaigns = await fetchPosts(
+            undefined,
+            undefined,
+            "newest",
+            "all",
+            "active",
+            user.id,
+          );
           if (!abort) {
             setCampaigns(userCampaigns || []);
             setCampaignsLoading(false);
@@ -278,7 +296,8 @@ function UserContent() {
       const ok = await updateUser(fd, token); // Note: updateUser might need token fix if it fails, but leaving as is for now
       console.log("Submitting updated profile data:", data, fd);
 
-      if (ok) { // Consider success if at least one worked? simplified for now
+      if (ok) {
+        // Consider success if at least one worked? simplified for now
         if (pendingAvatar?.file)
           await user.setProfileImage({ file: pendingAvatar.file });
         if (pendingAvatar?.clear) await user.setProfileImage({ file: null });
@@ -320,7 +339,9 @@ function UserContent() {
               >
                 {/* Header area (avatar + actions) */}
                 {tab === "edit" ? (
-                  <MuiBox sx={{ display: "flex", justifyContent: "center", mb: 4 }}>
+                  <MuiBox
+                    sx={{ display: "flex", justifyContent: "center", mb: 4 }}
+                  >
                     <MuiBox sx={{ position: "relative" }}>
                       <MuiBox
                         component="label"
@@ -474,13 +495,24 @@ function UserContent() {
                     label="My Campaigns"
                     active={isActiveTab(tab, "campaigns")}
                   />
+                  <NavItem
+                    href={buildTabHref("bookmarks")}
+                    icon={<BookmarkIcon />}
+                    label="Bookmarks"
+                    active={isActiveTab(tab, "bookmarks")}
+                  />
                 </List>
               </Paper>
             </Grid>
 
             {/* Main content area (same page; only component changes) */}
             <Grid size={{ xs: 12, md: 9, lg: 9 }}>
-              {tab === "profile" && <ProfilePanel campaignCount={campaigns.length} contributionsCount={contributions.length} />}
+              {tab === "profile" && (
+                <ProfilePanel
+                  campaignCount={campaigns.length}
+                  contributionsCount={contributions.length}
+                />
+              )}
               {tab === "edit" && (
                 <EditPanel
                   onSubmit={handleEditSubmit}
@@ -491,8 +523,19 @@ function UserContent() {
                   }}
                 />
               )}
-              {tab === "contributions" && <ContributionsPanel contributions={contributions} loading={contributionsLoading} />}
-              {tab === "campaigns" && <CampaignsPanel campaigns={campaigns} loading={campaignsLoading} />}
+              {tab === "contributions" && (
+                <ContributionsPanel
+                  contributions={contributions}
+                  loading={contributionsLoading}
+                />
+              )}
+              {tab === "campaigns" && (
+                <CampaignsPanel
+                  campaigns={campaigns}
+                  loading={campaignsLoading}
+                />
+              )}
+              {tab === "bookmarks" && <UserBookmarksPanel />}
             </Grid>
           </Grid>
         </MuiBox>

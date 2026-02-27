@@ -30,6 +30,8 @@ import CommentSections from "@/modules/post/components/comment/CommentSection";
 import { useUser } from "@clerk/nextjs";
 import ReportModal from "@/modules/report/components/ReportModal";
 import ReportIcon from "@mui/icons-material/Report";
+import { fetchPostById, fetchRecommendedPosts } from "@/modules/post/api/api";
+import PostList from "@/modules/post/components/PostList";
 import { getUserById } from "@/modules/user/api/api";
 import ReviewEditRequestModal from "@/modules/edit_request/components/ReviewEditRequestModal";
 import CreatorCard from "@/modules/post/components/CreatorCard";
@@ -40,6 +42,9 @@ import { getProgressByPostId } from "@/modules/progress/api/api";
 import { Progress } from "@/modules/progress/types";
 import AddIcon from "@mui/icons-material/Add";
 import { CATEGORY_COLORS } from "@/modules/home/utils/categoryColors";
+import { useBookmark } from "@/modules/post/hooks/useBookmark";
+import BookmarkIconMini from "@mui/icons-material/BookmarkBorder";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -53,6 +58,13 @@ export default function PostDetailPage() {
   const [openReportModal, setOpenReportModal] = useState(false);
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
   const [reviewRequest, setReviewRequest] = useState<any>(null);
+  const [recommendedPosts, setRecommendedPosts] = useState<Post[]>([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+
+  const { isBookmarked, handleToggleBookmark, setIsBookmarked } = useBookmark(
+    id,
+    false,
+  );
 
   // ✅ Track if post has been fetched to prevent duplicate view logs
   const hasFetchedPost = useRef(false);
@@ -127,9 +139,35 @@ export default function PostDetailPage() {
 
     fetch(url)
       .then((r) => r.json())
-      .then(setPost)
+      .then((data) => {
+        setPost(data);
+        setIsBookmarked(data.is_bookmarked || false);
+
+        // Fetch recommendations after getting the post
+        setLoadingRecommendations(true);
+        fetchRecommendedPosts(id, 4)
+          .then(async (recData) => {
+            if (recData && recData.recommendations) {
+              // Fetch full post details for each recommendation
+              const postsData = await Promise.all(
+                recData.recommendations.map((rec) =>
+                  fetchPostById(rec.post_id),
+                ),
+              );
+              // Filter out any failed fetches (nulls)
+              setRecommendedPosts(postsData.filter(Boolean));
+            }
+          })
+          .catch((err) => console.error("Failed to fetch recommendations", err))
+          .finally(() => setLoadingRecommendations(false));
+      })
       .catch(console.error);
   }, [id, user?.id]);
+
+  const handleBookmarkClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    await handleToggleBookmark();
+  };
 
   const imgSrc = useMemo(
     () =>
@@ -527,20 +565,23 @@ export default function PostDetailPage() {
             >
               <Button
                 variant="outlined"
-                startIcon={<BookmarkIconMini />}
+                onClick={handleBookmarkClick}
+                startIcon={
+                  isBookmarked ? <BookmarkIcon /> : <BookmarkIconMini />
+                }
                 sx={{
                   borderRadius: 2,
                   textTransform: "none",
                   fontWeight: 700,
                   borderColor: "divider",
-                  color: "text.primary",
+                  color: isBookmarked ? "primary.main" : "text.primary",
                   "&:hover": {
                     borderColor: "text.primary",
                     bgcolor: "transparent",
                   },
                 }}
               >
-                Remind Me
+                {isBookmarked ? "Saved" : "Save"}
               </Button>
               <IconButton
                 sx={{
@@ -784,6 +825,27 @@ export default function PostDetailPage() {
           />
         </Box>
 
+        {/* Recommended Posts Section */}
+        <Box sx={{ mt: 8, mb: 4, px: { xs: 2, md: 0 } }}>
+          <Typography variant="h4" fontWeight={900} sx={{ mb: 4 }}>
+            Recommended Campaigns
+          </Typography>
+
+          {loadingRecommendations ? (
+            <LinearProgress sx={{ borderRadius: 1 }} />
+          ) : recommendedPosts.length > 0 ? (
+            <PostList
+              posts={recommendedPosts}
+              onEdit={() => {}}
+              onDelete={() => {}}
+            />
+          ) : (
+            <Typography color="text.secondary">
+              No recommended campaigns found.
+            </Typography>
+          )}
+        </Box>
+
         {/* Modals */}
         <ProgressForm
           open={openProgressForm}
@@ -797,36 +859,5 @@ export default function PostDetailPage() {
         />
       </Container>
     </Container>
-  );
-}
-
-function BookmarkIconMini() {
-  return (
-    <Box
-      component="span"
-      sx={{
-        width: 16,
-        height: 16,
-        display: "inline-block",
-        border: "2px solid currentColor",
-        borderRadius: "4px",
-        position: "relative",
-      }}
-    >
-      <Box
-        component="span"
-        sx={{
-          position: "absolute",
-          left: "50%",
-          top: "42%",
-          width: 0,
-          height: 0,
-          transform: "translate(-50%,-50%)",
-          borderTop: "6px solid currentColor",
-          borderLeft: "4px solid transparent",
-          borderRight: "4px solid transparent",
-        }}
-      />
-    </Box>
   );
 }

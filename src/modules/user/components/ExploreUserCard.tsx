@@ -59,7 +59,7 @@ export default function ExploreUserCard({ user }: UserCardProps) {
             >
                 {/* Avatar overlapping header */}
                 <Avatar
-                    src={user.image?.path ? `${process.env.NEXT_PUBLIC_API_URL}${user.image.path}` : undefined}
+                    src={user.media?.path ? `${process.env.NEXT_PUBLIC_API_URL}${user.media.path}` : undefined}
                     alt={user.username}
                     sx={{
                         width: 90,
@@ -68,13 +68,13 @@ export default function ExploreUserCard({ user }: UserCardProps) {
                         mb: 2,
                         border: "4px solid white",
                         boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                        bgcolor: user.image?.path ? "#fff" : "#9e9e9e",
+                        bgcolor: user.media?.path ? "#fff" : "#9e9e9e",
                         color: "#fff",
                         fontSize: "2.5rem",
                         fontWeight: 700,
                     }}
                 >
-                    {!user.image?.path && user.username?.charAt(0).toUpperCase()}
+                    {!user.media?.path && user.username?.charAt(0).toUpperCase()}
                 </Avatar>
 
                 <Typography variant="h6" fontWeight={700} gutterBottom sx={{ fontSize: "1.1rem" }}>

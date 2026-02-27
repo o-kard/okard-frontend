@@ -27,6 +27,7 @@ export type Post = {
   effective_start_from: string | null;
   effective_end_date: string | null;
   created_at?: string;
+  updated_at?: string;
   state: PostStateType;
   status: PostStatusType;
   category: PostCategoryType;
@@ -43,6 +44,7 @@ export type Post = {
   rewards?: Reward[] | [];
   comments?: PostComment[] | [];
   user: UserPublicResponse;
+  is_bookmarked?: boolean;
 };
 
 export type Campaign = {
@@ -114,6 +116,8 @@ export type PostSummary = {
   suupporter: number | null;
   state: PostStateType;
   status: PostStatusType;
+  created_at?: string;
+  updated_at?: string;
   media: Media[];
   images?: Media[];
   video?: Media | null;
@@ -122,4 +126,5 @@ export type PostSummary = {
     username: string;
     media?: UserMedia | null;
   };
+  is_bookmarked?: boolean;
 };

@@ -1,10 +1,21 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { Notification } from "../types/notification";
-import { listNotifications, deleteNotification } from "../api/api";
+// import { useEffect, useMemo, useRef, useState } from "react";
+// import type { Notification } from "../types/notification";
+// import { listNotifications, deleteNotification } from "../api/api";
 
 type Opts = { clerkId?: string; pollMs?: number };
 
 export function useNotifications(opts: Opts = {}) {
+  // Temporary disabled
+  return {
+    items: [],
+    loading: false,
+    error: null,
+    unreadCount: 0,
+    refetch: async () => {},
+    removeOne: async (id: string) => {},
+  };
+
+  /*
   const { clerkId, pollMs = 15000 } = opts;
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
@@ -42,4 +53,5 @@ export function useNotifications(opts: Opts = {}) {
   const unreadCount = useMemo(() => items.length, [items]);
 
   return { items, loading, error, unreadCount, refetch: fetchNow, removeOne };
+  */
 }

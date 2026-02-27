@@ -11,7 +11,7 @@ export const fetchPosts = async (
   sort?: string,
   state?: string,
   status?: string,
-  clerkId?: string
+  clerkId?: string,
 ): Promise<Post[]> => {
   const params = new URLSearchParams();
   if (category) params.append("category", category);
@@ -162,34 +162,30 @@ export async function changeStatus(
     },
   );
 }
-export async function getForYouCampaigns(token: string
-): Promise<Post[]> {
+export async function getForYouCampaigns(token: string): Promise<Post[]> {
   const data = await request<{
     campaigns: {
-      campaign: Post
-      score: number
-    }[]
-  }>(
-    `${API_PATH}/for-you`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`
-      },
-    }
-  );
+      campaign: Post;
+      score: number;
+    }[];
+  }>(`${API_PATH}/for-you`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
   if (!data || !data.campaigns) {
     throw new Error("Failed to fetch for-you campaigns");
   }
 
   // Log the full data object for inspection
-  console.log('[FOR_YOU] full data:', data);
+  console.log("[FOR_YOU] full data:", data);
 
   data.campaigns.forEach(({ campaign, score }, i) => {
     console.log(
       `[FOR_YOU #${i}] score=${score.toFixed(3)}`,
-      campaign.post_header
+      campaign.post_header,
     );
   });
 
@@ -202,4 +198,39 @@ export async function fetchPostById(postId: string): Promise<Post> {
 
 export async function fetchPostsByUserId(userId: string): Promise<Post[]> {
   return request<Post[]>(`${API_PATH}/campaign-by-user/${userId}`);
+}
+
+// Bookmarks API
+export async function toggleBookmark(
+  postId: string,
+  token: string | null,
+): Promise<{ bookmarked: boolean }> {
+  return request<{ bookmarked: boolean }>(`/api/bookmarks/${postId}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function fetchBookmarks(token: string | null): Promise<Post[]> {
+  return request<Post[]>(`/api/bookmarks/`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function fetchRecommendedPosts(
+  postId: string,
+  limit: number = 4,
+): Promise<{
+  source_post_id: string;
+  recommendations: { post_id: string; score: number }[];
+}> {
+  return request<{
+    source_post_id: string;
+    recommendations: { post_id: string; score: number }[];
+  }>(`${API_PATH}/${postId}/recommend?limit=${limit}`);
 }
