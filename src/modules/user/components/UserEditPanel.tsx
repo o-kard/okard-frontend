@@ -33,7 +33,7 @@ type FormValues = {
     address: string | null;
     country_id: string | null;
     birth_date: string | null; // ISO "YYYY-MM-DD"
-    image: File | null;
+    media: File | null;
     new_password?: string;
     confirm_password?: string;
   };
@@ -81,7 +81,7 @@ export default function EditPanel({
         address: "",
         country_id: "",
         birth_date: null,
-        image: null,
+        media: null,
         new_password: "",
         confirm_password: "",
       },
@@ -121,7 +121,7 @@ export default function EditPanel({
           address: initial.address ?? "",
           country_id: initial.country_id ?? "",
           birth_date: initial.birth_date ? (initial.birth_date instanceof Date ? initial.birth_date.toISOString().split('T')[0] : initial.birth_date) : null,
-          image: null,
+          media: null,
           new_password: "",
           confirm_password: "",
         },
@@ -177,7 +177,7 @@ export default function EditPanel({
 
       fd.append("data", JSON.stringify(payload));
 
-      if (values.user.image) fd.append("image", values.user.image);
+      if (values.user.media) fd.append("media", values.user.media);
       if (values.user.new_password) fd.append("password_new", values.user.new_password);
       if (values.user.confirm_password) fd.append("password_confirm", values.user.confirm_password);
 

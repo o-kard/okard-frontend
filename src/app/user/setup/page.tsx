@@ -32,7 +32,7 @@ function UserSetupContent() {
   const handleSubmit = async (fd: FormData) => {
     if (!user) return;
 
-    const imageFile = fd.get("image") ?? null;
+    const imageFile = fd.get("media") ?? null;
     const removeImage = fd.get("remove_image") === "true";
 
     try {

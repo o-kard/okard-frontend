@@ -265,7 +265,7 @@ function UserContent() {
       }
 
       if (pendingAvatar?.file) {
-        fd.append("image", pendingAvatar.file);
+        fd.append("media", pendingAvatar.file);
       }
       if (pendingAvatar?.clear) {
         const raw = fd.get("data");

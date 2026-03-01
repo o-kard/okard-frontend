@@ -127,7 +127,7 @@ export default function UserForm({
       fd.append("remove_image", values.remove_image ? "true" : "false");
 
       if (values.user_image) {
-        fd.append("image", values.user_image);
+        fd.append("media", values.user_image);
       }
       if (values.password) {
         fd.append("password", values.password);
