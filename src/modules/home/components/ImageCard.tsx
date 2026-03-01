@@ -139,6 +139,7 @@ export default function ImageCard({ campaign, big = false }: ImageCardProps) {
 
           {/* User Info */}
           <Typography
+            component="div"
             fontWeight={600}
             sx={{
               fontFamily: "var(--font-montserrat)",
