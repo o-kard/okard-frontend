@@ -1,8 +1,7 @@
-import { Box, Paper, Typography, Stack, Chip, IconButton } from "@mui/material";
+import { Box, Paper, Typography, Stack, Chip, IconButton, keyframes } from "@mui/material";
 import Link from "next/link";
 import { Post } from "@/modules/post/types/post";
 import { CATEGORY_COLORS } from "@/modules/home/utils/categoryColors";
-import { keyframes } from "@mui/system";
 import EditIcon from "@mui/icons-material/Edit";
 
 const grow = keyframes`

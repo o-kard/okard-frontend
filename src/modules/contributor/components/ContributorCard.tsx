@@ -9,11 +9,11 @@ import {
     Avatar,
     Stack,
     Chip,
+    keyframes,
 } from "@mui/material";
 import { ContributorWithPost } from "../types";
 import Link from "next/link";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
-import { keyframes } from "@mui/system";
 
 const grow = keyframes`
   0% { transform: scaleX(0); }
