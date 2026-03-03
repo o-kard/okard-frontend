@@ -21,6 +21,7 @@ import ShareIcon from "@mui/icons-material/Share";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import CloseIcon from "@mui/icons-material/Close";
+import EditIcon from "@mui/icons-material/Edit";
 
 import { Post, Media } from "@/modules/post/types/post";
 import PostDetailTabs from "@/modules/post/components/PostDetailTabs";
@@ -46,6 +47,7 @@ import { useBookmark } from "@/modules/post/hooks/useBookmark";
 import BookmarkIconMini from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import { predictionLabel } from "@/utils/label";
+import CommunityLeaderboard from "@/modules/post/components/CommunityLeaderboard";
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -225,363 +227,376 @@ export default function PostDetailPage() {
   const CategoryIcon = categoryConfig?.icon;
 
   return (
-    <Container
-      maxWidth={false}
+    <Box
       sx={{
-        py: 5,
         bgcolor: "#FAFAFA",
+        width: "100%",
         minHeight: "100vh",
-        padding: 0,
-        paddingLeft: { xs: 0, md: 0 },
-        paddingRight: { xs: 0, sm: 0 },
+        pb: 8,
       }}
     >
-      <Container maxWidth="xl">
-        <Box
-          sx={{
-            mb: 3,
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            paddingTop: 2,
-          }}
-        >
-          <Button
-            component={Link}
-            href="/post"
-            startIcon={<ArrowBackIosNewIcon sx={{ fontSize: 14 }} />}
+      <Container
+        maxWidth={false}
+        sx={{
+          padding: 0,
+          paddingLeft: { xs: 0, md: 0 },
+          paddingRight: { xs: 0, sm: 0 },
+        }}
+      >
+        <Container maxWidth="xl">
+          <Box
             sx={{
-              color: "text.secondary",
-              textTransform: "none",
-              fontWeight: 700,
-              "&:hover": { color: "primary.main", bgcolor: "transparent" },
+              bgcolor: "transparent",
+              mb: 3,
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              paddingTop: 2,
             }}
           >
-            Back
-          </Button>
-        </Box>
-
-        <Grid
-          container
-          spacing={4}
-          alignItems="start"
-          sx={{ paddingLeft: 0, paddingRight: 0 }}
-        >
-          {/* LEFT: card */}
-          <Grid size={{ xs: 12, md: 7 }}>
-            <Box
+            <Button
+              component={Link}
+              href="/post"
+              startIcon={<ArrowBackIosNewIcon sx={{ fontSize: 14 }} />}
               sx={{
-                bgcolor: "common.white",
-                borderRadius: 4,
-                boxShadow: "0 8px 40px rgba(0,0,0,0.08)",
-                overflow: "hidden",
+                color: "text.secondary",
+                textTransform: "none",
+                fontWeight: 700,
+                "&:hover": { color: "primary.main", bgcolor: "transparent" },
               }}
             >
-              {/* Image Carousel */}
+              Back
+            </Button>
+          </Box>
+
+          <Grid
+            container
+            spacing={4}
+            alignItems="start"
+            sx={{ paddingLeft: 0, paddingRight: 0 }}
+          >
+            {/* LEFT: card */}
+            <Grid size={{ xs: 12, md: 7 }}>
               <Box
                 sx={{
-                  position: "relative",
-                  height: { xs: 420, md: 520 },
-                  bgcolor: "grey.100",
+                  bgcolor: "common.white",
+                  borderRadius: 4,
+                  boxShadow: "0 8px 40px rgba(0,0,0,0.08)",
                   overflow: "hidden",
                 }}
               >
-                {sliderMedia.length > 0 && (
-                  <>
-                    {sliderMedia[currentIndex].media_type?.startsWith(
-                      "video/",
-                    ) ? (
-                      <Box
-                        component="video"
-                        src={`${process.env.NEXT_PUBLIC_API_URL}${sliderMedia[currentIndex].path}`}
-                        controls
-                        sx={{
-                          position: "absolute",
-                          inset: 0,
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "contain",
-                          bgcolor: "black",
-                        }}
-                      />
-                    ) : (
-                      <Box
-                        component="img"
-                        src={`${process.env.NEXT_PUBLIC_API_URL}${sliderMedia[currentIndex].path}`}
-                        alt={post.post_header}
-                        sx={{
-                          position: "absolute",
-                          inset: 0,
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                          transition: "opacity 0.5s ease-in-out",
-                        }}
-                      />
-                    )}
-
-                    {sliderMedia.length > 1 && (
-                      <>
-                        {/* Prev Button */}
-                        <IconButton
-                          onClick={() =>
-                            setCurrentIndex((prev) =>
-                              prev === 0 ? sliderMedia.length - 1 : prev - 1,
-                            )
-                          }
-                          sx={{
-                            position: "absolute",
-                            top: "50%",
-                            left: 16,
-                            transform: "translateY(-50%)",
-                            bgcolor: "rgba(0,0,0,0.4)",
-                            color: "white",
-                            "&:hover": { bgcolor: "rgba(0,0,0,0.6)" },
-                          }}
-                        >
-                          <ArrowBackIosNewIcon fontSize="small" />
-                        </IconButton>
-
-                        {/* Next Button */}
-                        <IconButton
-                          onClick={() =>
-                            setCurrentIndex((prev) =>
-                              prev === sliderMedia.length - 1 ? 0 : prev + 1,
-                            )
-                          }
-                          sx={{
-                            position: "absolute",
-                            top: "50%",
-                            right: 16,
-                            transform: "translateY(-50%)",
-                            bgcolor: "rgba(0,0,0,0.4)",
-                            color: "white",
-                            "&:hover": { bgcolor: "rgba(0,0,0,0.6)" },
-                          }}
-                        >
-                          <ArrowBackIosNewIcon
-                            fontSize="small"
-                            sx={{ transform: "rotate(180deg)" }}
-                          />
-                        </IconButton>
-
-                        {/* Indicator Dots */}
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          sx={{
-                            position: "absolute",
-                            bottom: 16,
-                            left: "50%",
-                            transform: "translateX(-50%)",
-                          }}
-                        >
-                          {sliderMedia.map((_, i) => (
-                            <Box
-                              key={i}
-                              onClick={() => setCurrentIndex(i)}
-                              sx={{
-                                width: 10,
-                                height: 10,
-                                borderRadius: "50%",
-                                bgcolor:
-                                  i === currentIndex
-                                    ? "primary.main"
-                                    : "rgba(255,255,255,0.6)",
-                                cursor: "pointer",
-                              }}
-                            />
-                          ))}
-                        </Stack>
-                      </>
-                    )}
-                  </>
-                )}
-
-                <Chip
-                  icon={CategoryIcon ? <CategoryIcon /> : undefined}
-                  label={categoryConfig?.label ?? post.category}
+                {/* Image Carousel */}
+                <Box
                   sx={{
-                    position: "absolute",
-                    top: 16,
-                    right: 16,
-                    fontWeight: 700,
-                    textTransform: "capitalize",
-                    bgcolor: categoryConfig?.color ?? "primary.main",
-                    color: "white",
-                    "& .MuiChip-icon": {
-                      color: "white",
-                    },
-                  }}
-                />
-              </Box>
-
-              {/* ตัวเลข + progress */}
-              <Box
-                sx={{
-                  p: 4,
-                  borderTop: "1px solid",
-                  borderColor: "rgba(0,0,0,0.04)",
-                }}
-              >
-                <Stack
-                  direction="row"
-                  alignItems="baseline"
-                  spacing={1}
-                  justifyContent="space-between"
-                  sx={{ mb: 2 }}
-                >
-                  <Box>
-                    <Typography
-                      variant="h4"
-                      fontWeight={900}
-                      sx={{ letterSpacing: "-0.02em" }}
-                    >
-                      {current.toLocaleString()}{" "}
-                      <Box
-                        component="span"
-                        sx={{
-                          fontSize: 20,
-                          color: "text.secondary",
-                          fontWeight: 600,
-                        }}
-                      >
-                        THB
-                      </Box>
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      fontWeight={500}
-                    >
-                      raised of {goal.toLocaleString()} THB goal
-                    </Typography>
-                  </Box>
-
-                  <Typography
-                    variant="h5"
-                    fontWeight={800}
-                    color="primary.main"
-                  >
-                    {percent}%
-                  </Typography>
-                </Stack>
-
-                <LinearProgress
-                  variant="determinate"
-                  value={percent}
-                  sx={{
-                    height: 12,
-                    borderRadius: 6,
+                    position: "relative",
+                    height: { xs: 420, md: 520 },
                     bgcolor: "grey.100",
-                    "& .MuiLinearProgress-bar": {
-                      borderRadius: 6,
-                      backgroundImage:
-                        "linear-gradient(90deg, #18C59B 0%, #0B9B78 100%)",
-                    },
+                    overflow: "hidden",
                   }}
-                />
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  sx={{ mt: 2 }}
-                  color="text.secondary"
                 >
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <AccessTimeIcon fontSize="small" />
-                    <Typography variant="body2" fontWeight={600}>
-                      {daysLeft !== undefined
-                        ? daysLeft < 0
-                          ? "Ended"
-                          : `${daysLeft} days left`
-                        : "-"}
+                  {sliderMedia.length > 0 && (
+                    <>
+                      {sliderMedia[currentIndex].media_type?.startsWith(
+                        "video/",
+                      ) ? (
+                        <Box
+                          component="video"
+                          src={`${process.env.NEXT_PUBLIC_API_URL}${sliderMedia[currentIndex].path}`}
+                          controls
+                          sx={{
+                            position: "absolute",
+                            inset: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "contain",
+                            bgcolor: "black",
+                          }}
+                        />
+                      ) : (
+                        <Box
+                          component="img"
+                          src={`${process.env.NEXT_PUBLIC_API_URL}${sliderMedia[currentIndex].path}`}
+                          alt={post.post_header}
+                          sx={{
+                            position: "absolute",
+                            inset: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            transition: "opacity 0.5s ease-in-out",
+                          }}
+                        />
+                      )}
+
+                      {sliderMedia.length > 1 && (
+                        <>
+                          {/* Prev Button */}
+                          <IconButton
+                            onClick={() =>
+                              setCurrentIndex((prev) =>
+                                prev === 0 ? sliderMedia.length - 1 : prev - 1,
+                              )
+                            }
+                            sx={{
+                              position: "absolute",
+                              top: "50%",
+                              left: 16,
+                              transform: "translateY(-50%)",
+                              bgcolor: "rgba(0,0,0,0.4)",
+                              color: "white",
+                              "&:hover": { bgcolor: "rgba(0,0,0,0.6)" },
+                            }}
+                          >
+                            <ArrowBackIosNewIcon fontSize="small" />
+                          </IconButton>
+
+                          {/* Next Button */}
+                          <IconButton
+                            onClick={() =>
+                              setCurrentIndex((prev) =>
+                                prev === sliderMedia.length - 1 ? 0 : prev + 1,
+                              )
+                            }
+                            sx={{
+                              position: "absolute",
+                              top: "50%",
+                              right: 16,
+                              transform: "translateY(-50%)",
+                              bgcolor: "rgba(0,0,0,0.4)",
+                              color: "white",
+                              "&:hover": { bgcolor: "rgba(0,0,0,0.6)" },
+                            }}
+                          >
+                            <ArrowBackIosNewIcon
+                              fontSize="small"
+                              sx={{ transform: "rotate(180deg)" }}
+                            />
+                          </IconButton>
+
+                          {/* Indicator Dots */}
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            sx={{
+                              position: "absolute",
+                              bottom: 16,
+                              left: "50%",
+                              transform: "translateX(-50%)",
+                            }}
+                          >
+                            {sliderMedia.map((_, i) => (
+                              <Box
+                                key={i}
+                                onClick={() => setCurrentIndex(i)}
+                                sx={{
+                                  width: 10,
+                                  height: 10,
+                                  borderRadius: "50%",
+                                  bgcolor:
+                                    i === currentIndex
+                                      ? "primary.main"
+                                      : "rgba(255,255,255,0.6)",
+                                  cursor: "pointer",
+                                }}
+                              />
+                            ))}
+                          </Stack>
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  <Chip
+                    icon={CategoryIcon ? <CategoryIcon /> : undefined}
+                    label={categoryConfig?.label ?? post.category}
+                    sx={{
+                      position: "absolute",
+                      top: 16,
+                      right: 16,
+                      fontWeight: 700,
+                      textTransform: "capitalize",
+                      bgcolor: categoryConfig?.color ?? "primary.main",
+                      color: "white",
+                      "& .MuiChip-icon": {
+                        color: "white",
+                      },
+                    }}
+                  />
+                </Box>
+
+                {/* ตัวเลข + progress */}
+                <Box
+                  sx={{
+                    p: 4,
+                    borderTop: "1px solid",
+                    borderColor: "rgba(0,0,0,0.04)",
+                  }}
+                >
+                  <Stack
+                    direction="row"
+                    alignItems="baseline"
+                    spacing={1}
+                    justifyContent="space-between"
+                    sx={{ mb: 2 }}
+                  >
+                    <Box>
+                      <Typography
+                        variant="h4"
+                        fontWeight={900}
+                        sx={{ letterSpacing: "-0.02em" }}
+                      >
+                        {current.toLocaleString()}{" "}
+                        <Box
+                          component="span"
+                          sx={{
+                            fontSize: 20,
+                            color: "text.secondary",
+                            fontWeight: 600,
+                          }}
+                        >
+                          USD
+                        </Box>
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        fontWeight={500}
+                      >
+                        raised of {goal.toLocaleString()} USD goal
+                      </Typography>
+                    </Box>
+
+                    <Typography
+                      variant="h5"
+                      fontWeight={800}
+                      color="primary.main"
+                    >
+                      {percent}%
                     </Typography>
                   </Stack>
-                </Stack>
+
+                  <LinearProgress
+                    variant="determinate"
+                    value={percent}
+                    sx={{
+                      height: 12,
+                      borderRadius: 6,
+                      bgcolor: "grey.100",
+                      "& .MuiLinearProgress-bar": {
+                        borderRadius: 6,
+                        backgroundImage:
+                          "linear-gradient(90deg, #18C59B 0%, #0B9B78 100%)",
+                      },
+                    }}
+                  />
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    sx={{ mt: 2 }}
+                    color="text.secondary"
+                  >
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <AccessTimeIcon fontSize="small" />
+                      <Typography variant="body2" fontWeight={600}>
+                        {daysLeft !== undefined
+                          ? daysLeft < 0
+                            ? "Ended"
+                            : `${daysLeft} days left`
+                          : "-"}
+                      </Typography>
+                    </Stack>
+                  </Stack>
+                </Box>
               </Box>
-            </Box>
-          </Grid>
+            </Grid>
 
-          {/* RIGHT: meta + actions */}
-          <Grid size={{ xs: 12, md: 5 }}>
-            <Typography variant="h3" fontWeight={800} sx={{ mb: 1 }}>
-              {post.post_header}
-            </Typography>
-
-            {/* author */}
-            <Stack
-              direction="row"
-              alignItems="center"
-              spacing={1.5}
-              sx={{ mb: 1.5 }}
-            >
-              <Box
+            {/* RIGHT: meta + actions */}
+            <Grid size={{ xs: 12, md: 5 }}>
+              <Typography
+                variant="h3"
+                fontWeight={600}
                 sx={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: "50%",
-                  bgcolor: "#FFE6F2",
-                  display: "grid",
-                  placeItems: "center",
-                  overflow: "hidden",
+                  mb: 1,
+                  fontSize: { xs: "28px", md: "40px" },
                 }}
               >
-                {post.user?.media?.path ? (
-                  <Box
-                    component="img"
-                    src={`${process.env.NEXT_PUBLIC_API_URL}${post.user.media.path}`}
-                    alt={post.user.username}
-                    sx={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                ) : (
-                  <PersonIcon sx={{ color: "#ff4081" }} />
-                )}
-              </Box>
-              <Typography fontWeight={700}>
-                {[post.user?.first_name, post.user?.surname]
-                  .filter(Boolean)
-                  .join(" ") ||
-                  post.user?.username ||
-                  "Unknown creator"}
+                {post.post_header}
               </Typography>
-            </Stack>
 
-            <Typography color="text.secondary" sx={{ mb: 2 }}>
-              {post.post_description}
-            </Typography>
-
-            {/* stats */}
-            <Stack spacing={1.5} sx={{ mb: 2 }}>
-              <Stack direction="row" alignItems="center" spacing={1.2}>
-                <GroupIcon />
-                <Typography fontWeight={700}>
-                  {post.supporter ?? 0} SUPPORTER
-                </Typography>
-              </Stack>
-              <Stack direction="row" alignItems="center" spacing={1.2}>
-                <AccessTimeIcon />
-                <Typography fontWeight={700}>
-                  {formatDate(post.effective_end_date)}
-                </Typography>
-              </Stack>
-              {post.ai_label && (
-                <Stack
-                  direction="column"
-                  sx={{ mt: 2, flexWrap: "wrap", gap: 1 }}
+              {/* author */}
+              <Stack
+                direction="row"
+                alignItems="center"
+                spacing={1.5}
+                sx={{ mb: 1.5 }}
+              >
+                <Box
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    bgcolor: "#FFE6F2",
+                    display: "grid",
+                    placeItems: "center",
+                    overflow: "hidden",
+                  }}
                 >
-                  {post.ai_label.success_label && (
-                    <Chip
-                      label={`SUCCESS RATE : ${predictionLabel(post.ai_label.success_label.toUpperCase())}`}
-                      sx={{
-                        width: "fit-content",
-                        bgcolor: "#FFED9E",
-                        fontWeight: 800,
-                        color: "black",
-                        borderRadius: 2,
-                      }}
+                  {post.user?.media?.path ? (
+                    <Box
+                      component="img"
+                      src={`${process.env.NEXT_PUBLIC_API_URL}${post.user.media.path}`}
+                      alt={post.user.username}
+                      sx={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
+                  ) : (
+                    <PersonIcon sx={{ color: "#ff4081" }} />
                   )}
-                  {/* {post.ai_label.risk_label && (
+                </Box>
+                <Typography fontWeight={700}>
+                  {[post.user?.first_name, post.user?.surname]
+                    .filter(Boolean)
+                    .join(" ") ||
+                    post.user?.username ||
+                    "Unknown creator"}
+                </Typography>
+              </Stack>
+
+              <Typography color="text.secondary" sx={{ mb: 2 }}>
+                {post.post_description}
+              </Typography>
+
+              {/* stats */}
+              <Stack spacing={1.5} sx={{ mb: 2 }}>
+                <Stack direction="row" alignItems="center" spacing={1.2}>
+                  <GroupIcon />
+                  <Typography fontWeight={700}>
+                    {post.supporter ?? 0} SUPPORTER
+                  </Typography>
+                </Stack>
+                <Stack direction="row" alignItems="center" spacing={1.2}>
+                  <AccessTimeIcon />
+                  <Typography fontWeight={700}>
+                    {formatDate(post.effective_end_date)}
+                  </Typography>
+                </Stack>
+                {post.ai_label && (
+                  <Stack
+                    direction="column"
+                    sx={{ mt: 2, flexWrap: "wrap", gap: 1 }}
+                  >
+                    {post.ai_label.success_label && (
+                      <Chip
+                        label={`SUCCESS RATE : ${predictionLabel(post.ai_label.success_label.toUpperCase())}`}
+                        sx={{
+                          width: "fit-content",
+                          bgcolor: "#FFED9E",
+                          fontWeight: 800,
+                          color: "black",
+                          borderRadius: 2,
+                        }}
+                      />
+                    )}
+                    {/* {post.ai_label.risk_label && (
                     <Chip
                       label={`RISK ${post.ai_label.risk_label.toUpperCase()}`}
                       sx={{
@@ -593,351 +608,366 @@ export default function PostDetailPage() {
                       }}
                     />
                   )} */}
-                  {post.ai_label.days_to_state_label && (
-                    <Chip
-                      label={`DAYS TO STATE : ${post.ai_label.days_to_state_label.toUpperCase()}`}
-                      sx={{
-                        width: "fit-content",
-                        bgcolor: "#B0E5FF",
-                        fontWeight: 800,
-                        color: "black",
-                        borderRadius: 2,
-                      }}
-                    />
-                  )}
-                  {post.ai_label.goal_eval_label && (
-                    <Chip
-                      label={`GOAL EVAL : ${post.ai_label.goal_eval_label.toUpperCase()}`}
-                      sx={{
-                        width: "fit-content",
-                        bgcolor: "#D3FFB0",
-                        fontWeight: 800,
-                        color: "black",
-                        borderRadius: 2,
-                      }}
-                    />
-                  )}
-                </Stack>
-              )}
-            </Stack>
+                    {post.ai_label.days_to_state_label && (
+                      <Chip
+                        label={`DAYS TO STATE : ${post.ai_label.days_to_state_label.toUpperCase()}`}
+                        sx={{
+                          width: "fit-content",
+                          bgcolor: "#B0E5FF",
+                          fontWeight: 800,
+                          color: "black",
+                          borderRadius: 2,
+                        }}
+                      />
+                    )}
+                    {post.ai_label.goal_eval_label && (
+                      <Chip
+                        label={`GOAL EVAL : ${post.ai_label.goal_eval_label.toUpperCase()}`}
+                        sx={{
+                          width: "fit-content",
+                          bgcolor: "#D3FFB0",
+                          fontWeight: 800,
+                          color: "black",
+                          borderRadius: 2,
+                        }}
+                      />
+                    )}
+                  </Stack>
+                )}
+              </Stack>
 
-            <Stack
-              direction="row"
-              spacing={1.2}
-              alignItems="center"
-              sx={{ mb: 2.5, flexWrap: "wrap" }}
-            >
-              <Button
-                variant="outlined"
-                onClick={handleBookmarkClick}
-                startIcon={
-                  isBookmarked ? <BookmarkIcon /> : <BookmarkIconMini />
-                }
-                sx={{
-                  borderRadius: 2,
-                  textTransform: "none",
-                  fontWeight: 700,
-                  borderColor: "divider",
-                  color: isBookmarked ? "primary.main" : "text.primary",
-                  "&:hover": {
-                    borderColor: "text.primary",
-                    bgcolor: "transparent",
-                  },
-                }}
+              <Stack
+                direction="row"
+                spacing={1.2}
+                alignItems="center"
+                sx={{ mb: 2.5, flexWrap: "wrap" }}
               >
-                {isBookmarked ? "Saved" : "Save"}
-              </Button>
-              <IconButton
-                sx={{
-                  color: "#1877F2",
-                  bgcolor: "rgba(24,119,242,0.08)",
-                  "&:hover": { bgcolor: "rgba(24,119,242,0.15)" },
-                }}
-              >
-                <FacebookIcon />
-              </IconButton>
-              <IconButton
-                sx={{
-                  color: "#E1306C",
-                  bgcolor: "rgba(225,48,108,0.08)",
-                  "&:hover": { bgcolor: "rgba(225,48,108,0.15)" },
-                }}
-              >
-                <InstagramIcon />
-              </IconButton>
-              <IconButton
-                sx={{
-                  color: "text.secondary",
-                  bgcolor: "rgba(0,0,0,0.04)",
-                  "&:hover": { bgcolor: "rgba(0,0,0,0.08)" },
-                }}
-              >
-                <ShareIcon />
-              </IconButton>
-
-              {/* Report Button (Everyone) */}
-              {appUser && appUser !== post.user_id && (
+                <Button
+                  variant="outlined"
+                  onClick={handleBookmarkClick}
+                  startIcon={
+                    isBookmarked ? <BookmarkIcon /> : <BookmarkIconMini />
+                  }
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: "none",
+                    fontWeight: 700,
+                    borderColor: "divider",
+                    color: isBookmarked ? "primary.main" : "text.primary",
+                    "&:hover": {
+                      borderColor: "text.primary",
+                      bgcolor: "transparent",
+                    },
+                  }}
+                >
+                  {isBookmarked ? "Saved" : "Save"}
+                </Button>
                 <IconButton
                   sx={{
-                    color: "error.main",
-                    bgcolor: "rgba(211,47,47,0.08)",
-                    "&:hover": { bgcolor: "rgba(211,47,47,0.15)" },
+                    color: "#1877F2",
+                    bgcolor: "rgba(24,119,242,0.08)",
+                    "&:hover": { bgcolor: "rgba(24,119,242,0.15)" },
                   }}
-                  onClick={() => setOpenReportModal(true)}
-                  title="Report this post"
                 >
-                  <ReportIcon />
+                  <FacebookIcon />
                 </IconButton>
-              )}
-
-              {portableReview && (
-                <Button
-                  variant="contained"
-                  color="warning"
-                  startIcon={<RateReviewIcon />}
-                  onClick={() => setReviewRequest(portableReview)}
+                <IconButton
+                  sx={{
+                    color: "#E1306C",
+                    bgcolor: "rgba(225,48,108,0.08)",
+                    "&:hover": { bgcolor: "rgba(225,48,108,0.15)" },
+                  }}
                 >
-                  Review Request
-                </Button>
-              )}
-            </Stack>
+                  <InstagramIcon />
+                </IconButton>
+                <IconButton
+                  sx={{
+                    color: "text.secondary",
+                    bgcolor: "rgba(0,0,0,0.04)",
+                    "&:hover": { bgcolor: "rgba(0,0,0,0.08)" },
+                  }}
+                >
+                  <ShareIcon />
+                </IconButton>
 
-            <ReviewEditRequestModal
-              open={!!reviewRequest}
-              onClose={() => setReviewRequest(null)}
-              request={reviewRequest}
-              clerkId={user?.id || ""}
-            />
+                {/* Edit Button (For Owner) */}
+                {appUser && appUser === post.user_id && (
+                  <Button
+                    variant="outlined"
+                    component={Link}
+                    href={`/post/edit/${post.id}`}
+                    startIcon={<EditIcon />}
+                    sx={{
+                      borderRadius: 2,
+                      textTransform: "none",
+                      fontWeight: 700,
+                      borderColor: "divider",
+                      color: "text.primary",
+                      "&:hover": {
+                        borderColor: "text.primary",
+                        bgcolor: "transparent",
+                      },
+                    }}
+                  >
+                    Edit Post
+                  </Button>
+                )}
 
-            <ReportModal
-              open={openReportModal}
-              onClose={() => setOpenReportModal(false)}
-              postId={post.id}
-              clerkId={user?.id || ""}
-            />
-            <Button
-              variant="contained"
-              fullWidth
-              disabled={daysLeft !== undefined && daysLeft < 0}
-              sx={{
-                bgcolor:
-                  daysLeft !== undefined && daysLeft < 0
-                    ? "grey.400"
-                    : "#18C59B",
-                background:
-                  daysLeft !== undefined && daysLeft < 0
-                    ? "grey.400"
-                    : "linear-gradient(45deg, #18C59B 30%, #12a884 90%)",
-                color: "white",
-                fontWeight: 800,
-                borderRadius: 3,
-                height: 60,
-                fontSize: 18,
-                letterSpacing: "0.02em",
-                textTransform: "none",
-                boxShadow:
-                  daysLeft !== undefined && daysLeft < 0
-                    ? "none"
-                    : "0 8px 24px rgba(24, 197, 155, 0.35)",
-                transition: "all 0.3s ease",
-                "&:hover": {
+                {/* Report Button (Everyone) */}
+                {appUser && appUser !== post.user_id && (
+                  <IconButton
+                    sx={{
+                      color: "error.main",
+                      bgcolor: "rgba(211,47,47,0.08)",
+                      "&:hover": { bgcolor: "rgba(211,47,47,0.15)" },
+                    }}
+                    onClick={() => setOpenReportModal(true)}
+                    title="Report this post"
+                  >
+                    <ReportIcon />
+                  </IconButton>
+                )}
+
+                {portableReview && (
+                  <Button
+                    variant="contained"
+                    color="warning"
+                    startIcon={<RateReviewIcon />}
+                    onClick={() => setReviewRequest(portableReview)}
+                  >
+                    Review Request
+                  </Button>
+                )}
+              </Stack>
+
+              <ReviewEditRequestModal
+                open={!!reviewRequest}
+                onClose={() => setReviewRequest(null)}
+                request={reviewRequest}
+                clerkId={user?.id || ""}
+              />
+
+              <ReportModal
+                open={openReportModal}
+                onClose={() => setOpenReportModal(false)}
+                postId={post.id}
+                clerkId={user?.id || ""}
+              />
+              <Button
+                variant="contained"
+                fullWidth
+                disabled={daysLeft !== undefined && daysLeft < 0}
+                sx={{
+                  bgcolor:
+                    daysLeft !== undefined && daysLeft < 0
+                      ? "grey.400"
+                      : "#18C59B",
+                  background:
+                    daysLeft !== undefined && daysLeft < 0
+                      ? "grey.400"
+                      : "linear-gradient(45deg, #18C59B 30%, #12a884 90%)",
+                  color: "white",
+                  fontWeight: 800,
+                  borderRadius: 3,
+                  height: 60,
+                  fontSize: 18,
+                  letterSpacing: "0.02em",
+                  textTransform: "none",
                   boxShadow:
                     daysLeft !== undefined && daysLeft < 0
                       ? "none"
-                      : "0 12px 28px rgba(24, 197, 155, 0.5)",
-                  transform:
-                    daysLeft !== undefined && daysLeft < 0
-                      ? "none"
-                      : "translateY(-2px)",
-                },
-              }}
-              onClick={() => router.push(`/payment/${id}`)}
-            >
-              {daysLeft !== undefined && daysLeft < 0
-                ? "Campaign Ended"
-                : "Contribute this Campaign"}
-            </Button>
+                      : "0 8px 24px rgba(24, 197, 155, 0.35)",
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    boxShadow:
+                      daysLeft !== undefined && daysLeft < 0
+                        ? "none"
+                        : "0 12px 28px rgba(24, 197, 155, 0.5)",
+                    transform:
+                      daysLeft !== undefined && daysLeft < 0
+                        ? "none"
+                        : "translateY(-2px)",
+                  },
+                }}
+                onClick={() => router.push(`/payment/${id}`)}
+              >
+                {daysLeft !== undefined && daysLeft < 0
+                  ? "Campaign Ended"
+                  : "Contribute this Campaign"}
+              </Button>
+            </Grid>
           </Grid>
-        </Grid>
-        <Box
-          sx={{
-            width: "100%",
-          }}
-        >
-          <PostDetailTabs
-            stickyTop={64}
-            sections={[
-              {
-                key: "campaign",
-                label: "Campaign",
-                content: (
-                  <Grid container spacing={4}>
-                    <Grid size={{ xs: 12, md: 8 }}>
-                      <CampaignSections
-                        campaigns={post.campaigns}
-                        apiBaseUrl={process.env.NEXT_PUBLIC_API_URL}
-                        scrollMarginTop={100}
-                        title=""
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 3 }}>
-                      <CreatorCard user={post.user} />
-                    </Grid>
-                  </Grid>
-                ),
-              },
-              {
-                key: "rewards",
-                label: "Rewards",
-                content: (
-                  <Grid container spacing={4}>
-                    <Grid size={{ xs: 12, md: 8 }}>
-                      <RewardSections
-                        rewards={post.rewards}
-                        apiBaseUrl={process.env.NEXT_PUBLIC_API_URL}
-                        scrollMarginTop={100}
-                        title=""
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 3 }}>
-                      <CreatorCard user={post.user} />
-                    </Grid>
-                  </Grid>
-                ),
-              },
-              {
-                key: "progress",
-                label: "Progress",
-                content: (
-                  <Grid container spacing={4}>
-                    <Grid size={{ xs: 12, md: 8 }}>
-                      <Box>
-                        <Stack
-                          direction="row"
-                          alignItems="center"
-                          justifyContent="flex-start"
-                          spacing={2}
-                        >
-                          {appUser && post.user_id === appUser && (
-                            <Button
-                              variant="contained"
-                              startIcon={<AddIcon />}
-                              onClick={() => {
-                                setEditProgressItem(null);
-                                setOpenProgressForm(true);
-                              }}
-                              size="small"
-                              sx={{
-                                bgcolor: "#18C59B",
-                                color: "white",
-                                fontWeight: 800,
-                                borderRadius: 2,
-                                px: 3,
-                                py: 1,
-                                textTransform: "none",
-                                boxShadow:
-                                  "0 4px 14px 0 rgba(24, 197, 155, 0.39)",
-                                "&:hover": {
-                                  bgcolor: "#12a884",
-                                  boxShadow:
-                                    "0 6px 20px 0 rgba(24, 197, 155, 0.23)",
-                                },
-                              }}
-                            >
-                              Add Update
-                            </Button>
-                          )}
-                        </Stack>
-
-                        <ProgressSection
-                          items={progressItems}
+          <Box
+            sx={{
+              width: "100%",
+            }}
+          >
+            <PostDetailTabs
+              stickyTop={64}
+              sections={[
+                {
+                  key: "campaign",
+                  label: "Campaign",
+                  content: (
+                    <Grid container spacing={4}>
+                      <Grid size={{ xs: 12, md: 8 }}>
+                        <CampaignSections
+                          campaigns={post.campaigns}
                           apiBaseUrl={process.env.NEXT_PUBLIC_API_URL}
+                          scrollMarginTop={100}
                           title=""
-                          isOwner={Boolean(appUser && post.user_id === appUser)}
-                          onEdit={(item) => {
-                            setEditProgressItem(item);
-                            setOpenProgressForm(true);
-                          }}
                         />
-                      </Box>
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 3 }}>
+                        <CreatorCard user={post.user} />
+                      </Grid>
                     </Grid>
-                    <Grid size={{ xs: 12, md: 3 }}>
-                      <CreatorCard user={post.user} />
+                  ),
+                },
+                {
+                  key: "rewards",
+                  label: "Rewards",
+                  content: (
+                    <Grid container spacing={4}>
+                      <Grid size={{ xs: 12, md: 8 }}>
+                        <RewardSections
+                          rewards={post.rewards}
+                          apiBaseUrl={process.env.NEXT_PUBLIC_API_URL}
+                          scrollMarginTop={100}
+                          title=""
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 3 }}>
+                        <CreatorCard user={post.user} />
+                      </Grid>
                     </Grid>
-                  </Grid>
-                ),
-              },
-              {
-                key: "comment",
-                label: "Comment",
-                content: (
-                  <Grid container spacing={4}>
-                    <Grid size={{ xs: 12, md: 8 }}>
-                      <CommentSections
-                        postId={post.id}
-                        apiBaseUrl={process.env.NEXT_PUBLIC_API_URL}
-                        scrollMarginTop={100}
-                        title=""
-                        clerkId={user?.id}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 3 }}>
-                      <CreatorCard user={post.user} />
-                    </Grid>
-                  </Grid>
-                ),
-              },
-              {
-                key: "community",
-                label: "Community",
-                content: (
-                  <Box>
-                    <Typography variant="h5" fontWeight={900} sx={{ mb: 1.5 }}>
-                      Community
-                    </Typography>
-                    <Typography color="text.secondary">
-                      Community posts / discussions…
-                    </Typography>
-                  </Box>
-                ),
-              },
-            ]}
-          />
-        </Box>
+                  ),
+                },
+                {
+                  key: "progress",
+                  label: "Progress",
+                  content: (
+                    <Grid container spacing={4}>
+                      <Grid size={{ xs: 12, md: 8 }}>
+                        <Box>
+                          <Stack
+                            direction="row"
+                            alignItems="center"
+                            justifyContent="flex-start"
+                            spacing={2}
+                          >
+                            {appUser && post.user_id === appUser && (
+                              <Button
+                                variant="contained"
+                                startIcon={<AddIcon />}
+                                onClick={() => {
+                                  setEditProgressItem(null);
+                                  setOpenProgressForm(true);
+                                }}
+                                size="small"
+                                sx={{
+                                  bgcolor: "#18C59B",
+                                  color: "white",
+                                  fontWeight: 800,
+                                  borderRadius: 2,
+                                  px: 3,
+                                  py: 1,
+                                  textTransform: "none",
+                                  boxShadow:
+                                    "0 4px 14px 0 rgba(24, 197, 155, 0.39)",
+                                  "&:hover": {
+                                    bgcolor: "#12a884",
+                                    boxShadow:
+                                      "0 6px 20px 0 rgba(24, 197, 155, 0.23)",
+                                  },
+                                }}
+                              >
+                                Add Update
+                              </Button>
+                            )}
+                          </Stack>
 
-        {/* Recommended Posts Section */}
-        <Box sx={{ mt: 8, mb: 4, px: { xs: 2, md: 0 } }}>
-          <Typography variant="h4" fontWeight={900} sx={{ mb: 4 }}>
-            Recommended Campaigns
-          </Typography>
-
-          {loadingRecommendations ? (
-            <LinearProgress sx={{ borderRadius: 1 }} />
-          ) : recommendedPosts.length > 0 ? (
-            <PostList
-              posts={recommendedPosts}
-              onEdit={() => {}}
-              onDelete={() => {}}
+                          <ProgressSection
+                            items={progressItems}
+                            apiBaseUrl={process.env.NEXT_PUBLIC_API_URL}
+                            title=""
+                            isOwner={Boolean(
+                              appUser && post.user_id === appUser,
+                            )}
+                            onEdit={(item) => {
+                              setEditProgressItem(item);
+                              setOpenProgressForm(true);
+                            }}
+                          />
+                        </Box>
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 3 }}>
+                        <CreatorCard user={post.user} />
+                      </Grid>
+                    </Grid>
+                  ),
+                },
+                {
+                  key: "comment",
+                  label: "Comment",
+                  content: (
+                    <Grid container spacing={4}>
+                      <Grid size={{ xs: 12, md: 8 }}>
+                        <CommentSections
+                          postId={post.id}
+                          apiBaseUrl={process.env.NEXT_PUBLIC_API_URL}
+                          scrollMarginTop={100}
+                          title=""
+                          clerkId={user?.id}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 3 }}>
+                        <CreatorCard user={post.user} />
+                      </Grid>
+                    </Grid>
+                  ),
+                },
+                {
+                  key: "community",
+                  label: "Community",
+                  content: <CommunityLeaderboard postId={post.id} />,
+                },
+              ]}
             />
-          ) : (
-            <Typography color="text.secondary">
-              No recommended campaigns found.
-            </Typography>
-          )}
-        </Box>
+          </Box>
 
-        {/* Modals */}
-        <ProgressForm
-          open={openProgressForm}
-          onClose={() => setOpenProgressForm(false)}
-          postId={post.id}
-          onSuccess={() => {
-            fetchProgress();
-            setEditProgressItem(null);
-          }}
-          initialData={editProgressItem}
-        />
+          {/* Recommended Posts Section */}
+          {recommendedPosts.length > 0 && (
+            <Box sx={{ mt: 8, mb: 4, px: { xs: 2, md: 0 } }}>
+              <Typography variant="h4" fontWeight={900} sx={{ mb: 4 }}>
+                Recommended Campaigns
+              </Typography>
+
+              {loadingRecommendations ? (
+                <LinearProgress sx={{ borderRadius: 1 }} />
+              ) : (
+                <PostList
+                  posts={recommendedPosts}
+                  onEdit={() => {}}
+                  onDelete={() => {}}
+                />
+              )}
+            </Box>
+          )}
+
+          {/* Modals */}
+          <ProgressForm
+            open={openProgressForm}
+            onClose={() => setOpenProgressForm(false)}
+            postId={post.id}
+            onSuccess={() => {
+              fetchProgress();
+              setEditProgressItem(null);
+            }}
+            initialData={editProgressItem}
+          />
+        </Container>
       </Container>
-    </Container>
+    </Box>
   );
 }

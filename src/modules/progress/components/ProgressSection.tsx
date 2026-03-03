@@ -94,13 +94,13 @@ export default function ProgressSection({
                       justifyContent: "flex-start",
                       textTransform: "none",
                       fontWeight: 800,
-                      color: isActive ? "#e91e63" : "text.primary",
+                      color: isActive ? "#18c59b" : "text.primary",
                       bgcolor: isActive
-                        ? "rgba(233,30,99,0.08)"
+                        ? "rgba(24,197,155,0.08)"
                         : "transparent",
                       borderRadius: 2,
                       px: 1,
-                      "&:hover": { bgcolor: "rgba(233,30,99,0.12)" },
+                      "&:hover": { bgcolor: "rgba(24,197,155,0.12)" },
                     }}
                   >
                     {item.progress_header || `Progress #${i + 1}`}

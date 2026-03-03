@@ -67,13 +67,13 @@ export default function RewardSections({
                       justifyContent: "flex-start",
                       textTransform: "none",
                       fontWeight: 800,
-                      color: isActive ? "#e91e63" : "text.primary",
+                      color: isActive ? "#18c59b" : "text.primary",
                       bgcolor: isActive
-                        ? "rgba(233,30,99,0.08)"
+                        ? "rgba(24,197,155,0.08)"
                         : "transparent",
                       borderRadius: 2,
                       px: 1,
-                      "&:hover": { bgcolor: "rgba(233,30,99,0.12)" },
+                      "&:hover": { bgcolor: "rgba(24,197,155,0.12)" },
                     }}
                   >
                     {c.reward_header || `Reward #${i + 1}`}
@@ -149,7 +149,7 @@ export default function RewardSections({
                             more than
                           </Typography>
                           <Typography variant="h6" fontWeight={900}>
-                            {new Intl.NumberFormat("th-TH").format(amount)} THB
+                            {new Intl.NumberFormat("th-TH").format(amount)} USD
                           </Typography>
                         </Box>
                       </Grid>

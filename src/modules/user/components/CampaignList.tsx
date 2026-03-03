@@ -172,7 +172,7 @@ export default function CampaignList({ campaigns, showEditButton }: CampaignList
                                                 </Typography>
                                                 <Typography variant="caption" color="text.secondary">
                                                     {new Intl.NumberFormat().format(post.current_amount)} /{" "}
-                                                    {new Intl.NumberFormat().format(post.goal_amount)} THB
+                                                    {new Intl.NumberFormat().format(post.goal_amount)} USD
                                                 </Typography>
                                             </Box>
                                             <Box

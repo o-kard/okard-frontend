@@ -52,12 +52,12 @@ export default function PostDetailTabs({ sections, stickyTop = 64 }: Props) {
               fontWeight: 800,
               minHeight: 48,
               fontSize: 16,
-              mr: 4, // Increase spacing between tabs
+              mr: 4,
               color: "text.secondary",
               "&:hover": { color: "primary.main" },
             },
             "& .MuiTabs-indicator": {
-              bgcolor: "#18C59B", // Match primary color
+              bgcolor: "#18C59B",
               height: 3,
               borderRadius: "3px 3px 0 0",
             },

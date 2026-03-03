@@ -98,10 +98,10 @@ export default function PaymentComponent({ postId, userId }: Props) {
               sx={{ mb: 1 }}
             >
               <Typography variant="h5" fontWeight={800}>
-                {goal.toLocaleString()} THB
+                {goal.toLocaleString()} USD
               </Typography>
               <Typography color="text.secondary">
-                {current.toLocaleString()} THB raised
+                {current.toLocaleString()} USD raised
               </Typography>
             </Stack>
             <LinearProgress

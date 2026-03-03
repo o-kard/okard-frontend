@@ -185,7 +185,6 @@ function UserContent() {
             undefined,
             "newest",
             "all",
-            "active",
             user.id,
           );
           if (!abort) {

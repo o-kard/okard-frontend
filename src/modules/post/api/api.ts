@@ -1,5 +1,5 @@
 import { request } from "@/api/api";
-import { LikeResp, Post, PostComment } from "../types/post";
+import { LikeResp, Post, PostComment, PostCommunity } from "../types/post";
 
 const API_PATH = "/api/post";
 const API_PATH_COMMENT = "/api/comment";
@@ -196,6 +196,10 @@ export async function fetchPostById(postId: string): Promise<Post> {
 
 export async function fetchPostsByUserId(userId: string): Promise<Post[]> {
   return request<Post[]>(`${API_PATH}/campaign-by-user/${userId}`);
+}
+
+export async function getPostCommunity(postId: string): Promise<PostCommunity> {
+  return request<PostCommunity>(`${API_PATH}/${postId}/community`);
 }
 
 // Bookmarks API
