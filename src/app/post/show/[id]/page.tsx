@@ -27,12 +27,12 @@ import PostDetailTabs from "@/modules/post/components/PostDetailTabs";
 import CampaignSections from "@/modules/post/components/CampaginSection";
 import RewardSections from "@/modules/post/components/RewardSection";
 import CommentSections from "@/modules/post/components/comment/CommentSection";
-import { useUser } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import ReportModal from "@/modules/report/components/ReportModal";
 import ReportIcon from "@mui/icons-material/Report";
 import { fetchPostById, fetchRecommendedPosts } from "@/modules/post/api/api";
 import PostList from "@/modules/post/components/PostList";
-import { getUserById } from "@/modules/user/api/api";
+import { getUser, getUserById } from "@/modules/user/api/api";
 import ReviewEditRequestModal from "@/modules/edit_request/components/ReviewEditRequestModal";
 import CreatorCard from "@/modules/post/components/CreatorCard";
 import RateReviewIcon from "@mui/icons-material/RateReview";
@@ -45,6 +45,7 @@ import { CATEGORY_COLORS } from "@/modules/home/utils/categoryColors";
 import { useBookmark } from "@/modules/post/hooks/useBookmark";
 import BookmarkIconMini from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
+import { predictionLabel } from "@/utils/label";
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -53,8 +54,8 @@ export default function PostDetailPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const router = useRouter();
   const { user } = useUser();
-  const [appUser, setAppUser] = useState<{ id: string } | null>(null);
-  const [openEditModal, setOpenEditModal] = useState(false);
+  const [appUser, setAppUser] = useState<string>("");
+  const { getToken } = useAuth();
   const [openReportModal, setOpenReportModal] = useState(false);
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
   const [reviewRequest, setReviewRequest] = useState<any>(null);
@@ -84,10 +85,24 @@ export default function PostDetailPage() {
   };
 
   useEffect(() => {
-    if (user?.id) {
-      getUserById(user.id).then((u) => setAppUser(u));
+    async function fetchRole() {
+      if (user?.id) {
+        try {
+          const token = await getToken();
+          if (token) {
+            const dbUser = await getUser(token);
+            if (dbUser && dbUser.role) {
+              setAppUser(dbUser.id);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to fetch user role:", err);
+        }
+      }
     }
-  }, [user?.id]);
+    fetchRole();
+  }, [user?.id, getToken]);
+  console.log(appUser);
 
   useEffect(() => {
     if (!id) return;
@@ -106,7 +121,7 @@ export default function PostDetailPage() {
   const portableReview = useMemo(() => {
     if (!appUser || pendingRequests.length === 0) return null;
     return pendingRequests.find((req) =>
-      req.approvers?.some((app: any) => app.user_id === appUser.id),
+      req.approvers?.some((app: any) => app.user_id === appUser),
     );
   }, [appUser, pendingRequests]);
 
@@ -475,7 +490,11 @@ export default function PostDetailPage() {
                   <Stack direction="row" alignItems="center" spacing={1}>
                     <AccessTimeIcon fontSize="small" />
                     <Typography variant="body2" fontWeight={600}>
-                      {daysLeft ?? "-"} days left
+                      {daysLeft !== undefined
+                        ? daysLeft < 0
+                          ? "Ended"
+                          : `${daysLeft} days left`
+                        : "-"}
                     </Typography>
                   </Stack>
                 </Stack>
@@ -545,16 +564,61 @@ export default function PostDetailPage() {
                   {formatDate(post.effective_end_date)}
                 </Typography>
               </Stack>
-              <Chip
-                label={`SUCCESS RATE ${percent}%`}
-                sx={{
-                  width: "fit-content",
-                  bgcolor: "#FFED9E",
-                  fontWeight: 800,
-                  color: "black",
-                  borderRadius: 2,
-                }}
-              />
+              {post.ai_label && (
+                <Stack
+                  direction="column"
+                  sx={{ mt: 2, flexWrap: "wrap", gap: 1 }}
+                >
+                  {post.ai_label.success_label && (
+                    <Chip
+                      label={`SUCCESS RATE : ${predictionLabel(post.ai_label.success_label.toUpperCase())}`}
+                      sx={{
+                        width: "fit-content",
+                        bgcolor: "#FFED9E",
+                        fontWeight: 800,
+                        color: "black",
+                        borderRadius: 2,
+                      }}
+                    />
+                  )}
+                  {/* {post.ai_label.risk_label && (
+                    <Chip
+                      label={`RISK ${post.ai_label.risk_label.toUpperCase()}`}
+                      sx={{
+                        width: "fit-content",
+                        bgcolor: "#FFB0B0",
+                        fontWeight: 800,
+                        color: "black",
+                        borderRadius: 2,
+                      }}
+                    />
+                  )} */}
+                  {post.ai_label.days_to_state_label && (
+                    <Chip
+                      label={`DAYS TO STATE : ${post.ai_label.days_to_state_label.toUpperCase()}`}
+                      sx={{
+                        width: "fit-content",
+                        bgcolor: "#B0E5FF",
+                        fontWeight: 800,
+                        color: "black",
+                        borderRadius: 2,
+                      }}
+                    />
+                  )}
+                  {post.ai_label.goal_eval_label && (
+                    <Chip
+                      label={`GOAL EVAL : ${post.ai_label.goal_eval_label.toUpperCase()}`}
+                      sx={{
+                        width: "fit-content",
+                        bgcolor: "#D3FFB0",
+                        fontWeight: 800,
+                        color: "black",
+                        borderRadius: 2,
+                      }}
+                    />
+                  )}
+                </Stack>
+              )}
             </Stack>
 
             <Stack
@@ -612,7 +676,7 @@ export default function PostDetailPage() {
               </IconButton>
 
               {/* Report Button (Everyone) */}
-              {appUser && appUser.id !== post.user_id && (
+              {appUser && appUser !== post.user_id && (
                 <IconButton
                   sx={{
                     color: "error.main",
@@ -654,9 +718,16 @@ export default function PostDetailPage() {
             <Button
               variant="contained"
               fullWidth
+              disabled={daysLeft !== undefined && daysLeft < 0}
               sx={{
-                bgcolor: "#18C59B",
-                background: "linear-gradient(45deg, #18C59B 30%, #12a884 90%)",
+                bgcolor:
+                  daysLeft !== undefined && daysLeft < 0
+                    ? "grey.400"
+                    : "#18C59B",
+                background:
+                  daysLeft !== undefined && daysLeft < 0
+                    ? "grey.400"
+                    : "linear-gradient(45deg, #18C59B 30%, #12a884 90%)",
                 color: "white",
                 fontWeight: 800,
                 borderRadius: 3,
@@ -664,16 +735,27 @@ export default function PostDetailPage() {
                 fontSize: 18,
                 letterSpacing: "0.02em",
                 textTransform: "none",
-                boxShadow: "0 8px 24px rgba(24, 197, 155, 0.35)",
+                boxShadow:
+                  daysLeft !== undefined && daysLeft < 0
+                    ? "none"
+                    : "0 8px 24px rgba(24, 197, 155, 0.35)",
                 transition: "all 0.3s ease",
                 "&:hover": {
-                  boxShadow: "0 12px 28px rgba(24, 197, 155, 0.5)",
-                  transform: "translateY(-2px)",
+                  boxShadow:
+                    daysLeft !== undefined && daysLeft < 0
+                      ? "none"
+                      : "0 12px 28px rgba(24, 197, 155, 0.5)",
+                  transform:
+                    daysLeft !== undefined && daysLeft < 0
+                      ? "none"
+                      : "translateY(-2px)",
                 },
               }}
               onClick={() => router.push(`/payment/${id}`)}
             >
-              Contribute this Campaign
+              {daysLeft !== undefined && daysLeft < 0
+                ? "Campaign Ended"
+                : "Contribute this Campaign"}
             </Button>
           </Grid>
         </Grid>
@@ -736,7 +818,7 @@ export default function PostDetailPage() {
                           justifyContent="flex-start"
                           spacing={2}
                         >
-                          {appUser && post.user_id === appUser.id && (
+                          {appUser && post.user_id === appUser && (
                             <Button
                               variant="contained"
                               startIcon={<AddIcon />}
@@ -771,9 +853,7 @@ export default function PostDetailPage() {
                           items={progressItems}
                           apiBaseUrl={process.env.NEXT_PUBLIC_API_URL}
                           title=""
-                          isOwner={Boolean(
-                            appUser && post.user_id === appUser.id,
-                          )}
+                          isOwner={Boolean(appUser && post.user_id === appUser)}
                           onEdit={(item) => {
                             setEditProgressItem(item);
                             setOpenProgressForm(true);

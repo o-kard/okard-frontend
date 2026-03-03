@@ -34,7 +34,10 @@ export default function PostCreatePage() {
     }
   };
 
-  const handlePredict = async (values: FormValues) => {
+  const handlePredict = async (
+    values: FormValues,
+    mediaState: { hasVideo: boolean; hasImage: boolean },
+  ) => {
     if (!clerkUser) return;
 
     try {
@@ -43,9 +46,12 @@ export default function PostCreatePage() {
       const dbUser = await getUser(token);
       const userCountryId = dbUser.country_id;
       const countryLabel =
-        countryOptions.find((c) => c.value === userCountryId)?.label || "Unknown";
+        countryOptions.find((c) => c.value === userCountryId)?.label ||
+        "Unknown";
 
-      const category_group = categoryOptions.find((opt) => opt.value === values.category)?.label || "Technology";
+      const category_group =
+        categoryOptions.find((opt) => opt.value === values.category)?.label ||
+        "Technology";
 
       const input: PredictInput = {
         goal: values.goal_amount,
@@ -55,8 +61,8 @@ export default function PostCreatePage() {
         end_date: values.effective_end_date || "",
         country_displayable_name: countryLabel,
         category_group,
-        has_video: 0,
-        has_photo: (values.post_images?.length ?? 0) > 0 ? 1 : 0,
+        has_video: mediaState.hasVideo,
+        has_photo: mediaState.hasImage,
       };
 
       const result = await predictPost(input, clerkUser.id);

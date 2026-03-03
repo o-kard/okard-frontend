@@ -10,18 +10,18 @@ import {
   IconButton,
   Typography,
   Drawer,
-  Chip
+  Chip,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import ExploreHeader from "./components/ExploreHeader";
 import { useMediaQuery } from "@mui/material";
 import PostList from "./components/PostList";
-import { Post, } from "./types/post";
+import { Post } from "./types/post";
 import { fetchPosts, deletePost, getForYouCampaigns } from "./api/api";
 import SideFilters from "./components/SideFilters";
 
 type Timing = "all" | "draft" | "published" | "archived";
-type ViewMode = "popular" | "recommended"
+type ViewMode = "popular" | "recommended";
 
 export default function PostComponent() {
   const { user } = useUser();
@@ -37,13 +37,14 @@ export default function PostComponent() {
   const [timing, setTiming] = useState<Timing>("all");
   const [includeClosed, setIncludeClosed] = useState(false);
 
-  const [sort, setSort] = useState<string>(searchParams.get("sort") || "popular");
+  const [sort, setSort] = useState<string>(
+    searchParams.get("sort") || "popular",
+  );
 
   // Keep this state for viewMode switching
   const [viewMode, setViewMode] = useState<ViewMode>("popular");
 
   const isMdUp = useMediaQuery("(min-width:900px)");
-
 
   const categories = [
     { value: "art", label: "Art" },
@@ -60,7 +61,7 @@ export default function PostComponent() {
     { value: "photography", label: "Photography" },
     { value: "publishing", label: "Publishing" },
     { value: "technology", label: "Technology" },
-    { value: "theater", label: "Theater" }
+    { value: "theater", label: "Theater" },
   ];
 
   // Sync state with URL params when they change
@@ -72,8 +73,8 @@ export default function PostComponent() {
         setCategory(lowerCat);
       }
     } else if (category !== "all") {
-      // If URL has no category, but we have one set (and it's not default), 
-      // decide if we should reset to 'all' or keep it. 
+      // If URL has no category, but we have one set (and it's not default),
+      // decide if we should reset to 'all' or keep it.
       // Usually navigation to /post means 'all'.
       setCategory("all");
     }
@@ -84,10 +85,8 @@ export default function PostComponent() {
     }
   }, [searchParams]);
 
-
-
   useEffect(() => {
-    // If user is not passing query params, maybe we don't load? 
+    // If user is not passing query params, maybe we don't load?
     // Actually we always load.
 
     const load = async () => {
@@ -98,48 +97,67 @@ export default function PostComponent() {
 
           // Client-side filtering for "For You"
           if (category !== "all") {
-            posts = posts.filter(p => p.category?.toLowerCase() === category.toLowerCase());
+            posts = posts.filter(
+              (p) => p.category?.toLowerCase() === category.toLowerCase(),
+            );
           }
 
           if (searchQuery) {
-            posts = posts.filter(p =>
-              p.post_header?.toLowerCase().includes(searchQuery) ||
-              p.post_description?.toLowerCase().includes(searchQuery)
+            posts = posts.filter(
+              (p) =>
+                p.post_header?.toLowerCase().includes(searchQuery) ||
+                p.post_description?.toLowerCase().includes(searchQuery),
             );
           }
 
           // Client-side sorting for "For You" if needed
           if (sort === "newest") {
-            posts.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+            posts.sort(
+              (a, b) =>
+                new Date(b.created_at || 0).getTime() -
+                new Date(a.created_at || 0).getTime(),
+            );
           } else if (sort === "ending_soon") {
-            posts = posts.filter(p => new Date(p.effective_end_date || 0) > new Date());
-            posts.sort((a, b) => new Date(a.effective_end_date || 0).getTime() - new Date(b.effective_end_date || 0).getTime());
+            posts = posts.filter(
+              (p) => new Date(p.effective_end_date || 0) > new Date(),
+            );
+            posts.sort(
+              (a, b) =>
+                new Date(a.effective_end_date || 0).getTime() -
+                new Date(b.effective_end_date || 0).getTime(),
+            );
           } else if (sort === "popular") {
             posts.sort((a, b) => (b.supporter || 0) - (a.supporter || 0));
           } else if (sort === "updated") {
-            posts.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+            posts.sort(
+              (a, b) =>
+                new Date(b.created_at || 0).getTime() -
+                new Date(a.created_at || 0).getTime(),
+            );
           }
 
           // Common filtering
-          if (!includeClosed) posts = posts.filter((p) => p.status === "active");
-          if (timing === "draft") posts = posts.filter((p) => p.state === "draft");
-          else if (timing === "published") posts = posts.filter((p) => p.state === "published");
-          else if (timing === "archived") posts = posts.filter((p) => p.state === "archived");
+          if (!includeClosed) {
+            posts = posts.filter((p) =>
+              ["published", "success"].includes(p.state),
+            );
+          }
+          if (timing === "draft")
+            posts = posts.filter((p) => p.state === "draft");
+          else if (timing === "published")
+            posts = posts.filter((p) => p.state === "published");
 
           setPosts(posts);
         } else {
           // Pass filters to backend
-          // Map timing to state
+          // Map timing to state (timing can be draft, published, all)
           const stateParam = timing === "all" ? "all" : timing;
-          // Map includeClosed to status (includeClosed=true -> all, false -> active)
-          const statusParam = includeClosed ? "all" : "active";
 
           const data = await fetchPosts(
             category === "all" ? undefined : category,
             searchQuery || undefined,
             sort,
             stateParam,
-            statusParam
           );
 
           // Backend now handles filtering, so we just set the data
@@ -160,7 +178,7 @@ export default function PostComponent() {
     newParams.delete("q"); // Clear query
     newParams.delete("query"); // Just in case
     router.push(`/post?${newParams.toString()}`);
-  }
+  };
 
   const handleClearAll = () => {
     setCategory("all");
@@ -168,7 +186,7 @@ export default function PostComponent() {
     setIncludeClosed(false);
     setSort("newest");
     router.push("/post"); // Clear URL
-  }
+  };
 
   // filtered is now just posts because we filtered during load
   const filtered = posts;
@@ -191,9 +209,14 @@ export default function PostComponent() {
               justifyContent="space-between"
             >
               {!isMdUp && (
-                <IconButton onClick={() => setMobileOpen(true)} sx={{ border: '1px solid #ddd', borderRadius: 2 }}>
+                <IconButton
+                  onClick={() => setMobileOpen(true)}
+                  sx={{ border: "1px solid #ddd", borderRadius: 2 }}
+                >
                   <MenuIcon />
-                  <Typography variant="button" sx={{ ml: 1, fontWeight: 600 }}>Filters</Typography>
+                  <Typography variant="button" sx={{ ml: 1, fontWeight: 600 }}>
+                    Filters
+                  </Typography>
                 </IconButton>
               )}
             </Box>
@@ -235,7 +258,7 @@ export default function PostComponent() {
             </Box>
             <PostList
               posts={filtered}
-              onEdit={() => { }}
+              onEdit={() => {}}
               onDelete={handleDelete}
             />
           </Grid>

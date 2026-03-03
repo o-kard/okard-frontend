@@ -10,7 +10,6 @@ export const fetchPosts = async (
   searchQuery?: string,
   sort?: string,
   state?: string,
-  status?: string,
   clerkId?: string,
 ): Promise<Post[]> => {
   const params = new URLSearchParams();
@@ -18,7 +17,6 @@ export const fetchPosts = async (
   if (searchQuery) params.append("q", searchQuery);
   if (sort) params.append("sort", sort);
   if (state) params.append("state", state);
-  if (status) params.append("status", status);
   if (clerkId) params.append("clerk_id", clerkId);
 
   const qs = params.toString();
@@ -147,13 +145,13 @@ export async function reorderPostImages(
   );
 }
 
-export async function changeStatus(
+export async function changeState(
   postId: string,
-  status: string,
+  state: string,
   token: string | null,
 ) {
   return request<Post>(
-    `${API_PATH}/${postId}/status?status=${encodeURIComponent(status)}`,
+    `${API_PATH}/${postId}/state?state=${encodeURIComponent(state)}`,
     {
       method: "PUT",
       headers: {

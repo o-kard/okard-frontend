@@ -269,7 +269,7 @@ export default function PostList({
         const percent =
           goal > 0 ? Math.min(100, Math.round((raised / goal) * 100)) : 0;
 
-        const isOngoing = post.status === "active" && post.state !== "archived";
+        const isOngoing = post.state === "published";
 
         return (
           <Grid key={post.id} size={{ xs: gridXs, sm: gridSm, md: gridMd }}>
