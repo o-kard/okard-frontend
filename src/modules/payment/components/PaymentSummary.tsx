@@ -40,7 +40,7 @@ export default function PaymentSummary({
       <Stack direction="row" justifyContent="space-between">
         <Typography color="text.secondary">Your contribution</Typography>
         <Typography color="text.secondary">
-          {(amount || 0).toLocaleString()} THB
+          {(amount || 0).toLocaleString()} USD
         </Typography>
       </Stack>
 
@@ -61,7 +61,7 @@ export default function PaymentSummary({
         sx={{ bgcolor: "#eee", p: 1.2, borderRadius: 1 }}
       >
         <Typography fontWeight={800}>Total</Typography>
-        <Typography fontWeight={800}>{total.toLocaleString()} THB</Typography>
+        <Typography fontWeight={800}>{total.toLocaleString()} USD</Typography>
       </Stack>
 
       <FormControlLabel

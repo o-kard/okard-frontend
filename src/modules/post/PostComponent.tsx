@@ -22,6 +22,7 @@ import SideFilters from "./components/SideFilters";
 
 type Timing = "all" | "draft" | "published" | "archived";
 type ViewMode = "popular" | "recommended";
+import { CATEGORY_COLORS } from "@/modules/home/utils/categoryColors";
 
 export default function PostComponent() {
   const { user } = useUser();
@@ -246,6 +247,30 @@ export default function PostComponent() {
               <Typography variant="body2" color="text.secondary">
                 Found : {filtered.length} Campaigns
               </Typography>
+              {category !== "all" &&
+                (() => {
+                  const categoryConfig =
+                    CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS] ??
+                    CATEGORY_COLORS.all;
+                  const CategoryIcon = categoryConfig?.icon;
+                  return (
+                    <Chip
+                      icon={CategoryIcon ? <CategoryIcon /> : undefined}
+                      label={categoryConfig?.label ?? category}
+                      onDelete={() => setCategory("all")}
+                      size="small"
+                      sx={{
+                        fontWeight: 700,
+                        textTransform: "capitalize",
+                        bgcolor: categoryConfig?.color ?? "primary.main",
+                        color: "white",
+                        "& .MuiChip-icon": {
+                          color: "white",
+                        },
+                      }}
+                    />
+                  );
+                })()}
               {searchQuery && (
                 <Chip
                   label={`Search: ${searchQuery}`}

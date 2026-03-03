@@ -66,13 +66,13 @@ export default function CampaignSections({
                       justifyContent: "flex-start",
                       textTransform: "none",
                       fontWeight: 800,
-                      color: isActive ? "#e91e63" : "text.primary",
+                      color: isActive ? "#18c59b" : "text.primary",
                       bgcolor: isActive
-                        ? "rgba(233,30,99,0.08)"
+                        ? "rgba(24,197,155,0.08)"
                         : "transparent",
                       borderRadius: 2,
                       px: 1,
-                      "&:hover": { bgcolor: "rgba(233,30,99,0.12)" },
+                      "&:hover": { bgcolor: "rgba(24,197,155,0.12)" },
                     }}
                   >
                     {c.campaign_header || `Campaign #${i + 1}`}
@@ -85,7 +85,7 @@ export default function CampaignSections({
 
         {/* RIGHT: Sections */}
         <Grid size={{ xs: 12, md: 9 }}>
-          <Stack spacing={6}>
+          <Stack spacing={6} sx={{ padding: 2 }}>
             {data.map((c, i) => {
               const img = c.media?.[0]?.path
                 ? `${apiBaseUrl}${c.media[0].path}`
@@ -124,7 +124,7 @@ export default function CampaignSections({
                       src={img}
                       alt={c.campaign_header || `Campaign #${i + 1}`}
                       sx={{
-                        width: "60%",
+                        width: { xs: "100%", md: "60%" },
                         height: "auto",
                         aspectRatio: "4/3",
                         objectFit: "cover",

@@ -33,6 +33,16 @@ export interface AIPrediction {
   stretch_label: string | null;
 }
 
+export interface CitySupporterStat {
+  city: string;
+  supporter: number;
+}
+
+export interface PostCommunity {
+  total_supporters: number;
+  top_cities: CitySupporterStat[];
+}
+
 export type Post = {
   id: UUID;
   user_id: UUID;

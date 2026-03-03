@@ -123,8 +123,9 @@ function SortableThumb({
           <video
             src={item.preview}
             style={{
-              width: 140,
-              height: 100,
+              width: "100%",
+              height: "auto",
+              aspectRatio: "4 / 3",
               objectFit: "cover",
               borderRadius: 8,
               backgroundColor: "#000",
@@ -136,8 +137,9 @@ function SortableThumb({
           <img
             src={item.preview}
             style={{
-              width: 140,
-              height: 100,
+              width: "100%",
+              height: "auto",
+              aspectRatio: "4 / 3",
               objectFit: "cover",
               borderRadius: 8,
             }}
@@ -231,7 +233,7 @@ export default function PostForm({
     handleSubmit,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     mode: "onChange",
     defaultValues: {
@@ -951,7 +953,7 @@ export default function PostForm({
 
         <Grid size={{ xs: 12 }}>
           <TextField
-            label="Start (effective_start_from)"
+            label="Start"
             type="datetime-local"
             fullWidth
             disabled={!!(editItem?.state === "published")}
@@ -967,7 +969,7 @@ export default function PostForm({
 
         <Grid size={{ xs: 12 }}>
           <TextField
-            label="End (effective_end_date)"
+            label="End"
             type="datetime-local"
             fullWidth
             {...register("effective_end_date", {
@@ -1016,8 +1018,8 @@ export default function PostForm({
               <video
                 src={postVideo.preview}
                 style={{
-                  width: 280,
-                  height: 160,
+                  width: "100%",
+                  height: "auto",
                   objectFit: "cover",
                   borderRadius: 8,
                   backgroundColor: "#000",
@@ -1078,7 +1080,7 @@ export default function PostForm({
                   sx={{
                     mt: 1,
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))",
+                    gridTemplateColumns: "repeat(2, 1fr)",
                     gap: 2,
                   }}
                 >
@@ -1172,8 +1174,8 @@ export default function PostForm({
                       src={toAbsolute(campaignPreviews[idx])}
                       alt={`camp-${idx}`}
                       style={{
-                        width: 200,
-                        height: 140,
+                        width: "auto",
+                        height: "auto",
                         objectFit: "cover",
                         borderRadius: 8,
                         border: "1px solid #ddd",
@@ -1306,8 +1308,8 @@ export default function PostForm({
                         src={toAbsolute(rewardPreviews[idx])}
                         alt={`reward-${idx}`}
                         style={{
-                          width: 200,
-                          height: 140,
+                          width: "auto",
+                          height: "auto",
                           objectFit: "cover",
                           borderRadius: 8,
                           border: "1px solid #ddd",
@@ -1361,7 +1363,13 @@ export default function PostForm({
         </Grid>
 
         <Grid size={{ xs: 12 }} display="flex" gap={2} sx={{ mt: 2 }}>
-          <Button type="submit" variant="contained" color="success" fullWidth>
+          <Button
+            type="submit"
+            variant="contained"
+            color="success"
+            fullWidth
+            disabled={isSubmitting}
+          >
             {editItem ? "Update (with campaigns)" : "Create (with campaigns)"}
           </Button>
           <Button

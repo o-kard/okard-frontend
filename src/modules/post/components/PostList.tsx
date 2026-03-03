@@ -12,6 +12,7 @@ import Grid from "@mui/material/Grid";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import { useAuth } from "@clerk/nextjs";
+import { CATEGORY_COLORS } from "@/modules/home/utils/categoryColors";
 import { toggleBookmark } from "../api/api";
 import { useState } from "react";
 
@@ -43,6 +44,11 @@ function PostCard({
   const { getToken } = useAuth();
   const [isBookmarked, setIsBookmarked] = useState(post.is_bookmarked || false);
   const [isHoveringBookmark, setIsHoveringBookmark] = useState(false);
+
+  const categoryConfig =
+    CATEGORY_COLORS[post.category as keyof typeof CATEGORY_COLORS] ??
+    CATEGORY_COLORS.all;
+  const CategoryIcon = categoryConfig?.icon;
 
   const handleBookmarkClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -92,6 +98,25 @@ function PostCard({
             }}
           />
         )}
+
+        <Chip
+          icon={CategoryIcon ? <CategoryIcon /> : undefined}
+          label={categoryConfig?.label ?? post.category}
+          size="small"
+          sx={{
+            position: "absolute",
+            top: 12,
+            left: 12,
+            zIndex: 10,
+            fontWeight: 700,
+            textTransform: "capitalize",
+            bgcolor: categoryConfig?.color ?? "primary.main",
+            color: "white",
+            "& .MuiChip-icon": {
+              color: "white",
+            },
+          }}
+        />
 
         {/* Bookmark Icon */}
         <IconButton
@@ -166,7 +191,7 @@ function PostCard({
             color="#fff"
             sx={{ textShadow: "0 1px 2px rgba(0,0,0,.6)" }}
           >
-            {goal.toLocaleString()} THB
+            {goal.toLocaleString()} USD
           </Typography>
 
           <Box sx={{ mt: 1 }}>
@@ -185,7 +210,7 @@ function PostCard({
               color="#fff"
               sx={{ display: "block", mt: 0.5, opacity: 0.9 }}
             >
-              {raised.toLocaleString()} THB raised | {percent}% funded
+              {raised.toLocaleString()} USD raised | {percent}% funded
             </Typography>
           </Box>
         </Box>
