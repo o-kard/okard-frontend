@@ -16,10 +16,22 @@ export type PostCategoryType =
   | "publishing"
   | "technology"
   | "theater";
-export type PostStatusType = "active" | "inactive";
-export type PostStateType = "draft" | "published" | "archived";
+export type PostStateType =
+  | "draft"
+  | "published"
+  | "fail"
+  | "success"
+  | "suspend";
 
 export type UUID = string;
+
+export interface AIPrediction {
+  success_label: string | null;
+  risk_label: string | null;
+  days_to_state_label: string | null;
+  goal_eval_label: string | null;
+  stretch_label: string | null;
+}
 
 export type Post = {
   id: UUID;
@@ -29,7 +41,6 @@ export type Post = {
   created_at?: string;
   updated_at?: string;
   state: PostStateType;
-  status: PostStatusType;
   category: PostCategoryType;
   post_header: string;
   post_description: string;
@@ -45,6 +56,7 @@ export type Post = {
   comments?: PostComment[] | [];
   user: UserPublicResponse;
   is_bookmarked?: boolean;
+  ai_label?: AIPrediction | null;
 };
 
 export type Campaign = {
@@ -115,7 +127,6 @@ export type PostSummary = {
   progress: number;
   suupporter: number | null;
   state: PostStateType;
-  status: PostStatusType;
   created_at?: string;
   updated_at?: string;
   media: Media[];
@@ -127,4 +138,5 @@ export type PostSummary = {
     media?: UserMedia | null;
   };
   is_bookmarked?: boolean;
+  ai_label?: AIPrediction | null;
 };

@@ -18,12 +18,7 @@ import {
 import Grid from "@mui/material/Grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import type {
-  Post,
-  PostCategoryType,
-  PostStateType,
-  PostStatusType,
-} from "../types/post";
+import type { Post, PostCategoryType, PostStateType } from "../types/post";
 import PredictResultDialog from "@/modules/post/components/PredictResultDialog";
 import {
   DndContext,
@@ -84,7 +79,6 @@ export type FormValues = {
   effective_start_from: string | null;
   effective_end_date: string | null;
   state: PostStateType;
-  status: PostStatusType;
   category: PostCategoryType;
   post_media: File[];
   campaigns: FormCampaign[];
@@ -204,7 +198,10 @@ type Props = {
   onSubmit?: (fd: FormData, editId?: string | null) => Promise<void> | void;
   onSuccess?: () => void;
   onCancel?: () => void;
-  onPredict?: (values: FormValues) => Promise<any>;
+  onPredict?: (
+    values: FormValues,
+    mediaState: { hasVideo: boolean; hasImage: boolean },
+  ) => Promise<any>;
   onEditRequest?: (proposedChanges: any) => void;
 };
 const toAbsolute = (p?: string) => {
@@ -246,7 +243,6 @@ export default function PostForm({
       effective_start_from: null,
       effective_end_date: null,
       state: "draft",
-      status: "active",
       category: "technology",
       post_media: [],
       campaigns: [{ display_order: 1, file: null }],
@@ -427,7 +423,6 @@ export default function PostForm({
     setValue("current_amount", editItem.current_amount ?? 0);
     setValue("supporter", editItem.supporter ?? 0);
     setValue("state", editItem.state);
-    setValue("status", editItem.status);
     setValue("category", editItem.category);
     setValue(
       "effective_start_from",
@@ -620,7 +615,6 @@ export default function PostForm({
       effective_start_from: toIso(values.effective_start_from!),
       effective_end_date: toIso(values.effective_end_date!),
       state: values.state,
-      status: values.status,
       category: values.category,
     };
     fd.append("post_data", JSON.stringify(postPayload));
@@ -706,6 +700,7 @@ export default function PostForm({
           newMedia.map((it) => ({
             filename: it.file.name,
             display_order: it.display_order,
+            type: it.file.type.startsWith("video/") ? "video" : "image",
           })),
         ),
       );
@@ -736,12 +731,6 @@ export default function PostForm({
       if (Number(values.goal_amount) !== Number(editItem.goal_amount)) {
         hasSensitiveChanges = true;
         sensitiveFieldsChanged.goal_amount = Number(values.goal_amount);
-      }
-
-      // Check Status
-      if (values.status !== editItem.status) {
-        hasSensitiveChanges = true;
-        sensitiveFieldsChanged.status = values.status;
       }
 
       // Check Effective End Date
@@ -790,7 +779,6 @@ export default function PostForm({
       if (sensitiveFieldsChanged.category) proposed.category = values.category;
       if (sensitiveFieldsChanged.goal_amount)
         proposed.goal_amount = values.goal_amount;
-      if (sensitiveFieldsChanged.status) proposed.status = values.status;
       if (sensitiveFieldsChanged.effective_end_date)
         proposed.effective_end_date = values.effective_end_date;
 
@@ -854,7 +842,11 @@ export default function PostForm({
           setPredictResult(null);
 
           console.log("👉 calling onPredict now");
-          const result = await onPredict(values);
+          const mediaState = {
+            hasVideo: !!postVideo,
+            hasImage: postMedia.length > 0,
+          };
+          const result = await onPredict(values, mediaState);
           setPredictResult(result || { message: "No result returned" });
         } catch (err) {
           console.error("Predict error:", err);
@@ -922,32 +914,9 @@ export default function PostForm({
             >
               <MenuItem value="draft">Draft</MenuItem>
               <MenuItem value="published">Published</MenuItem>
-              <MenuItem value="archived">Archived</MenuItem>
-            </TextField>
-          )}
-        />
-
-        <Controller
-          name="status"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              select
-              label="Status"
-              fullWidth
-              helperText={
-                editItem && editItem.state === "published"
-                  ? "Changing this will trigger an Edit Request"
-                  : ""
-              }
-              value={field.value ?? ""}
-              onChange={field.onChange}
-              slotProps={{
-                select: { MenuProps: { disableScrollLock: true } },
-              }}
-            >
-              <MenuItem value="active">Active</MenuItem>
-              <MenuItem value="inactive">Inactive</MenuItem>
+              <MenuItem value="fail">Fail</MenuItem>
+              <MenuItem value="success">Success</MenuItem>
+              <MenuItem value="suspend">Suspend</MenuItem>
             </TextField>
           )}
         />

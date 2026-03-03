@@ -26,8 +26,8 @@ export async function getUser(token: string) {
 }
 
 export async function checkUserExists(clerk_id: string) {
-  const r = await request<{ exists: boolean }>(`${API_URL}/exists/${clerk_id}`)
-  return r.exists
+  const r = await request<{ exists: boolean }>(`${API_URL}/exists/${clerk_id}`);
+  return r.exists;
 }
 
 export async function updateUser(fd: FormData, token: string | null) {
@@ -42,4 +42,10 @@ export async function updateUser(fd: FormData, token: string | null) {
 
 export async function listUsers() {
   return request<User[]>(`${API_URL}/list`);
+}
+
+export async function deleteUser(userId: string) {
+  return request(`${API_URL}/delete/${userId}`, {
+    method: "DELETE",
+  });
 }
