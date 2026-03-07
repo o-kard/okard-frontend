@@ -39,10 +39,21 @@ export default function PostEditPage() {
   }, [id]);
 
   useEffect(() => {
-    if (user) {
-      getUserById(user.id).then((u) => setCurrentUserProfile(u));
-    }
-  }, [user]);
+    const fetchUser = async () => {
+      if (user) {
+        try {
+          const token = await getToken();
+          if (token) {
+            const u = await getUser(token);
+            setCurrentUserProfile(u);
+          }
+        } catch (e) {
+          console.error("Failed to fetch user profile:", e);
+        }
+      }
+    };
+    fetchUser();
+  }, [user, getToken]);
 
   useEffect(() => {
     if (isLoaded && !user) {
@@ -53,6 +64,7 @@ export default function PostEditPage() {
     if (post && currentUserProfile) {
       if (post.user_id !== currentUserProfile.id) {
         setAccessDenied(true);
+        router.push("/post");
       }
     }
   }, [isLoaded, user, post, currentUserProfile, router]);
@@ -108,38 +120,12 @@ export default function PostEditPage() {
     }
   };
 
-  if (!post) return <LoadingScreen message="Loading Post..." />;
+  if (!isLoaded || !user || !post || !currentUserProfile) {
+    return <LoadingScreen message="Loading Post..." />;
+  }
 
-  if (accessDenied) {
-    return (
-      <Container maxWidth="sm">
-        <Box
-          mt={10}
-          textAlign="center"
-          py={8}
-          sx={{
-            backgroundColor: "background.paper",
-            borderRadius: 2,
-            boxShadow: 1,
-          }}
-        >
-          <Typography variant="h4" color="error" fontWeight="bold" gutterBottom>
-            403 Access Denied
-          </Typography>
-          <Typography variant="body1" color="text.secondary" paragraph>
-            You are not authorized to edit this campaign because you are not the
-            owner.
-          </Typography>
-          <Button
-            variant="contained"
-            onClick={() => router.push("/post")}
-            sx={{ mt: 2 }}
-          >
-            Back to Campaigns
-          </Button>
-        </Box>
-      </Container>
-    );
+  if (accessDenied || post.user_id !== currentUserProfile.id) {
+    return null;
   }
 
   return (
