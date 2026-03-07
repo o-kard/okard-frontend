@@ -92,6 +92,7 @@ export default function ProgressSection({
                     onClick={() => handleNavClick(i)}
                     sx={{
                       justifyContent: "flex-start",
+                      textAlign: "left",
                       textTransform: "none",
                       fontWeight: 800,
                       color: isActive ? "#18c59b" : "text.primary",
@@ -101,6 +102,10 @@ export default function ProgressSection({
                       borderRadius: 2,
                       px: 1,
                       "&:hover": { bgcolor: "rgba(24,197,155,0.12)" },
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
                     }}
                   >
                     {item.progress_header || `Progress #${i + 1}`}

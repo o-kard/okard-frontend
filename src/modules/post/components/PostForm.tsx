@@ -916,9 +916,6 @@ export default function PostForm({
             >
               <MenuItem value="draft">Draft</MenuItem>
               <MenuItem value="published">Published</MenuItem>
-              <MenuItem value="fail">Fail</MenuItem>
-              <MenuItem value="success">Success</MenuItem>
-              <MenuItem value="suspend">Suspend</MenuItem>
             </TextField>
           )}
         />

@@ -159,6 +159,7 @@ export default function PostComponent() {
             searchQuery || undefined,
             sort,
             stateParam,
+            user?.id,
           );
 
           // Backend now handles filtering, so we just set the data
@@ -195,7 +196,10 @@ export default function PostComponent() {
   const handleDelete = async (id: string) => {
     if (!user) return;
     const ok = await deletePost(id, user.id);
-    if (ok) setPosts(await fetchPosts());
+    if (ok)
+      setPosts(
+        await fetchPosts(undefined, undefined, undefined, undefined, user.id),
+      );
   };
 
   return (

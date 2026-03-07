@@ -14,7 +14,7 @@ import BookmarkIcon from "@mui/icons-material/Bookmark";
 import { useAuth } from "@clerk/nextjs";
 import { CATEGORY_COLORS } from "@/modules/home/utils/categoryColors";
 import { toggleBookmark } from "../api/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type Props = {
   posts: Post[];
@@ -44,6 +44,10 @@ function PostCard({
   const { getToken } = useAuth();
   const [isBookmarked, setIsBookmarked] = useState(post.is_bookmarked || false);
   const [isHoveringBookmark, setIsHoveringBookmark] = useState(false);
+
+  useEffect(() => {
+    setIsBookmarked(post.is_bookmarked || false);
+  }, [post.is_bookmarked]);
 
   const categoryConfig =
     CATEGORY_COLORS[post.category as keyof typeof CATEGORY_COLORS] ??
@@ -128,7 +132,7 @@ function PostCard({
             position: "absolute",
             top: 12,
             right: 12,
-            zIndex: 10,
+            zIndex: 2,
             bgcolor: "rgba(255, 255, 255, 0.8)",
             opacity: isBookmarked ? 1 : 0, // Show if bookmarked, or if hovered via parent CSS
             transition: "opacity 0.2s ease, background-color 0.2s ease",

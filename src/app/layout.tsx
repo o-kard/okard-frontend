@@ -60,6 +60,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import ThemeRegistry from "../modules/themeRegister/ThemeRegistry";
 import AppShell from "../modules/layout/AppShell";
+import ProfileGatekeeper from "../components/common/ProfileGatekeeper";
 
 //import font
 import { Syncopate, Montserrat } from "next/font/google";
@@ -67,12 +68,12 @@ import { Syncopate, Montserrat } from "next/font/google";
 const syncopate = Syncopate({
   weight: ["400", "700"],
   subsets: ["latin"],
-  variable: "--font-syncopate", 
+  variable: "--font-syncopate",
   display: "swap",
 });
 
 const montserrat = Montserrat({
-  subsets: ["latin"], 
+  subsets: ["latin"],
   variable: "--font-montserrat",
   display: "swap",
 });
@@ -92,7 +93,9 @@ export default function RootLayout({
       <html lang="en">
         <body className={`${syncopate.variable} ${montserrat.variable}`}>
           <ThemeRegistry>
-            <AppShell>{children}</AppShell>
+            <ProfileGatekeeper>
+              <AppShell>{children}</AppShell>
+            </ProfileGatekeeper>
           </ThemeRegistry>
         </body>
       </html>

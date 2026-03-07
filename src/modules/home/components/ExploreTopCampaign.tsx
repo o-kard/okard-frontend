@@ -26,7 +26,7 @@ export default function ExploreTopCampaign() {
     <Container maxWidth="lg" sx={{ py: 6 }}>
       <Typography
         fontWeight="bold"
-        fontSize={{ xs: "2rem", sm: "3rem",  md: "3.5rem" }}
+        fontSize={{ xs: "2rem", sm: "3rem", md: "3.5rem" }}
         textAlign="center"
         mb={4}
         fontFamily="var(--font-montserrat)"
@@ -35,10 +35,7 @@ export default function ExploreTopCampaign() {
       </Typography>
 
       {/* Tabs (controlled) */}
-      <CategoryTabs
-        value={selectedCategory}
-        onChange={setSelectedCategory}
-      />
+      <CategoryTabs value={selectedCategory} onChange={setSelectedCategory} />
 
       {/* Grid */}
       <CampaignGrid campaigns={campaigns} />
