@@ -205,13 +205,13 @@ export default function CreatorsPage() {
                 letterSpacing: "-0.02em",
               }}
             >
-              Creators Management
+              Users Management
             </Typography>
             <Typography
               variant="body1"
               sx={{ color: "#666666", mt: 1, fontWeight: 400 }}
             >
-              View and manage all creators in the system.
+              View and manage all users in the system.
             </Typography>
           </Box>
         </Stack>
@@ -260,7 +260,7 @@ export default function CreatorsPage() {
             sx={{ width: 360 }}
           />
           <Chip
-            label={`${filtered.length} Creators Found`}
+            label={`${filtered.length} Users Found`}
             sx={{
               background: "rgba(244, 114, 182, 0.1)",
               color: "#F472B6",
@@ -403,7 +403,9 @@ export default function CreatorsPage() {
                         border: "1px solid rgba(18, 201, 152, 0.4)",
                       }}
                     >
-                      {c.role}
+                      {c.role
+                        ? c.role.charAt(0).toUpperCase() + c.role.slice(1)
+                        : "-"}
                     </Box>
                   </TableCell>
                   <TableCell align="center">
@@ -455,10 +457,10 @@ export default function CreatorsPage() {
                 variant="h6"
                 sx={{ color: "#222222", fontWeight: 600 }}
               >
-                No creators found
+                No users found
               </Typography>
               <Typography variant="body2" sx={{ color: "#666666", mt: 0.5 }}>
-                We couldn't find any creators matching "{search}"
+                We couldn't find any users matching "{search}"
               </Typography>
             </Stack>
           )}

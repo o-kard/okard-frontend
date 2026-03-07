@@ -55,7 +55,7 @@ export default function PostDetailPage() {
   const [post, setPost] = useState<Post | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const [appUser, setAppUser] = useState<string>("");
   const { getToken } = useAuth();
   const [openReportModal, setOpenReportModal] = useState(false);
@@ -142,7 +142,7 @@ export default function PostDetailPage() {
   };
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !isLoaded) return;
 
     // ✅ Prevent duplicate fetches
     if (hasFetchedPost.current) return;

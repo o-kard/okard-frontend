@@ -10,7 +10,7 @@ import { getTopPledgedCampaigns } from "../api/api";
 import { getForYouCampaigns } from "@/modules/post/api/api";
 import { useUser, useAuth } from "@clerk/nextjs";
 
-const DEFAULT_LIMIT = 10
+const DEFAULT_LIMIT = 10;
 
 type Props = {
   onHoverBackground?: (img: string | null) => void;
@@ -20,10 +20,10 @@ export default function CampaignPart({ onHoverBackground }: Props) {
   const { user, isSignedIn } = useUser();
   const { getToken } = useAuth();
   const clerkId = user?.id;
-  const [tab, setTab] = useState<TabKey>("popular")
-  const [category, setCategory] = useState<string | null>(null)
-  const [campaigns, setCampaigns] = useState<(Post | PostSummary)[]>([])
-  const [loading, setLoading] = useState(false)
+  const [tab, setTab] = useState<TabKey>("popular");
+  const [category, setCategory] = useState<string | null>(null);
+  const [campaigns, setCampaigns] = useState<(Post | PostSummary)[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,7 +52,7 @@ export default function CampaignPart({ onHoverBackground }: Props) {
         if (!cancelled) setLoading(false);
       }
     };
-    console.log(clerkId)
+    console.log(clerkId);
     fetchData();
 
     return () => {
@@ -73,11 +73,23 @@ export default function CampaignPart({ onHoverBackground }: Props) {
     >
       {isSignedIn && <CampaignTabs activeTab={tab} onChange={setTab} />}
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px', width: '100%' }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "400px",
+            width: "100%",
+          }}
+        >
           <CircularProgress />
         </Box>
       ) : (
-        <CampaignSlider campaigns={campaigns} resetKey={tab} onHoverBackground={onHoverBackground} />
+        <CampaignSlider
+          campaigns={campaigns}
+          resetKey={tab}
+          onHoverBackground={onHoverBackground}
+        />
       )}
     </Box>
   );

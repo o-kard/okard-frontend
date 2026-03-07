@@ -2,8 +2,11 @@ import { Box } from "@mui/material";
 import ImageCard from "./ImageCard";
 import { Post, PostSummary } from "@/modules/post/types/post";
 
-export default function CampaignGrid({ campaigns }: { campaigns: (Post | PostSummary)[] }) {
-
+export default function CampaignGrid({
+  campaigns,
+}: {
+  campaigns: (Post | PostSummary)[];
+}) {
   return (
     <Box
       sx={{
@@ -13,14 +16,14 @@ export default function CampaignGrid({ campaigns }: { campaigns: (Post | PostSum
           md: "repeat(4, 1fr)",
         },
         gap: 3,
-        // alignItems: "stretch",
+        alignItems: "stretch",
       }}
     >
       {campaigns.slice(0, 7).map((campaign, index) => {
         // FEATURED (ตัวแรก)
         if (index === 0) {
           return (
-            <Box key={campaign.id} sx={{ gridColumn: "1 / span 2", }}>
+            <Box key={campaign.id} sx={{ gridColumn: "1 / span 2" }}>
               <ImageCard campaign={campaign} big />
             </Box>
           );
@@ -32,18 +35,13 @@ export default function CampaignGrid({ campaigns }: { campaigns: (Post | PostSum
             <ImageCard
               key={campaign.id}
               campaign={campaign}
-            // big
+              // big
             />
           );
         }
 
         // p4 - p7 (แถวล่าง)
-        return (
-          <ImageCard
-            key={campaign.id}
-            campaign={campaign}
-          />
-        );
+        return <ImageCard key={campaign.id} campaign={campaign} />;
       })}
     </Box>
   );

@@ -1,5 +1,6 @@
 import { Grid, Typography, IconButton, Chip } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import { useRouter } from "next/navigation";
 import type { Notification } from "../types/notification";
 
 function typeLabel(t: Notification["type"]) {
@@ -26,13 +27,23 @@ export default function NotificationItem({
   n: Notification;
   onDelete?: (id: string) => void;
 }) {
+  const router = useRouter();
+
+  const handleClick = () => {
+    if (n.post_id) {
+      router.push(`/post/show/${n.post_id}`);
+    }
+  };
+
   return (
     <Grid
       container
       spacing={1.5}
+      onClick={handleClick}
       sx={(theme) => ({
         p: 1.5,
         borderRadius: 2,
+        cursor: n.post_id ? "pointer" : "default",
         "&:hover": { backgroundColor: theme.palette.action.hover },
       })}
       alignItems="flex-start"
@@ -53,8 +64,14 @@ export default function NotificationItem({
         </Typography>
       </Grid>
 
-      <Grid size={{ xs: 2, md: 2 }}>
-        <IconButton size="small" onClick={() => onDelete?.(n.id)}>
+      <Grid size={{ xs: 2, md: 2 }} sx={{ textAlign: "right" }}>
+        <IconButton
+          size="small"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete?.(n.id);
+          }}
+        >
           <CloseRoundedIcon fontSize="small" />
         </IconButton>
       </Grid>
