@@ -17,3 +17,7 @@ patches:
       - op: replace
         path: /spec/replicas
         value: 2
+
+images:
+  - name: okard-frontend
+    newTag: uat
