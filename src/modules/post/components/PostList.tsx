@@ -255,7 +255,19 @@ function PostCard({
       {/* BODY */}
       <Box sx={{ px: 2, pt: 1.5, pb: 2 }}>
         {post.post_description && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
+              mt: 1,
+              display: "-webkit-box",
+              WebkitLineClamp: 5,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              height: "100px",
+            }}
+          >
             {post.post_description}
           </Typography>
         )}
