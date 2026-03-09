@@ -41,6 +41,7 @@ import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 import DashboardCustomizeIcon from "@mui/icons-material/DashboardCustomize";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import EditIcon from "@mui/icons-material/Edit";
+import DashboardIcon from "@mui/icons-material/Dashboard";
 import PersonIcon from "@mui/icons-material/Person";
 import { Camera, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -500,6 +501,14 @@ function UserContent() {
                     label="Bookmarks"
                     active={isActiveTab(tab, "bookmarks")}
                   />
+                  {profile?.role === "creator" && (
+                    <NavItem
+                      href="/dashboard"
+                      icon={<DashboardIcon />}
+                      label="Dashboard"
+                      active={false}
+                    />
+                  )}
                 </List>
               </Paper>
             </Grid>

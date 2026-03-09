@@ -34,6 +34,7 @@ import InfoIcon from "@mui/icons-material/Info";
 import PersonIcon from "@mui/icons-material/Person";
 import AddIcon from "@mui/icons-material/Add";
 import CampaignIcon from "@mui/icons-material/Campaign";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 
 import dynamic from "next/dynamic";
 import SearchBar from "./SearchBar";
@@ -279,6 +280,34 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
             fullWidth
           >
             START A CAMPAIGN
+          </Button>
+        )}
+
+        {userRole === "admin" && (
+          <Button
+            component={NextLink}
+            href="/admin"
+            variant="contained"
+            onClick={() => setMobileOpen(false)}
+            startIcon={<AdminPanelSettingsIcon />}
+            sx={{
+              borderRadius: 3,
+              py: 1.5,
+              background: "linear-gradient(45deg, #12c998 30%, #f070a1 90%)",
+              boxShadow: "0 4px 14px rgba(18, 201, 152, 0.4)",
+              fontWeight: 800,
+              textTransform: "none",
+              fontSize: "1rem",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                transform: "translateY(-2px)",
+                boxShadow: "0 6px 20px rgba(18, 201, 152, 0.5)",
+                opacity: 0.9,
+              },
+            }}
+            fullWidth
+          >
+            ADMIN PANEL
           </Button>
         )}
 
@@ -651,6 +680,68 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                         START A&nbsp;
                       </Box>
                       CAMPAIGN
+                    </Typography>
+                  </Button>
+                )}
+
+                {userRole === "admin" && (
+                  <Button
+                    component={NextLink}
+                    href="/admin"
+                    variant="contained"
+                    size="small"
+                    startIcon={
+                      <AdminPanelSettingsIcon
+                        sx={{
+                          "@media (min-width: 1351px)": {
+                            display: "none",
+                          },
+                        }}
+                      />
+                    }
+                    sx={{
+                      borderRadius: 3,
+                      whiteSpace: "nowrap",
+                      px: { md: 1.5, lg: 3 },
+                      py: { md: 0.8, lg: 1 },
+                      background:
+                        "linear-gradient(45deg, #12c998 30%, #0fb488 90%)",
+                      boxShadow: "0 4px 10px rgba(18, 201, 152, 0.3)",
+                      transition: "all 0.3s ease",
+                      textTransform: "none",
+                      minWidth: "auto",
+                      "&:hover": {
+                        transform: "scale(1.05)",
+                        boxShadow: "0 6px 15px rgba(18, 201, 152, 0.4)",
+                        background:
+                          "linear-gradient(45deg, #12c998 10%, #f070a1 90%)",
+                      },
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontFamily: "var(--font-montserrat)",
+                        fontSize: { md: "0.8rem", lg: "1rem" },
+                        fontWeight: 700,
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Box
+                        component="span"
+                        sx={{
+                          display: {
+                            md: "none",
+                            lg: "none",
+                          },
+                          "@media (min-width: 1351px)": {
+                            display: "inline",
+                          },
+                        }}
+                      >
+                        ADMIN&nbsp;
+                      </Box>
+                      PANEL
                     </Typography>
                   </Button>
                 )}
