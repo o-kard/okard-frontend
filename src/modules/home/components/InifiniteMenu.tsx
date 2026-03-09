@@ -3,7 +3,7 @@
 import { FC, useRef, useState, useEffect, MutableRefObject } from 'react';
 import { mat4, quat, vec2, vec3 } from 'gl-matrix';
 import InfiniteMenuUI from './InfiniteMenuUI';
-import { Post } from '@/modules/post/types/post';
+import { PostSummary } from '@/modules/post/types/post';
 import { useRouter } from "next/navigation";
 
 const discVertShaderSource = `#version 300 es
@@ -710,19 +710,19 @@ class InfiniteGridMenu {
 
   private TARGET_FRAME_DURATION = 1000 / 60;
   private SPHERE_RADIUS = 2;
-    // เพิ่ม field
+  // เพิ่ม field
   private _lastActiveItemIndex = -1;
-    private rafId: number | null = null;
+  private rafId: number | null = null;
   private running = false;
   private lastTime = 0;
   private lastRenderTime = 0;
   private idleRenderInterval = 200; // ms (150–300 แนะนำ)
   private isIdle(): boolean {
-  return (
-    !this.control.isPointerDown &&
-    Math.abs(this.smoothRotationVelocity) < 0.002
-  );
-}
+    return (
+      !this.control.isPointerDown &&
+      Math.abs(this.smoothRotationVelocity) < 0.002
+    );
+  }
 
   public start(): void {
     if (this.running) return;
@@ -760,7 +760,7 @@ class InfiniteGridMenu {
 
   constructor(
     private canvas: HTMLCanvasElement,
-    private items: Post[],
+    private items: PostSummary[],
     private onActiveItemChange: ActiveItemCallback,
     private onMovementChange: MovementChangeCallback,
     onInit?: InitCallback,
@@ -780,7 +780,7 @@ class InfiniteGridMenu {
     this.updateProjectionMatrix();
   }
 
-    public run(time = 0): void {
+  public run(time = 0): void {
     if (!this.running) return;
 
     this._deltaTime = Math.min(32, time - this._time);
@@ -793,9 +793,9 @@ class InfiniteGridMenu {
     this.render();
 
     if (this.running) {
-        this.rafId = requestAnimationFrame(t => this.run(t));
+      this.rafId = requestAnimationFrame(t => this.run(t));
     }
-    }
+  }
 
   private init(onInit?: InitCallback): void {
     const gl = this.canvas.getContext('webgl2', {
@@ -884,12 +884,12 @@ class InfiniteGridMenu {
             img.crossOrigin = 'anonymous';
             img.onload = () => resolve(img);
             const src =
-            item.images?.[0]?.path
-              ? `${process.env.NEXT_PUBLIC_API_URL}${item.images[0].path}`
-              : "";
+              item.images?.[0]?.path
+                ? `${process.env.NEXT_PUBLIC_API_URL}${item.images[0].path}`
+                : "";
 
             img.src = src;
-  
+
             // console.log(item.images?.path[0]);
           })
       )
@@ -942,7 +942,7 @@ class InfiniteGridMenu {
 
   private animate(deltaTime: number): void {
     if (!this.gl) return;
-    
+
     this.control.update(deltaTime, this.TARGET_FRAME_DURATION);
 
     const positions = this.instancePositions.map(p => vec3.transformQuat(vec3.create(), p, this.control.orientation));
@@ -1094,32 +1094,32 @@ class InfiniteGridMenu {
   }
 
   private resizeCanvasToDisplaySize(canvas: HTMLCanvasElement): boolean {
-  const dpr = this.running
-    ? Math.min(1, window.devicePixelRatio || 1)
-    : 1;
+    const dpr = this.running
+      ? Math.min(1, window.devicePixelRatio || 1)
+      : 1;
 
-  const displayWidth = Math.round(canvas.clientWidth * dpr);
-  const displayHeight = Math.round(canvas.clientHeight * dpr);
+    const displayWidth = Math.round(canvas.clientWidth * dpr);
+    const displayHeight = Math.round(canvas.clientHeight * dpr);
 
-  if (
-    canvas.width !== displayWidth ||
-    canvas.height !== displayHeight
-  ) {
-    canvas.width = displayWidth;
-    canvas.height = displayHeight;
-    return true;
+    if (
+      canvas.width !== displayWidth ||
+      canvas.height !== displayHeight
+    ) {
+      canvas.width = displayWidth;
+      canvas.height = displayHeight;
+      return true;
+    }
+
+    return false;
   }
-
-  return false;
-}
 
 }
 
 interface InfiniteMenuProps {
-  items?: Post[];
+  items?: PostSummary[];
   scale?: number;
   isActive?: boolean;
-  
+
   categories: string[];
   selectedCategory: string;
   onCategoryChange: (cat: string) => void;
@@ -1128,19 +1128,19 @@ interface InfiniteMenuProps {
 const InfiniteMenu: FC<InfiniteMenuProps> = ({ items = [], scale = 1.0, isActive = true, categories, selectedCategory, onCategoryChange }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null) as MutableRefObject<HTMLCanvasElement | null>;
   const router = useRouter();
-  const [activeItem, setActiveItem] = useState<Post | null>(null);
+  const [activeItem, setActiveItem] = useState<PostSummary | null>(null);
   const [isMoving, setIsMoving] = useState<boolean>(false);
   const sketchRef = useRef<InfiniteGridMenu | null>(null);
 
   useEffect(() => {
-  const sketch = sketchRef.current;
-  if (!sketch) return;
+    const sketch = sketchRef.current;
+    if (!sketch) return;
 
-  if (isActive) {
+    if (isActive) {
       sketch.start();
-  } else {
-      sketch.stop(); 
-  }
+    } else {
+      sketch.stop();
+    }
   }, [isActive]);
 
 
@@ -1162,17 +1162,17 @@ const InfiniteMenu: FC<InfiniteMenuProps> = ({ items = [], scale = 1.0, isActive
       );
     }
 
-  if (isActive) {
-    sketchRef.current.start();
-  } else {
-    sketchRef.current.stop();
-  }
+    if (isActive) {
+      sketchRef.current.start();
+    } else {
+      sketchRef.current.stop();
+    }
 
-  return () => {
-    sketchRef.current?.stop();   
-    sketchRef.current = null;    
-  };
-}, [items, isActive, scale]);
+    return () => {
+      sketchRef.current?.stop();
+      sketchRef.current = null;
+    };
+  }, [items, isActive, scale]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -1190,17 +1190,17 @@ const InfiniteMenu: FC<InfiniteMenuProps> = ({ items = [], scale = 1.0, isActive
     router.push(`/post/show/${activeItem.id}`);
   };
 
-return (
-  <InfiniteMenuUI
-    canvasRef={canvasRef}
-    activeItem={activeItem}
-    isMoving={isMoving}
-    onActionClick={handleButtonClick}
-    categories={categories}
-    selectedCategory={selectedCategory}
-    onCategoryChange={onCategoryChange}
-  />
-);
+  return (
+    <InfiniteMenuUI
+      canvasRef={canvasRef}
+      activeItem={activeItem}
+      isMoving={isMoving}
+      onActionClick={handleButtonClick}
+      categories={categories}
+      selectedCategory={selectedCategory}
+      onCategoryChange={onCategoryChange}
+    />
+  );
 }
 
 export default InfiniteMenu;

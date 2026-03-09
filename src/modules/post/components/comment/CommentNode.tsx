@@ -73,8 +73,8 @@ export default function CommentNode({
           >
             <Avatar
               src={
-                node.author.image?.path
-                  ? `${apiBaseUrl}${node.author.image?.path}`
+                node.author.media?.path
+                  ? `${apiBaseUrl}${node.author.media?.path}`
                   : undefined
               }
               alt={node.author?.username || String(node.user_id)}
