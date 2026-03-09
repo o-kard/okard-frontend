@@ -5,12 +5,12 @@ import { Box, IconButton, Typography } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { glowHover } from "../utils/glowHover";
-import { Post } from "@/modules/post/types/post";
+import { PostSummary } from "@/modules/post/types/post";
 import InfiniteMenu from "./InifiniteMenu";
 
 type Group = {
   category: string;
-  projects: Post[];
+  projects: PostSummary[];
 };
 
 type BubbleCarouselProps = {
@@ -54,7 +54,7 @@ export default function BubbleCarousel({ groups }: BubbleCarouselProps) {
     if (!video) return;
 
     if (selectedIndex === 0 && isVisible) {
-      video.play().catch(() => {});
+      video.play().catch(() => { });
     } else {
       video.pause();
     }

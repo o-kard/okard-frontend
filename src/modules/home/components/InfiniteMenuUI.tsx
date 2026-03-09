@@ -3,12 +3,12 @@
 import { FC } from "react";
 import { Box, Typography, IconButton, Select, MenuItem } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { Post } from "@/modules/post/types/post";
+import { PostSummary } from "@/modules/post/types/post";
 import { CATEGORY_COLORS } from "../utils/categoryColors";
 
 type Props = {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
-  activeItem: Post | null;
+  activeItem: PostSummary | null;
   isMoving: boolean;
   onActionClick: () => void;
 
@@ -285,7 +285,7 @@ const InfiniteMenuUI: FC<Props> = ({
                     color: "white",
                   }}
                 >
-                  {activeItem.supporter?.toLocaleString() || 0}
+                  {activeItem.supporters?.toLocaleString() || 0}
                 </Typography>
               </Box>
 

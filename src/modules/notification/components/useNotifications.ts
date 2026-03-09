@@ -11,8 +11,8 @@ export function useNotifications(opts: Opts = {}) {
     loading: false,
     error: null,
     unreadCount: 0,
-    refetch: async () => {},
-    removeOne: async (id: string) => {},
+    refetch: async () => { },
+    removeOne: async (id: string) => { },
   };
 
   /*
