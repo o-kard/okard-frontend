@@ -174,6 +174,7 @@ export default function RewardSections({
                               color: "text.secondary",
                               mb: 2,
                               whiteSpace: "pre-line",
+                              pb: 3,
                             }}
                           >
                             {c.reward_description}

@@ -1,4 +1,16 @@
-import { Grid, Typography, IconButton, Chip } from "@mui/material";
+import { useState } from "react";
+import {
+  Grid,
+  Typography,
+  IconButton,
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+} from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { useRouter } from "next/navigation";
 import type { Notification } from "../types/notification";
@@ -28,6 +40,7 @@ export default function NotificationItem({
   onDelete?: (id: string) => void;
 }) {
   const router = useRouter();
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   const handleClick = () => {
     if (n.post_id) {
@@ -69,12 +82,49 @@ export default function NotificationItem({
           size="small"
           onClick={(e) => {
             e.stopPropagation();
-            onDelete?.(n.id);
+            setOpenDeleteDialog(true);
           }}
         >
           <CloseRoundedIcon fontSize="small" />
         </IconButton>
       </Grid>
+
+      <Dialog
+        open={openDeleteDialog}
+        onClose={(e: React.MouseEvent) => {
+          e.stopPropagation();
+          setOpenDeleteDialog(false);
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <DialogTitle>Delete Notification</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this notification?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpenDeleteDialog(false);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            color="error"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpenDeleteDialog(false);
+              onDelete?.(n.id);
+            }}
+            autoFocus
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Grid>
   );
 }

@@ -603,6 +603,16 @@ export default function PostForm({
   };
 
   const handleFormSubmit: SubmitHandler<FormValues> = async (values) => {
+    if (!values.campaigns || values.campaigns.length === 0) {
+      alert("Please add at least one campaign item.");
+      return;
+    }
+
+    if (!values.rewards || values.rewards.length === 0) {
+      alert("Please add at least one reward.");
+      return;
+    }
+
     const fd = new FormData();
     const isEdit = Boolean(editItem?.id);
     const pickedNewFiles = (watch("post_media") ?? []).length > 0;
@@ -635,12 +645,14 @@ export default function PostForm({
       }));
 
       const campFiles: File[] = [];
-      values.campaigns.forEach((c, i) => {
-        const f = (c as any).file as File | undefined;
-        if (!f)
-          throw new Error(`Please upload an image for campaign #${i + 1}.`);
+      for (let i = 0; i < values.campaigns.length; i++) {
+        const f = (values.campaigns[i] as any).file as File | undefined;
+        if (!f) {
+          alert(`Please upload an image for campaign #${i + 1}.`);
+          return;
+        }
         campFiles.push(f);
-      });
+      }
 
       fd.append("campaigns", JSON.stringify(createCampaignList));
       campFiles.forEach((f) => fd.append("campaign_media", f));
@@ -654,11 +666,14 @@ export default function PostForm({
       }));
 
       const rewardFiles: File[] = [];
-      values.rewards.forEach((c, i) => {
-        const f = (c as any).file as File | undefined;
-        if (!f) throw new Error(`Please upload an image for reward #${i + 1}.`);
+      for (let i = 0; i < values.rewards.length; i++) {
+        const f = (values.rewards[i] as any).file as File | undefined;
+        if (!f) {
+          alert(`Please upload an image for reward #${i + 1}.`);
+          return;
+        }
         rewardFiles.push(f);
-      });
+      }
 
       fd.append("rewards", JSON.stringify(createRewardList));
       rewardFiles.forEach((f) => fd.append("reward_media", f));
