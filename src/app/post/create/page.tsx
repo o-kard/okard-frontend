@@ -2,7 +2,13 @@
 
 "use client";
 import { useRouter } from "next/navigation";
-import { useAuth, useUser } from "@clerk/nextjs";
+import {
+  useAuth,
+  useUser,
+  SignedIn,
+  SignedOut,
+  RedirectToSignIn,
+} from "@clerk/nextjs";
 import { useState } from "react";
 import { createPostWithCampaigns } from "@/modules/post/api/api";
 import PostForm, { categoryOptions } from "@/modules/post/components/PostForm";
@@ -79,17 +85,24 @@ export default function PostCreatePage() {
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box mt={6} mb={4}>
-        <Typography variant="h5" fontWeight="bold" gutterBottom>
-          Create New Post
-        </Typography>
-        <PostForm
-          onPredict={handlePredict}
-          onSubmit={handleSubmit}
-          onCancel={() => router.push("/post")}
-        />
-      </Box>
-    </Container>
+    <>
+      <SignedIn>
+        <Container maxWidth="sm">
+          <Box mt={6} mb={4}>
+            <Typography variant="h5" fontWeight="bold" gutterBottom>
+              Create New Post
+            </Typography>
+            <PostForm
+              onPredict={handlePredict}
+              onSubmit={handleSubmit}
+              onCancel={() => router.push("/post")}
+            />
+          </Box>
+        </Container>
+      </SignedIn>
+      <SignedOut>
+        <RedirectToSignIn />
+      </SignedOut>
+    </>
   );
 }
