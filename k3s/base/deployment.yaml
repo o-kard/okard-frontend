@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend
+  name: okard-frontend
   labels:
-    app: frontend
+    app: okard-frontend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: frontend
+      app: okard-frontend
   template:
     metadata:
       labels:
-        app: frontend
+        app: okard-frontend
     spec:
       containers:
-        - name: frontend
+        - name: okard-frontend
           image: okard-frontend:latest
           imagePullPolicy: IfNotPresent
           ports:
