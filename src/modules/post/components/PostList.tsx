@@ -1,5 +1,6 @@
 import { Post } from "../types/post";
 import Link from "next/link";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 import {
   Box,
   Typography,
@@ -302,7 +303,7 @@ export default function PostList({
     <Grid container spacing={2}>
       {posts.map((post) => {
         const img = post.images?.[0]?.path
-          ? `${process.env.NEXT_PUBLIC_API_URL}${post.images[0].path}`
+          ? resolveMediaUrl(post.images[0].path)
           : undefined;
 
         const goal = Math.max(0, post.goal_amount || 0);

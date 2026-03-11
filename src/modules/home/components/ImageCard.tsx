@@ -5,6 +5,7 @@ import BookmarkIcon from "@mui/icons-material/Bookmark";
 import IconButton from "@mui/material/IconButton";
 import { useState } from "react";
 import Link from "next/dist/client/link";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 type ResponsiveNumber =
   | number
@@ -40,7 +41,7 @@ export default function ImageCard({ campaign, big = false }: ImageCardProps) {
           component="img"
           src={
             campaign?.images?.[0]?.path
-              ? `${process.env.NEXT_PUBLIC_API_URL}${campaign.images[0].path}`
+              ? resolveMediaUrl(campaign.images[0].path)
               : undefined
           }
           sx={{
@@ -172,7 +173,7 @@ export default function ImageCard({ campaign, big = false }: ImageCardProps) {
               {campaign.user.media?.path ? (
                 <Box
                   component="img"
-                  src={`${process.env.NEXT_PUBLIC_API_URL}${campaign.user.media.path}`}
+                  src={resolveMediaUrl(campaign.user.media.path)}
                   alt={campaign.user.username}
                   sx={{
                     width: "100%",

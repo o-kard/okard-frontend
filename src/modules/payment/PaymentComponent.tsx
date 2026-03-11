@@ -18,6 +18,7 @@ import PaymentForm from "./components/PaymentForm";
 import PaymentMethodPicker from "./components/PaymentMethod";
 import PaymentSummary from "./components/PaymentSummary";
 import { Post } from "../post/types/post";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 type Props = {
   postId: string;
@@ -49,7 +50,7 @@ export default function PaymentComponent({ postId, userId }: Props) {
   const imgSrc = useMemo(
     () =>
       post?.images?.[0]?.path
-        ? `${process.env.NEXT_PUBLIC_API_URL}${post.images[0].path}`
+        ? resolveMediaUrl(post.images[0].path)
         : undefined,
     [post],
   );

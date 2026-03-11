@@ -15,6 +15,7 @@ import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import { keyframes } from "@emotion/react";
 import { Post } from "@/modules/post/types/post";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 const grow = keyframes`
   0% { transform: scaleX(0); }
@@ -36,7 +37,7 @@ export default function BookmarkCard({
   );
 
   const postImage = post.images?.[0]?.path
-    ? `${process.env.NEXT_PUBLIC_API_URL}${post.images[0].path}`
+    ? resolveMediaUrl(post.images[0].path)
     : undefined;
 
   const handleUnbookmark = (e: React.MouseEvent) => {

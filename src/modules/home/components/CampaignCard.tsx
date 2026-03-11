@@ -15,6 +15,7 @@ import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import IconButton from "@mui/material/IconButton";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -38,7 +39,7 @@ export default function ProjectCard({
       <Card
         onMouseEnter={() => {
           const img = campaign.images?.[0]?.path
-            ? `${process.env.NEXT_PUBLIC_API_URL}${campaign.images[0].path}`
+            ? resolveMediaUrl(campaign.images[0].path)
             : null;
 
           onHoverBackground?.(img);
@@ -69,7 +70,7 @@ export default function ProjectCard({
           component="img"
           image={
             campaign.images?.[0]?.path
-              ? `${process.env.NEXT_PUBLIC_API_URL}${campaign.images[0].path}`
+              ? resolveMediaUrl(campaign.images[0].path)
               : ""
           }
           alt={campaign.post_header}
@@ -206,7 +207,7 @@ export default function ProjectCard({
               {campaign.user.media?.path ? (
                 <Box
                   component="img"
-                  src={`${process.env.NEXT_PUBLIC_API_URL}${campaign.user.media.path}`}
+                  src={resolveMediaUrl(campaign.user.media.path)}
                   alt={campaign.user.username}
                   sx={{
                     width: "100%",
