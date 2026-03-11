@@ -25,4 +25,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Check Build / Type Error
+        env:
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
         run: pnpm build
