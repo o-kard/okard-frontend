@@ -11,3 +11,6 @@ Dockerfile
 .dockerignore
 
 .env.uat
+
+pgdata/
+minio_data/
