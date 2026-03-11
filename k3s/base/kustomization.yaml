@@ -7,4 +7,4 @@ resources:
 
 # Common labels applied to all resources in base
 commonLabels:
-  app: frontend
+  app: okard-frontend
