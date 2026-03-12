@@ -14,6 +14,7 @@ import { Progress } from "../types";
 import { useActiveSection } from "@/modules/post/hooks/useActiveSection";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import EditIcon from "@mui/icons-material/Edit";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 type Props = {
   items?: Progress[];
@@ -121,7 +122,7 @@ export default function ProgressSection({
           <Stack spacing={4}>
             {data.map((item, i) => {
               const img = item.media?.[0]?.path
-                ? `${apiBaseUrl}${item.media[0].path}`
+                ? resolveMediaUrl(item.media[0].path)
                 : undefined;
 
               return (

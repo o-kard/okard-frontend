@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Button, Grid, Stack, Typography } from "@mui/material";
 import type { Campaign } from "@/modules/post/types/post";
 import { useActiveSection } from "../hooks/useActiveSection";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 const slugify = (s?: string) =>
   (s || "")
@@ -93,7 +94,7 @@ export default function CampaignSections({
           <Stack spacing={6} sx={{ padding: 2 }}>
             {data.map((c, i) => {
               const img = c.media?.[0]?.path
-                ? `${apiBaseUrl}${c.media[0].path}`
+                ? resolveMediaUrl(c.media[0].path)
                 : undefined;
               const anchorId = `${i + 1}-${slugify(c.campaign_header)}`;
 
