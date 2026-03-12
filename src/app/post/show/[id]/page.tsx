@@ -48,6 +48,7 @@ import BookmarkIconMini from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import { predictionLabel } from "@/utils/label";
 import CommunityLeaderboard from "@/modules/post/components/CommunityLeaderboard";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -189,7 +190,7 @@ export default function PostDetailPage() {
   const imgSrc = useMemo(
     () =>
       post?.images?.[0]?.path
-        ? `${process.env.NEXT_PUBLIC_API_URL}${post.images[0].path}`
+        ? resolveMediaUrl(post.images[0].path)
         : undefined,
     [post],
   );
@@ -301,7 +302,7 @@ export default function PostDetailPage() {
                       ) ? (
                         <Box
                           component="video"
-                          src={`${process.env.NEXT_PUBLIC_API_URL}${sliderMedia[currentIndex].path}`}
+                          src={resolveMediaUrl(sliderMedia[currentIndex].path)}
                           controls
                           sx={{
                             position: "absolute",
@@ -315,7 +316,7 @@ export default function PostDetailPage() {
                       ) : (
                         <Box
                           component="img"
-                          src={`${process.env.NEXT_PUBLIC_API_URL}${sliderMedia[currentIndex].path}`}
+                          src={resolveMediaUrl(sliderMedia[currentIndex].path)}
                           alt={post.post_header}
                           sx={{
                             position: "absolute",
@@ -544,7 +545,7 @@ export default function PostDetailPage() {
                   {post.user?.media?.path ? (
                     <Box
                       component="img"
-                      src={`${process.env.NEXT_PUBLIC_API_URL}${post.user.media.path}`}
+                      src={resolveMediaUrl(post.user.media.path)}
                       alt={post.user.username}
                       sx={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />

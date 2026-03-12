@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 import {
   Box,
   Button,
@@ -73,7 +74,7 @@ export default function ProgressForm({
           const img = initialData.media[0];
           setImagePreviews([
             {
-              preview: `${process.env.NEXT_PUBLIC_API_URL}${img.path}`,
+              preview: resolveMediaUrl(img.path),
             },
           ]);
         } else {

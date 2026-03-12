@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Post } from "@/modules/post/types/post";
 import { CATEGORY_COLORS } from "@/modules/home/utils/categoryColors";
 import EditIcon from "@mui/icons-material/Edit";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 const grow = keyframes`
   0% { transform: scaleX(0); }
@@ -54,7 +55,7 @@ export default function CampaignList({ campaigns, showEditButton }: CampaignList
 
                 const postImage =
                     post.images && post.images.length > 0
-                        ? `${process.env.NEXT_PUBLIC_API_URL}${post.images[0].path}`
+                        ? resolveMediaUrl(post.images[0].path)
                         : "/placeholder-image.png";
 
                 const category = CATEGORY_COLORS[post.category] || CATEGORY_COLORS.all;

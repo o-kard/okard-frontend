@@ -1,5 +1,6 @@
 import { Box, Typography, Button, Avatar, Paper } from "@mui/material";
 import { UserPublicResponse } from "@/modules/user/types/user";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 type Props = {
   user: UserPublicResponse;
@@ -11,7 +12,7 @@ export default function CreatorCard({ user }: Props) {
     user.username ||
     "Unknown User";
   const avatarUrl = user.media?.path
-    ? `${process.env.NEXT_PUBLIC_API_URL}${user.media.path}`
+    ? resolveMediaUrl(user.media.path)
     : undefined;
 
   return (

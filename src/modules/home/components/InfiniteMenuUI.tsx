@@ -5,6 +5,7 @@ import { Box, Typography, IconButton, Select, MenuItem } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { PostSummary } from "@/modules/post/types/post";
 import { CATEGORY_COLORS } from "../utils/categoryColors";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 type Props = {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
@@ -177,7 +178,7 @@ const InfiniteMenuUI: FC<Props> = ({
                 {activeItem.user.media?.path ? (
                   <Box
                     component="img"
-                    src={`${process.env.NEXT_PUBLIC_API_URL}${activeItem.user.media.path}`}
+                    src={resolveMediaUrl(activeItem.user.media.path)}
                     alt={activeItem.user.username}
                     sx={{
                       width: "100%",

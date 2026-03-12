@@ -5,6 +5,7 @@ import { mat4, quat, vec2, vec3 } from 'gl-matrix';
 import InfiniteMenuUI from './InfiniteMenuUI';
 import { PostSummary } from '@/modules/post/types/post';
 import { useRouter } from "next/navigation";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 const discVertShaderSource = `#version 300 es
 
@@ -885,7 +886,7 @@ class InfiniteGridMenu {
             img.onload = () => resolve(img);
             const src =
               item.images?.[0]?.path
-                ? `${process.env.NEXT_PUBLIC_API_URL}${item.images[0].path}`
+                ? resolveMediaUrl(item.images[0].path)
                 : "";
 
             img.src = src;
