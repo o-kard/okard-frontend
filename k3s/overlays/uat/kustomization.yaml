@@ -22,8 +22,4 @@ patches:
 images:
   - name: okard-frontend
     newTag: uat
-
-secretGenerator:
-  - name: okard-frontend-secrets
-    envs:
-      - .env
+    
