@@ -9,4 +9,4 @@ spec:
         - name: ghcr-secret
       containers:
         - name: okard-frontend
-          image: ghcr.io/o-kard/okard-frontend:latest
+          image: ghcr.io/o-kard/okard-frontend
