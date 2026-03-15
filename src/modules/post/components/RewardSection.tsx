@@ -5,6 +5,7 @@ import { Box, Button, Grid, Stack, Typography } from "@mui/material";
 import type { Reward } from "@/modules/post/types/post";
 import { AttachMoney, Groups } from "@mui/icons-material";
 import { useActiveSection } from "../hooks/useActiveSection";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 const slugify = (s?: string) =>
   (s || "")
@@ -94,7 +95,7 @@ export default function RewardSections({
           <Stack spacing={4}>
             {data.map((c, i) => {
               const img = c.media?.[0]?.path
-                ? `${apiBaseUrl}${c.media[0].path}`
+                ? resolveMediaUrl(c.media[0].path)
                 : undefined;
               const anchorId = `${i + 1}-${slugify(c.reward_header)}`;
               const amount = (c as any).amount ?? (c as any).reward_amount ?? 0;

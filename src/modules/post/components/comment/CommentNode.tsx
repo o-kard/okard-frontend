@@ -7,6 +7,7 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import ReplyIcon from "@mui/icons-material/Reply";
 import InlineComposer from "./InlineComposer";
 import { formatDate } from "../../utils/commentHelpers";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 type CommentNodeProps = {
   node: PostComment;
@@ -74,7 +75,7 @@ export default function CommentNode({
             <Avatar
               src={
                 node.author.media?.path
-                  ? `${apiBaseUrl}${node.author.media?.path}`
+                  ? resolveMediaUrl(node.author.media?.path)
                   : undefined
               }
               alt={node.author?.username || String(node.user_id)}

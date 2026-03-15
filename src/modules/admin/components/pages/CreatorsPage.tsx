@@ -308,6 +308,7 @@ export default function CreatorsPage() {
                   Email
                 </TableCell>
                 <TableCell
+                  align="center"
                   sx={{
                     fontWeight: 600,
                     color: "#666666",
@@ -389,7 +390,7 @@ export default function CreatorsPage() {
                     </Stack>
                   </TableCell>
                   <TableCell sx={{ color: "#666666" }}>{c.email}</TableCell>
-                  <TableCell>
+                  <TableCell align="center">
                     <Box
                       component="span"
                       sx={{
@@ -401,6 +402,7 @@ export default function CreatorsPage() {
                         fontSize: "0.85rem",
                         fontWeight: 600,
                         border: "1px solid rgba(18, 201, 152, 0.4)",
+                        display: "inline-block",
                       }}
                     >
                       {c.role
