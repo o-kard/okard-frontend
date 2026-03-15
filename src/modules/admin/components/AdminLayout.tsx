@@ -76,7 +76,9 @@ export default function AdminLayout({
           transition: "background 0.2s",
         }}
       >
-        {children}
+        <Box sx={{ p: { xs: 1, sm: 2, md: 0 } }}>
+          {children}
+        </Box>
       </main>
     </div>
   );

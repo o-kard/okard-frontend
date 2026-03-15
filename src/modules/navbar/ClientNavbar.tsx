@@ -79,6 +79,8 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
         } catch (err) {
           console.error("Failed to fetch user role:", err);
         }
+      } else {
+        setUserRole("");
       }
     }
     fetchRole();

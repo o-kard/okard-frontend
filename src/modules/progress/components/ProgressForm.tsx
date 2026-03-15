@@ -213,32 +213,51 @@ export default function ProgressForm({
                 ))}
 
                 {imagePreviews.length === 0 && (
-                  <Button
-                    component="label"
-                    variant="outlined"
-                    sx={{
-                      width: 100,
-                      height: 100,
-                      borderRadius: 1,
-                      borderStyle: "dashed",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 0.5,
-                    }}
-                  >
-                    <AddPhotoAlternateIcon color="action" />
-                    <Typography variant="caption" color="text.secondary">
-                      Add
-                    </Typography>
-                    <input
-                      type="file"
-                      hidden
-                      accept="image/*"
-                      onChange={handleFileChange}
-                    />
-                  </Button>
+                  <Box>
+                    <Button
+                      component="label"
+                      variant="outlined"
+                      sx={{
+                        width: 100,
+                        height: 100,
+                        borderRadius: 1,
+                        borderStyle: "dashed",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 0.5,
+                        borderColor: errors.images ? "error.main" : "inherit",
+                      }}
+                    >
+                      <AddPhotoAlternateIcon color={errors.images ? "error" : "action"} />
+                      <Typography
+                        variant="caption"
+                        color={errors.images ? "error.main" : "text.secondary"}
+                      >
+                        Add
+                      </Typography>
+                      <input
+                        type="file"
+                        hidden
+                        accept="image/*"
+                        {...register("images", {
+                          validate: () =>
+                            (imagePreviews.length > 0) || "Picture is required",
+                        })}
+                        onChange={handleFileChange}
+                      />
+                    </Button>
+                    {errors.images && (
+                      <Typography
+                        variant="caption"
+                        color="error"
+                        sx={{ mt: 1, display: "block" }}
+                      >
+                        {errors.images.message}
+                      </Typography>
+                    )}
+                  </Box>
                 )}
               </Stack>
             </Box>
