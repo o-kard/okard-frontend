@@ -1,8 +1,8 @@
-name: Deploy Frontend to UAT
+name: Deploy Frontend to PRD
 
 on:
   push:
-    branches: [ "uat", "dev" ]
+    branches: [ "main" ]
 
 env:
   REGISTRY: ghcr.io
@@ -13,7 +13,7 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    environment: uat
+    environment: prd
     permissions:
       contents: read
       packages: write

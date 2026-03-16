@@ -5,8 +5,8 @@ resources:
   - ../../base
   - ingress.yaml
 
-namePrefix: uat-
-namespace: uat
+namePrefix: prd-
+namespace: prd
 
 # This setting patches the base deployment specifically for UAT
 patches:
