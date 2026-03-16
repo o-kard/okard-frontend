@@ -17,10 +17,10 @@ import { useUser } from "@clerk/nextjs";
 import DashboardSummary from "./components/DashboardSummary";
 import {
   fetchDashboardSummary,
-  fetchDashboardPosts,
+  fetchDashboardCampaigns,
   fetchPaymentStats,
   fetchInvestorCountries,
-  fetchTrendingPosts,
+  fetchTrendingCampaigns,
 } from "./api/api";
 import type {
   DashboardSummary as SummaryType,
@@ -57,10 +57,10 @@ export default function DashboardComponent() {
       try {
         const [s, p, pay, c, t] = await Promise.all([
           fetchDashboardSummary(clerkId),
-          fetchDashboardPosts(clerkId, limit, offset),
+          fetchDashboardCampaigns(clerkId, limit, offset),
           fetchPaymentStats(clerkId),
           fetchInvestorCountries(clerkId),
-          fetchTrendingPosts(clerkId),
+          fetchTrendingCampaigns(clerkId),
         ]);
         setSummary(s);
         setCampaigns(p);

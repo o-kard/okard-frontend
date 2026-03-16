@@ -19,5 +19,5 @@ export type DashboardCampaign = {
 export type TrendingCampaign = {
   campaign_id: string
   campaign_header: string
-  payment_count: number
+  donate_count: number
 }
