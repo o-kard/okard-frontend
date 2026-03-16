@@ -13,8 +13,8 @@ export default function DashboardSummary({
       <Grid size={{ xs: 12, md: 3 }}>
         <Card>
           <CardContent>
-            <Typography variant="h6">Total Posts</Typography>
-            <Typography variant="h4">{summary.post_count}</Typography>
+            <Typography variant="h6">Total Campaigns</Typography>
+            <Typography variant="h4">{summary.campaign_count}</Typography>
           </CardContent>
         </Card>
       </Grid>
@@ -31,9 +31,9 @@ export default function DashboardSummary({
       <Grid size={{ xs: 12, md: 3 }}>
         <Card>
           <CardContent>
-            <Typography variant="h6">Hit Goal Post Count</Typography>
+            <Typography variant="h6">Hit Goal Campaign Count</Typography>
             <Typography variant="h4">
-              {summary.hit_goal_post_count.toLocaleString()}
+              {summary.hit_goal_campaign_count.toLocaleString()}
             </Typography>
           </CardContent>
         </Card>

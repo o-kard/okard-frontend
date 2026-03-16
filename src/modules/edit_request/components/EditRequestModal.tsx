@@ -12,7 +12,7 @@ import {
 interface EditRequestModalProps {
   open: boolean;
   onClose: () => void;
-  postId: string;
+  campaignId: string;
   clerkId: string;
   proposedChanges?: any;
 }
@@ -20,7 +20,7 @@ interface EditRequestModalProps {
 export default function EditRequestModal({
   open,
   onClose,
-  postId,
+  campaignId,
   clerkId,
   proposedChanges,
 }: EditRequestModalProps) {
@@ -46,7 +46,7 @@ export default function EditRequestModal({
             // Upload
             const fd = new FormData();
             fd.append("file", fileObj);
-            fd.append("post_id", postId);
+            fd.append("campaign_id", campaignId);
             fd.append("clerk_id", clerkId);
 
             const res = await fetch(
@@ -89,7 +89,7 @@ export default function EditRequestModal({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            post_id: postId,
+            campaign_id: campaignId,
             description: description,
             proposed_changes: finalProposed,
             expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
@@ -114,7 +114,7 @@ export default function EditRequestModal({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Request to Edit Post</DialogTitle>
+      <DialogTitle>Request to Edit Campaign</DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           Describe what you want to change. Top 11 contributors will vote on

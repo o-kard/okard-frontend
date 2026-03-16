@@ -24,7 +24,7 @@ import {
   TableBody,
 } from "@mui/material";
 import { listUsers, deleteUser } from "@/modules/user/api/api";
-import { fetchPosts } from "@/modules/post/api/api";
+import { fetchCampaigns } from "@/modules/campaign/api/api";
 
 const statusColors: Record<string, string> = {
   Active: "#1de9b6",
@@ -137,10 +137,10 @@ export default function CreatorsPage() {
     async function loadCreators() {
       try {
         const users = await listUsers();
-        const posts = await fetchPosts();
+        const campaigns = await fetchCampaigns();
         const creatorsData = users.map((user) => {
-          const campaign_number = posts.filter(
-            (post) => post.user?.id === user.id,
+          const campaign_number = campaigns.filter(
+            (campaign) => campaign.user?.id === user.id,
           ).length;
           return {
             id: user.id,

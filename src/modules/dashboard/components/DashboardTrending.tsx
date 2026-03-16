@@ -1,15 +1,15 @@
 import { BarChart } from "@mui/x-charts/BarChart";
-import { TrendingPost } from "../types/dashboard";
+import { TrendingCampaign } from "../types/dashboard";
 
-export default function DashboardTrending({ data }: { data: TrendingPost[] }) {
-  if (!data.length) return <p>No trending posts</p>;
+export default function DashboardTrending({ data }: { data: TrendingCampaign[] }) {
+  if (!data.length) return <p>No trending campaigns</p>;
 
   return (
     <BarChart
       xAxis={[
         {
           scaleType: "band",
-          data: data.map((p) => p.post_header),
+          data: data.map((p) => p.campaign_header),
         },
       ]}
       series={[

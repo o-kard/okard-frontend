@@ -3,13 +3,13 @@
 import { FC } from "react";
 import { Box, Typography, IconButton, Select, MenuItem } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { PostSummary } from "@/modules/post/types/post";
+import { CampaignSummary } from "@/modules/campaign/types/campaign";
 import { CATEGORY_COLORS } from "../utils/categoryColors";
 import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 type Props = {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
-  activeItem: PostSummary | null;
+  activeItem: CampaignSummary | null;
   isMoving: boolean;
   onActionClick: () => void;
 
@@ -146,7 +146,7 @@ const InfiniteMenuUI: FC<Props> = ({
                 lineHeight: 1.1,
               }}
             >
-              {activeItem.post_header}
+              {activeItem.campaign_header}
             </Typography>
             {/* Creator */}
             <Box
@@ -246,7 +246,7 @@ const InfiniteMenuUI: FC<Props> = ({
                 fontSize: "1rem",
               }}
             >
-              {activeItem.post_description}
+              {activeItem.campaign_description}
             </Typography>
 
             {/* Stats row (ด้านล่าง แถวเดียว) */}

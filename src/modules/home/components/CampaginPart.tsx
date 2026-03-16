@@ -3,11 +3,11 @@
 import { useMemo, useState, useEffect } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import { TabKey } from "../types/types";
-import { Post, PostSummary } from "@/modules/post/types/post";
+import { Campaign, CampaignSummary } from "@/modules/campaign/types/campaign";
 import CampaignTabs from "./CampaignTabs";
 import CampaignSlider from "./CampaignSlider";
 import { getTopPledgedCampaigns } from "../api/api";
-import { getForYouCampaigns } from "@/modules/post/api/api";
+import { getForYouCampaigns } from "@/modules/campaign/api/api";
 import { useUser, useAuth } from "@clerk/nextjs";
 
 const DEFAULT_LIMIT = 10;
@@ -22,7 +22,7 @@ export default function CampaignPart({ onHoverBackground }: Props) {
   const clerkId = user?.id;
   const [tab, setTab] = useState<TabKey>("popular");
   const [category, setCategory] = useState<string | null>(null);
-  const [campaigns, setCampaigns] = useState<(Post | PostSummary)[]>([]);
+  const [campaigns, setCampaigns] = useState<(Campaign | CampaignSummary)[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ export default function CampaignPart({ onHoverBackground }: Props) {
 
     const fetchData = async () => {
       try {
-        let data: (Post | PostSummary)[] = [];
+        let data: (Campaign | CampaignSummary)[] = [];
 
         if (tab === "popular") {
           data = await getTopPledgedCampaigns({

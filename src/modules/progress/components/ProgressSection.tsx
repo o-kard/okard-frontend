@@ -11,10 +11,10 @@ import {
   IconButton,
 } from "@mui/material";
 import { Progress } from "../types";
-import { useActiveSection } from "@/modules/post/hooks/useActiveSection";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import EditIcon from "@mui/icons-material/Edit";
 import { resolveMediaUrl } from "@/utils/mediaUrl";
+import { useActiveSection } from "@/modules/campaign/hooks/useActiveSection";
 
 type Props = {
   items?: Progress[];

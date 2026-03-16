@@ -1,4 +1,4 @@
-import { Media } from "@/modules/post/types/post";
+import { Media } from "@/modules/campaign/types/campaign";
 
 export type User = {
   id: string;

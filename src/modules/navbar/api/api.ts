@@ -11,8 +11,8 @@ export async function search(query: string): Promise<SearchResponse> {
     return res.json();
 }
 
-export async function getAllPosts() {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/post`);
-    if (!res.ok) throw new Error("Failed to fetch posts");
+export async function getAllCampaigns() {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaign`);
+    if (!res.ok) throw new Error("Failed to fetch campaigns");
     return res.json();
 }

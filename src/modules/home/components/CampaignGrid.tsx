@@ -1,11 +1,11 @@
 import { Box } from "@mui/material";
 import ImageCard from "./ImageCard";
-import { Post, PostSummary } from "@/modules/post/types/post";
+import { Campaign, CampaignSummary } from "@/modules/campaign/types/campaign";
 
 export default function CampaignGrid({
   campaigns,
 }: {
-  campaigns: (Post | PostSummary)[];
+  campaigns: (Campaign | CampaignSummary)[];
 }) {
   return (
     <Box

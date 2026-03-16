@@ -6,15 +6,15 @@ export async function fetchDashboardSummary(clerkId: string) {
   return res.json();
 }
 
-export async function fetchDashboardPosts(
+export async function fetchDashboardCampaigns(
   clerkId: string,
   limit = 10,
   offset = 0
 ) {
   const res = await fetch(
-    `${API_URL}/posts?clerk_id=${clerkId}&limit=${limit}&offset=${offset}`
+    `${API_URL}/campaigns?clerk_id=${clerkId}&limit=${limit}&offset=${offset}`
   );
-  if (!res.ok) throw new Error("Failed to fetch posts");
+  if (!res.ok) throw new Error("Failed to fetch campaigns");
   return res.json();
 }
 
@@ -32,11 +32,11 @@ export async function fetchInvestorCountries(clerkId: string) {
   return res.json();
 }
 
-export async function fetchTrendingPosts(clerkId: string, day?: string) {
-  const url = `${API_URL}/posts/trending?clerk_id=${clerkId}${
+export async function fetchTrendingCampaigns(clerkId: string, day?: string) {
+  const url = `${API_URL}/campaigns/trending?clerk_id=${clerkId}${
     day ? `&day=${day}` : ""
   }`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error("Failed to fetch trending posts");
+  if (!res.ok) throw new Error("Failed to fetch trending campaigns");
   return res.json();
 }

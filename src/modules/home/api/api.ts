@@ -1,4 +1,4 @@
-import { PostSummary } from "@/modules/post/types/post";
+import { CampaignSummary } from "@/modules/campaign/types/campaign";
 import { CategoryStats } from "../types/types";
 
 const API_URL_Home = `${process.env.NEXT_PUBLIC_API_URL}/api/home`;
@@ -7,7 +7,7 @@ const ASSET_BASE = process.env.NEXT_PUBLIC_API_URL;
 export async function getTopPledgedCampaigns(params?: {
   category?: string;
   limit?: number;
-}): Promise<PostSummary[]> {
+}): Promise<CampaignSummary[]> {
   const query = new URLSearchParams();
 
   if (params?.category) query.append("category", params.category);

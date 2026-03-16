@@ -2,19 +2,19 @@
 
 import React from "react";
 import { Box, Typography, Stack } from "@mui/material";
-import { Post } from "@/modules/post/types/post";
+import { Campaign } from "@/modules/campaign/types/campaign";
 import BookmarkCard from "./BookmarkCard";
 
 interface BookmarkListProps {
-  posts: Post[];
-  onUnbookmark: (postId: string) => void;
+  campaigns: Campaign[];
+  onUnbookmark: (campaignId: string) => void;
 }
 
 export default function BookmarkList({
-  posts,
+  campaigns,
   onUnbookmark,
 }: BookmarkListProps) {
-  if (posts.length === 0) {
+  if (campaigns.length === 0) {
     return (
       <Box sx={{ py: 8, textAlign: "center" }}>
         <Typography color="text.secondary">
@@ -47,8 +47,8 @@ export default function BookmarkList({
         },
       }}
     >
-      {posts.map((post) => (
-        <BookmarkCard key={post.id} post={post} onUnbookmark={onUnbookmark} />
+      {campaigns.map((campaign) => (
+        <BookmarkCard key={campaign.id} campaign={campaign} onUnbookmark={onUnbookmark} />
       ))}
     </Stack>
   );

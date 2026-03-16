@@ -13,7 +13,7 @@ import {
 import Link from "next/link";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import { keyframes } from "@emotion/react";
-import { Post } from "@/modules/post/types/post";
+import { Campaign } from "@/modules/campaign/types/campaign";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import { resolveMediaUrl } from "@/utils/mediaUrl";
 
@@ -23,27 +23,27 @@ const grow = keyframes`
 `;
 
 interface BookmarkCardProps {
-  post: Post;
-  onUnbookmark: (postId: string) => void;
+  campaign: Campaign;
+  onUnbookmark: (campaignId: string) => void;
 }
 
 export default function BookmarkCard({
-  post,
+  campaign,
   onUnbookmark,
 }: BookmarkCardProps) {
   const progress = Math.min(
     100,
-    Math.round((post.current_amount / post.goal_amount) * 100),
+    Math.round((campaign.current_amount / campaign.goal_amount) * 100),
   );
 
-  const postImage = post.images?.[0]?.path
-    ? resolveMediaUrl(post.images[0].path)
+  const campaignImage = campaign.images?.[0]?.path
+    ? resolveMediaUrl(campaign.images[0].path)
     : undefined;
 
   const handleUnbookmark = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onUnbookmark(post.id);
+    onUnbookmark(campaign.id);
   };
 
   return (
@@ -67,7 +67,7 @@ export default function BookmarkCard({
       }}
     >
       <Link
-        href={`/post/show/${post.id}`}
+        href={`/campaign/show/${campaign.id}`}
         style={{ textDecoration: "none", color: "inherit" }}
       >
         <Box
@@ -94,7 +94,7 @@ export default function BookmarkCard({
             <BookmarkIcon fontSize="small" />
           </IconButton>
 
-          {/* Post Image */}
+          {/* Campaign Image */}
           <Box
             sx={{
               width: { xs: "100%", sm: 200 },
@@ -106,11 +106,11 @@ export default function BookmarkCard({
               flexShrink: 0,
             }}
           >
-            {postImage ? (
+            {campaignImage ? (
               <Box
                 component="img"
-                src={postImage}
-                alt={post.post_header}
+                src={campaignImage}
+                alt={campaign.campaign_header}
                 sx={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
             ) : (
@@ -147,7 +147,7 @@ export default function BookmarkCard({
                     WebkitBoxOrient: "vertical",
                   }}
                 >
-                  {post.post_header}
+                  {campaign.campaign_header}
                 </Typography>
               </Box>
 
@@ -162,7 +162,7 @@ export default function BookmarkCard({
                   WebkitBoxOrient: "vertical",
                 }}
               >
-                {post.post_description}
+                {campaign.campaign_description}
               </Typography>
             </Stack>
 
@@ -172,7 +172,7 @@ export default function BookmarkCard({
                   {progress}% funded
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {post.supporter ?? 0} supporters
+                  {campaign.supporter ?? 0} supporters
                 </Typography>
               </Box>
               <Box

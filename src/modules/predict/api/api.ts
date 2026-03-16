@@ -2,7 +2,7 @@ import { PredictInput, PredictResponse } from "../types/predictTypes";
 
 const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/predict/`;
 
-export async function predictPost(
+export async function predictCampaign(
   input: PredictInput,
   clerkId: string
 ): Promise<PredictResponse> {
