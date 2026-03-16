@@ -27,14 +27,14 @@ import CampaignIcon from "@mui/icons-material/Campaign";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import PersonIcon from "@mui/icons-material/Person";
 import DashboardCustomizeIcon from "@mui/icons-material/DashboardCustomize";
-import { Post } from "@/modules/post/types/post";
-import { fetchPosts } from "@/modules/post/api/api";
+import { Campaign } from "@/modules/campaign/types/campaign";
+import { fetchCampaigns } from "@/modules/campaign/api/api";
 import CampaignList from "./CampaignList";
-import { ContributorWithPost } from "../../contributor/types";
+import { ContributorWithCampaign } from "../../contributor/types";
 import { getContributeByUserId } from "../../contributor/api/api";
 import ContributorList from "../../contributor/components/ContributorList";
 import VerifiedIcon from "@mui/icons-material/Verified";
-import { fetchPostsByUserId } from "@/modules/post/api/api";
+import { fetchCampaignsByUserId } from "@/modules/campaign/api/api";
 import {
   User as UserIcon,
   Phone,
@@ -83,22 +83,22 @@ export default function PublicProfilePanel({
   const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("profile");
-  const [campaigns, setCampaigns] = useState<Post[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [campaignsLoading, setCampaignsLoading] = useState(false);
-  const [contributions, setContributions] = useState<ContributorWithPost[]>([]);
+  const [contributions, setContributions] = useState<ContributorWithCampaign[]>([]);
   const [contributionsLoading, setContributionsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredCampaigns = campaigns.filter(
-    (post) =>
-      post.post_header.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.post_description.toLowerCase().includes(searchQuery.toLowerCase()),
+    (campaign) =>
+      campaign.campaign_header.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      campaign.campaign_description.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const filteredContributions = contributions.filter(
     (c) =>
-      c.post.post_header.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.post.post_description.toLowerCase().includes(searchQuery.toLowerCase()),
+      c.campaign.campaign_header.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.campaign.campaign_description.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   useEffect(() => {
@@ -125,8 +125,8 @@ export default function PublicProfilePanel({
   useEffect(() => {
     if (profile?.id) {
       setCampaignsLoading(true);
-      fetchPostsByUserId(profile.id)
-        .then((res: Post[]) => {
+      fetchCampaignsByUserId(profile.id)
+        .then((res: Campaign[]) => {
           setCampaigns(res);
         })
         .catch((err: any) => console.error(err))
@@ -134,7 +134,7 @@ export default function PublicProfilePanel({
 
       setContributionsLoading(true);
       getContributeByUserId(profile.id)
-        .then((res: ContributorWithPost[]) => {
+        .then((res: ContributorWithCampaign[]) => {
           setContributions(res);
         })
         .catch((err: any) => console.error(err))

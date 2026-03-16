@@ -1,13 +1,13 @@
 export type DashboardSummary = {
   user_id: string;
-  post_count: number;
+  campaign_count: number;
   unique_investor_count: number;
   total_raised: number;
-  hit_goal_post_count: number
+  hit_goal_campaign_count: number
 };
 
-export type DashboardPost = {
-  post_id: string;
+export type DashboardCampaign = {
+  campaign_id: string;
   title: string;
   goal_amount: number;
   current_amount: number;
@@ -16,8 +16,8 @@ export type DashboardPost = {
   hit_goal: boolean;
 };
 
-export type TrendingPost = {
-  post_id: string
-  post_header: string
-  donate_count: number
+export type TrendingCampaign = {
+  campaign_id: string
+  campaign_header: string
+  payment_count: number
 }

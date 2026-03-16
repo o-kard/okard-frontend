@@ -5,12 +5,12 @@ import { Box, IconButton, Typography } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { glowHover } from "../utils/glowHover";
-import { PostSummary } from "@/modules/post/types/post";
+import { CampaignSummary } from "@/modules/campaign/types/campaign";
 import InfiniteMenu from "./InifiniteMenu";
 
 type Group = {
   category: string;
-  projects: PostSummary[];
+  projects: CampaignSummary[];
 };
 
 type BubbleCarouselProps = {

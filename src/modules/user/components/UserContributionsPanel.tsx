@@ -8,13 +8,13 @@ import {
 } from "@mui/material";
 import { SearchIcon } from "lucide-react";
 import React, { useState, useMemo } from "react";
-import { ContributorWithPost } from "../../contributor/types";
+import { ContributorWithCampaign } from "../../contributor/types";
 import ContributorList from "../../contributor/components/ContributorList";
 import { useUser } from "@clerk/nextjs";
 
 // Contributions
 interface ContributionsPanelProps {
-  contributions: ContributorWithPost[];
+  contributions: ContributorWithCampaign[];
   loading: boolean;
 }
 
@@ -26,8 +26,8 @@ export default function ContributionsPanel({ contributions, loading }: Contribut
     if (!searchQuery) return contributions;
     const lowerQuery = searchQuery.toLowerCase();
     return contributions.filter((c) =>
-      c.post.post_header.toLowerCase().includes(lowerQuery) ||
-      c.post.post_description.toLowerCase().includes(lowerQuery)
+      c.campaign.campaign_header.toLowerCase().includes(lowerQuery) ||
+      c.campaign.campaign_description.toLowerCase().includes(lowerQuery)
     );
   }, [contributions, searchQuery]);
 

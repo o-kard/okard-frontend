@@ -9,7 +9,7 @@ export type PaymentType =
 export type Payment = {
   id?: UUID;
   amount: number;
-  post_id: UUID;
+  campaign_id: UUID;
   full_name: string;
   email: string;
   payment_method: PaymentType;

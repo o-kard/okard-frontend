@@ -2,11 +2,11 @@
 
 import React from "react";
 import { Box, Typography, Stack } from "@mui/material";
-import { ContributorWithPost } from "../types";
+import { ContributorWithCampaign } from "../types";
 import ContributorCard from "./ContributorCard";
 
 interface ContributorListProps {
-    contributions: ContributorWithPost[];
+    contributions: ContributorWithCampaign[];
 }
 
 export default function ContributorList({ contributions }: ContributorListProps) {

@@ -24,14 +24,14 @@ import DeleteIcon from "@mui/icons-material/Delete";
 interface ReportModalProps {
   open: boolean;
   onClose: () => void;
-  postId: string;
+  campaignId: string;
   clerkId: string;
 }
 
 export default function ReportModal({
   open,
   onClose,
-  postId,
+  campaignId,
   clerkId,
 }: ReportModalProps) {
   const [type, setType] = useState("problem");
@@ -48,7 +48,7 @@ export default function ReportModal({
 
     try {
       const formData = new FormData();
-      formData.append("post_id", postId);
+      formData.append("campaign_id", campaignId);
       formData.append("type", type);
       if (header) formData.append("header", header);
       formData.append("description", description);

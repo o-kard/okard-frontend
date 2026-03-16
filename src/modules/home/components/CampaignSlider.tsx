@@ -2,12 +2,12 @@
 
 import useEmblaCarousel from "embla-carousel-react";
 import { Box } from "@mui/material";
-import { Post, PostSummary } from "@/modules/post/types/post";
+import { Campaign, CampaignSummary } from "@/modules/campaign/types/campaign";
 import CampaignCard from "./CampaignCard";
 import { useEffect } from "react";
 
 type Props = {
-  campaigns: (Post | PostSummary)[];
+  campaigns: (Campaign | CampaignSummary)[];
   resetKey: string;
   onHoverBackground?: (img: string | null) => void;
 };

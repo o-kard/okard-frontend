@@ -10,14 +10,14 @@ import {
   InputAdornment,
 } from "@mui/material";
 import { useAuth } from "@clerk/nextjs";
-import { fetchBookmarks, toggleBookmark } from "@/modules/post/api/api";
-import { Post } from "@/modules/post/types/post";
+import { fetchBookmarks, toggleBookmark } from "@/modules/campaign/api/api";
+import { Campaign } from "@/modules/campaign/types/campaign";
 import BookmarkList from "@/modules/bookmark/components/BookmarkList";
 import { SearchIcon } from "lucide-react";
 
 export default function UserBookmarksPanel() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -29,7 +29,7 @@ export default function UserBookmarksPanel() {
         const token = await getToken();
         if (token) {
           const data = await fetchBookmarks(token);
-          setPosts(data || []);
+          setCampaigns(data || []);
         }
       } catch (err) {
         console.error("Failed to load bookmarks", err);
@@ -41,27 +41,27 @@ export default function UserBookmarksPanel() {
     loadBookmarks();
   }, [isLoaded, isSignedIn, getToken]);
 
-  const handleUnbookmark = async (postId: string) => {
+  const handleUnbookmark = async (campaignId: string) => {
     try {
       const token = await getToken();
       if (!token) return;
-      await toggleBookmark(postId, token);
-      setPosts((prev) => prev.filter((p) => p.id !== postId));
+      await toggleBookmark(campaignId, token);
+      setCampaigns((prev) => prev.filter((p) => p.id !== campaignId));
     } catch (err) {
       console.error("Failed to toggle bookmark", err);
     }
   };
 
-  const filteredPosts = useMemo(() => {
-    if (!searchQuery) return posts;
+  const filteredCampaigns = useMemo(() => {
+    if (!searchQuery) return campaigns;
     const lowerQuery = searchQuery.toLowerCase();
-    return posts.filter(
+    return campaigns.filter(
       (p) =>
-        p.post_header.toLowerCase().includes(lowerQuery) ||
-        (p.post_description &&
-          p.post_description.toLowerCase().includes(lowerQuery)),
+        p.campaign_header.toLowerCase().includes(lowerQuery) ||
+        (p.campaign_description &&
+          p.campaign_description.toLowerCase().includes(lowerQuery)),
     );
-  }, [posts, searchQuery]);
+  }, [campaigns, searchQuery]);
 
   if (!isSignedIn) {
     return <Typography>Please sign in to view your bookmarks.</Typography>;
@@ -117,8 +117,8 @@ export default function UserBookmarksPanel() {
           <Box display="flex" justifyContent="center" p={4}>
             <CircularProgress />
           </Box>
-        ) : filteredPosts.length > 0 ? (
-          <BookmarkList posts={filteredPosts} onUnbookmark={handleUnbookmark} />
+        ) : filteredCampaigns.length > 0 ? (
+          <BookmarkList campaigns={filteredCampaigns} onUnbookmark={handleUnbookmark} />
         ) : (
           <Paper
             sx={{

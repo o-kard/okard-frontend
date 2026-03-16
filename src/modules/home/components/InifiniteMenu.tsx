@@ -3,7 +3,7 @@
 import { FC, useRef, useState, useEffect, MutableRefObject } from 'react';
 import { mat4, quat, vec2, vec3 } from 'gl-matrix';
 import InfiniteMenuUI from './InfiniteMenuUI';
-import { PostSummary } from '@/modules/post/types/post';
+import { CampaignSummary } from '@/modules/campaign/types/campaign';
 import { useRouter } from "next/navigation";
 import { resolveMediaUrl } from "@/utils/mediaUrl";
 
@@ -761,7 +761,7 @@ class InfiniteGridMenu {
 
   constructor(
     private canvas: HTMLCanvasElement,
-    private items: PostSummary[],
+    private items: CampaignSummary[],
     private onActiveItemChange: ActiveItemCallback,
     private onMovementChange: MovementChangeCallback,
     onInit?: InitCallback,
@@ -1117,7 +1117,7 @@ class InfiniteGridMenu {
 }
 
 interface InfiniteMenuProps {
-  items?: PostSummary[];
+  items?: CampaignSummary[];
   scale?: number;
   isActive?: boolean;
 
@@ -1129,7 +1129,7 @@ interface InfiniteMenuProps {
 const InfiniteMenu: FC<InfiniteMenuProps> = ({ items = [], scale = 1.0, isActive = true, categories, selectedCategory, onCategoryChange }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null) as MutableRefObject<HTMLCanvasElement | null>;
   const router = useRouter();
-  const [activeItem, setActiveItem] = useState<PostSummary | null>(null);
+  const [activeItem, setActiveItem] = useState<CampaignSummary | null>(null);
   const [isMoving, setIsMoving] = useState<boolean>(false);
   const sketchRef = useRef<InfiniteGridMenu | null>(null);
 

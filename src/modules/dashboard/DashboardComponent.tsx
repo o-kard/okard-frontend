@@ -15,7 +15,6 @@ import {
 import { useUser } from "@clerk/nextjs";
 
 import DashboardSummary from "./components/DashboardSummary";
-import DashboardPosts from "./components/DashboardPosts";
 import {
   fetchDashboardSummary,
   fetchDashboardPosts,
@@ -25,26 +24,27 @@ import {
 } from "./api/api";
 import type {
   DashboardSummary as SummaryType,
-  DashboardPost,
-  TrendingPost,
+  DashboardCampaign,
+  TrendingCampaign,
 } from "./types/dashboard";
 import PaymentChart from "./components/DashboardBarChart";
 import InvestorPieChart from "./components/DashboardPieChart";
 import DashboardTrending from "./components/DashboardTrending";
+import DashboardCampaigns from "./components/DashboardCampaigns";
 
 export default function DashboardComponent() {
   const { user, isLoaded, isSignedIn } = useUser();
   const clerkId = user?.id ?? "";
 
   const [summary, setSummary] = useState<SummaryType | null>(null);
-  const [posts, setPosts] = useState<DashboardPost[]>([]);
+  const [campaigns, setCampaigns] = useState<DashboardCampaign[]>([]);
   const [payments, setPayments] = useState<
     { date: string; total_amount: number }[]
   >([]);
   const [countries, setCountries] = useState<
     { country: string; invest_count: number }[]
   >([]);
-  const [trending, setTrending] = useState<TrendingPost[]>([]);
+  const [trending, setTrending] = useState<TrendingCampaign[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [limit, setLimit] = useState(10);
@@ -63,7 +63,7 @@ export default function DashboardComponent() {
           fetchTrendingPosts(clerkId),
         ]);
         setSummary(s);
-        setPosts(p);
+        setCampaigns(p);
         setPayments(pay);
         setCountries(c);
         setTrending(t);
@@ -130,7 +130,7 @@ export default function DashboardComponent() {
               Next
             </Button>
           </Stack>
-          <DashboardPosts posts={posts} />
+          <DashboardCampaigns campaigns={campaigns} />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h5" mt={4}>

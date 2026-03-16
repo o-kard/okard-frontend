@@ -6,12 +6,12 @@ import CategoryTabs from "./CategoryTabs";
 import CampaignGrid from "./CampaignGrid";
 import Button from "@mui/material/Button";
 import ArrowCircleRightOutlinedIcon from "@mui/icons-material/ArrowCircleRightOutlined";
-import { Post, PostSummary } from "@/modules/post/types/post";
+import { CampaignSummary } from "@/modules/campaign/types/campaign";
 import { getTopPledgedCampaigns } from "../api/api";
 
 export default function ExploreTopCampaign() {
   const [selectedCategory, setSelectedCategory] = useState<string>("art");
-  const [campaigns, setCampaigns] = useState<PostSummary[]>([]);
+  const [campaigns, setCampaigns] = useState<CampaignSummary[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

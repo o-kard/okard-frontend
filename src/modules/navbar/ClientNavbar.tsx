@@ -40,9 +40,9 @@ import dynamic from "next/dynamic";
 import SearchBar from "./SearchBar";
 import { usePathname } from "next/navigation";
 
-import { getAllPosts } from "./api/api";
+import { getAllCampaigns } from "./api/api";
 import { getUser } from "../user/api/api";
-import { Post } from "../post/types/post";
+import { Campaign } from "../campaign/types/campaign";
 import { CATEGORIES_LIST } from "../home/utils/categoryColors";
 import { useUser, useAuth } from "@clerk/nextjs";
 import CustomUserButton from "./CustomUserButton";
@@ -86,7 +86,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
     fetchRole();
   }, [user?.id, getToken]);
 
-  const [popularPosts, setPopularPosts] = useState<Post[]>([]);
+  const [popularCampaigns, setPopularCampaigns] = useState<Campaign[]>([]);
 
   const pathname = usePathname();
 
@@ -134,10 +134,10 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
   useEffect(() => {
     async function load() {
       try {
-        const data = await getAllPosts();
-        setPopularPosts(data.slice(0, 2));
+        const data = await getAllCampaigns();
+        setPopularCampaigns(data.slice(0, 2));
       } catch (err) {
-        console.error("Failed to load posts:", err);
+        console.error("Failed to load campaigns:", err);
       }
     }
     load();
@@ -945,8 +945,8 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                     <Card
                       component={NextLink}
                       href={
-                        popularPosts[0]
-                          ? `/post/show/${popularPosts[0].id}`
+                        popularCampaigns[0]
+                          ? `/campaign/show/${popularCampaigns[0].id}`
                           : "#"
                       }
                       sx={{
@@ -957,7 +957,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                         overflow: "hidden",
                         backgroundImage: `
                         linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.4), transparent),
-                        url('${process.env.NEXT_PUBLIC_API_URL}${popularPosts[0]?.images?.[0]?.path || ""}')
+                        url('${process.env.NEXT_PUBLIC_API_URL}${popularCampaigns[0]?.images?.[0]?.path || ""}')
                       `,
                         backgroundSize: "cover",
                         backgroundPosition: "center center",
@@ -989,7 +989,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                             fontFamily: "var(--font-montserrat)",
                           }}
                         >
-                          {popularPosts[0] ? popularPosts[0].post_header : "#"}
+                          {popularCampaigns[0] ? popularCampaigns[0].campaign_header : "#"}
                         </Typography>
                         <Box
                           display="flex"
@@ -1003,14 +1003,14 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                               height: 36,
                               borderRadius: "50%",
                               backgroundImage: `url('${process.env.NEXT_PUBLIC_API_URL}${
-                                popularPosts[0]?.user?.media?.path ?? ""
+                                popularCampaigns[0]?.user?.media?.path ?? ""
                               }')`,
                               backgroundSize: "cover",
                             }}
                           ></div>
                           <Typography variant="subtitle2" fontWeight="bold">
-                            {popularPosts[0]
-                              ? popularPosts[0].user.username
+                            {popularCampaigns[0]
+                              ? popularCampaigns[0].user.username
                               : "#"}
                           </Typography>
                         </Box>
@@ -1021,8 +1021,8 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                     <Card
                       component={NextLink}
                       href={
-                        popularPosts[1]
-                          ? `/post/show/${popularPosts[1].id}`
+                        popularCampaigns[1]
+                          ? `/campaign/show/${popularCampaigns[1].id}`
                           : "#"
                       }
                       sx={{
@@ -1038,7 +1038,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                         overflow: "hidden",
                         backgroundImage: `
                         linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.4), transparent),
-                        url('${process.env.NEXT_PUBLIC_API_URL}${popularPosts[1]?.images?.[0]?.path || ""}')
+                        url('${process.env.NEXT_PUBLIC_API_URL}${popularCampaigns[1]?.images?.[0]?.path || ""}')
                       `,
                         backgroundSize: "cover",
                         backgroundPosition: "center center",
@@ -1069,7 +1069,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                             fontFamily: "var(--font-montserrat)",
                           }}
                         >
-                          {popularPosts[1] ? popularPosts[1].post_header : "#"}
+                          {popularCampaigns[1] ? popularCampaigns[1].campaign_header : "#"}
                         </Typography>
                         <Box
                           display="flex"
@@ -1083,14 +1083,14 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                               height: 36,
                               borderRadius: "50%",
                               backgroundImage: `url('${process.env.NEXT_PUBLIC_API_URL}${
-                                popularPosts[1]?.user?.media?.path ?? ""
+                                popularCampaigns[1]?.user?.media?.path ?? ""
                               }')`,
                               backgroundSize: "cover",
                             }}
                           ></div>
                           <Typography variant="subtitle2" fontWeight="bold">
-                            {popularPosts[1]
-                              ? popularPosts[1].user.username
+                            {popularCampaigns[1]
+                              ? popularCampaigns[1].user.username
                               : "#"}
                           </Typography>
                         </Box>

@@ -51,8 +51,8 @@ import ContributionsPanel from "@/modules/user/components/UserContributionsPanel
 import CampaignsPanel from "@/modules/user/components/UserCampaignsPanel";
 import UserBookmarksPanel from "@/modules/user/components/UserBookmarksPanel";
 import { getUser, updateUser } from "@/modules/user/api/api";
-import { fetchPosts } from "@/modules/post/api/api";
-import { Post } from "@/modules/post/types/post";
+import { fetchCampaigns } from "@/modules/campaign/api/api";
+import { Campaign } from "@/modules/campaign/types/campaign";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { updateCreator } from "@/modules/creator/api/api";
 import { useRequireUserInDb } from "@/hooks/useRequireUserDb";
@@ -60,8 +60,8 @@ import { useUpdateUsername } from "@/hooks/useUpdateUsername";
 import { useAddEmailAddress } from "@/hooks/useAddEmailAddress";
 import { validatePwdPair } from "@/utils/validation";
 import { getContributeByUserId } from "@/modules/contributor/api/api";
-import { ContributorWithPost } from "@/modules/contributor/types";
-import { fetchPostById } from "@/modules/post/api/api";
+import { ContributorWithCampaign } from "@/modules/contributor/types";
+import { fetchCampaignById } from "@/modules/campaign/api/api";
 
 // Optional: gate page behind DB user check
 // import { useRequireUserInDb } from "@/hooks/useRequireUserInDb";
@@ -113,9 +113,9 @@ function UserContent() {
   const { getToken } = useAuth();
 
   const [profile, setProfile] = useState<any | null>(null);
-  const [campaigns, setCampaigns] = useState<Post[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [campaignsLoading, setCampaignsLoading] = useState(true);
-  const [contributions, setContributions] = useState<ContributorWithPost[]>([]);
+  const [contributions, setContributions] = useState<ContributorWithCampaign[]>([]);
   const [contributionsLoading, setContributionsLoading] = useState(true);
 
   const { updateUsername } = useUpdateUsername();
@@ -181,7 +181,7 @@ function UserContent() {
 
         // Fetch campaigns
         if (user?.id) {
-          const userCampaigns = await fetchPosts(
+          const userCampaigns = await fetchCampaigns(
             undefined,
             undefined,
             "newest",

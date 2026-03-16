@@ -23,7 +23,7 @@ import { CreateProgressPayload, Progress } from "../types";
 type Props = {
   open: boolean;
   onClose: () => void;
-  postId: string;
+  campaignId: string;
   onSuccess: () => void;
   initialData?: Progress | null;
 };
@@ -37,7 +37,7 @@ type FormValues = {
 export default function ProgressForm({
   open,
   onClose,
-  postId,
+  campaignId,
   onSuccess,
   initialData,
 }: Props) {
@@ -122,7 +122,7 @@ export default function ProgressForm({
       };
 
       if (!initialData) {
-        payload.post_id = postId;
+        payload.campaign_id = campaignId;
       }
 
       fd.append("progress_data", JSON.stringify(payload));
@@ -272,7 +272,7 @@ export default function ProgressForm({
               ? "Submitting..."
               : initialData
                 ? "Save Changes"
-                : "Post Update"}
+                : "Campaign Update"}
           </Button>
         </DialogActions>
       </form>

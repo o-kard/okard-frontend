@@ -23,7 +23,7 @@ import {
   TableCell,
   TableBody,
 } from "@mui/material";
-import { fetchPosts, changeState, deletePost } from "@/modules/post/api/api";
+import { fetchCampaigns, changeCampaignState, deleteCampaign } from "@/modules/campaign/api/api";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -37,11 +37,11 @@ const statusColors: Record<string, string> = {
 };
 
 const ActionMenu = ({
-  postId,
+  campaignId,
   onSuspend,
   onDelete,
 }: {
-  postId: string;
+  campaignId: string;
   onSuspend: () => void;
   onDelete: () => void;
 }) => {
@@ -88,7 +88,7 @@ const ActionMenu = ({
         <MenuItem
           onClick={(e) => {
             handleClose(e);
-            window.open(`/post/show/${postId}`, "_blank");
+            window.open(`/campaign/show/${campaignId}`, "_blank");
           }}
           sx={{
             fontSize: "0.9rem",
@@ -145,22 +145,22 @@ export default function CampaignsPage() {
   useEffect(() => {
     async function loadCampaigns() {
       try {
-        const posts = await fetchPosts();
-        const campaignsData = posts.map((post) => {
-          const goal = post.goal_amount || 0;
-          const raised = post.current_amount || 0;
+        const campaigns = await fetchCampaigns();
+        const campaignsData = campaigns.map((campaign) => {
+          const goal = campaign.goal_amount || 0;
+          const raised = campaign.current_amount || 0;
           const progress =
             goal > 0 ? Math.min(100, Math.round((raised / goal) * 100)) : 0;
           return {
-            id: post.id,
-            name: post.post_header,
-            creator: post.user?.username || "Unknown",
-            status: post.state,
+            id: campaign.id,
+            name: campaign.campaign_header,
+            creator: campaign.user?.username || "Unknown",
+            status: campaign.state,
             goal,
             raised,
-            category: post.category || "-",
+            category: campaign.category || "-",
             progress,
-            created_at: post.created_at,
+            created_at: campaign.created_at,
           };
         });
         setCampaigns(campaignsData);
@@ -171,7 +171,7 @@ export default function CampaignsPage() {
     loadCampaigns();
   }, []);
 
-  const handleDelete = async (postId: string) => {
+  const handleDelete = async (campaignId: string) => {
     if (!getToken) return;
     try {
       if (confirm("Are you sure you want to delete this campaign?")) {
@@ -181,7 +181,7 @@ export default function CampaignsPage() {
         // Wait, useAuth gives userId which is clerkId. We should use it.
       }
     } catch (err) {
-      console.error("Failed to delete post", err);
+      console.error("Failed to delete campaign", err);
     }
   };
 
@@ -206,7 +206,7 @@ export default function CampaignsPage() {
     try {
       const token = await getToken();
       const newStatus = currentStatus === "active" ? "suspended" : "active";
-      await changeState(selectedId, newStatus, token);
+      await changeCampaignState(selectedId, newStatus, token);
       setCampaigns((prev) =>
         prev.map((c) =>
           c.id === selectedId ? { ...c, status: newStatus } : c,
@@ -561,7 +561,7 @@ export default function CampaignsPage() {
                   </TableCell>
                   <TableCell align="right">
                     <ActionMenu
-                      postId={p.id}
+                      campaignId={p.id}
                       onSuspend={() => {
                         setSelectedId(p.id);
                         setConfirmOpen(true);
@@ -575,7 +575,7 @@ export default function CampaignsPage() {
                           try {
                             const clerkId = "admin_placeholder"; // We lack userId in the block but we can bypass or set it up.
                             // To be fully correct, let's just make a simple API call if the user is ok.
-                            await deletePost(p.id, "admin");
+                            await deleteCampaign(p.id, "admin");
                             setCampaigns((prev) =>
                               prev.filter((c) => c.id !== p.id),
                             );

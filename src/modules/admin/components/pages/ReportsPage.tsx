@@ -31,7 +31,7 @@ import {
   deleteReport,
 } from "@/modules/report/api/api";
 import { listUsers } from "@/modules/user/api/api";
-import { fetchPosts } from "@/modules/post/api/api";
+import { fetchCampaigns } from "@/modules/campaign/api/api";
 import { ReportStatus } from "@/modules/report/types/report";
 
 const statusColors: Record<string, string> = {
@@ -129,18 +129,18 @@ export default function ReportsPage() {
 
   const loadReports = async () => {
     try {
-      const [reps, users, posts] = await Promise.all([
+      const [reps, users, campaigns] = await Promise.all([
         getReports(),
         listUsers(),
-        fetchPosts(),
+        fetchCampaigns(),
       ]);
 
       const reportsData = reps.map((report) => {
         const user = users.find((u) => u.id === report.reporter_id);
-        const post = posts.find((p) => p.id === report.post_id);
+        const campaign = campaigns.find((c) => c.id === report.campaign_id);
         return {
           id: report.id,
-          project: post ? post.post_header : "Unknown Post (or Global)",
+          project: campaign ? campaign.campaign_header : "Unknown Campaign (or Global)",
           reporter: user ? user.username : "Unknown User",
           reason:
             report.type + (report.description ? `: ${report.description}` : ""),

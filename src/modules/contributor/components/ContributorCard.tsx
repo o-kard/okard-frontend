@@ -11,7 +11,7 @@ import {
   Chip,
   keyframes,
 } from "@mui/material";
-import { ContributorWithPost } from "../types";
+import { ContributorWithCampaign } from "../types";
 import Link from "next/link";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import { resolveMediaUrl } from "@/utils/mediaUrl";
@@ -22,20 +22,20 @@ const grow = keyframes`
 `;
 
 interface ContributorCardProps {
-  contribution: ContributorWithPost;
+  contribution: ContributorWithCampaign;
 }
 
 export default function ContributorCard({
   contribution,
 }: ContributorCardProps) {
-  const { post, total_amount, updated_at } = contribution;
+  const { campaign, total_amount, updated_at } = contribution;
   const progress = Math.min(
     100,
-    Math.round((post.current_amount / post.goal_amount) * 100),
+    Math.round((campaign.current_amount / campaign.goal_amount) * 100),
   );
 
-  const postImage = post.images?.[0]?.path
-    ? resolveMediaUrl(post.images[0].path)
+  const campaignImage = campaign.images?.[0]?.path
+    ? resolveMediaUrl(campaign.images[0].path)
     : undefined;
 
   return (
@@ -59,7 +59,7 @@ export default function ContributorCard({
       }}
     >
       <Link
-        href={`/post/show/${post.id}`}
+        href={`/campaign/show/${campaign.id}`}
         style={{ textDecoration: "none", color: "inherit" }}
       >
         <Box
@@ -69,7 +69,7 @@ export default function ContributorCard({
             height: "100%",
           }}
         >
-          {/* Post Image */}
+          {/* Campaign Image */}
           <Box
             sx={{
               width: { xs: "100%", sm: 240 },
@@ -81,11 +81,11 @@ export default function ContributorCard({
               flexShrink: 0,
             }}
           >
-            {postImage ? (
+            {campaignImage ? (
               <Box
                 component="img"
-                src={postImage}
-                alt={post.post_header}
+                src={campaignImage}
+                alt={campaign.campaign_header}
                 sx={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
             ) : (
@@ -120,7 +120,7 @@ export default function ContributorCard({
                     WebkitBoxOrient: "vertical",
                   }}
                 >
-                  {post.post_header}
+                  {campaign.campaign_header}
                 </Typography>
                 <Chip
                   label={`฿${total_amount.toLocaleString()}`}
@@ -143,7 +143,7 @@ export default function ContributorCard({
                   minHeight: 40,
                 }}
               >
-                {post.post_description}
+                {campaign.campaign_description}
               </Typography>
             </Stack>
 
