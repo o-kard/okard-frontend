@@ -44,24 +44,13 @@ export default function PaymentSummary({
         </Typography>
       </Stack>
 
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Typography color="text.secondary">Okard tip</Typography>
-        <TextField
-          size="small"
-          type="number"
-          value={tip || ""}
-          onChange={(e) => onChangeTip(Number(e.target.value || 0))}
-          inputProps={{ min: 0, style: { textAlign: "right", width: 110 } }}
-        />
-      </Stack>
-
       <Stack
         direction="row"
         justifyContent="space-between"
         sx={{ bgcolor: "#eee", p: 1.2, borderRadius: 1 }}
       >
         <Typography fontWeight={800}>Total</Typography>
-        <Typography fontWeight={800}>{total.toLocaleString()} USD</Typography>
+        <Typography fontWeight={800}>{(amount || 0).toLocaleString()} USD</Typography>
       </Stack>
 
       <FormControlLabel

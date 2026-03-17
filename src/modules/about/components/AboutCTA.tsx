@@ -21,7 +21,7 @@ export default function AboutCTA() {
                     <Typography variant="h6" sx={{ mb: 4, opacity: 0.7 }}>
                         Join thousands of creators turning their dreams into reality.
                     </Typography>
-                    <Button component={Link} href="/post" variant="contained" color="success" size="large" sx={{ borderRadius: 8, px: 6, py: 1.5, fontSize: "1.2rem", fontWeight: "bold" }}>
+                    <Button component={Link} href="/campaign" variant="contained" color="success" size="large" sx={{ borderRadius: 8, px: 6, py: 1.5, fontSize: "1.2rem", fontWeight: "bold" }}>
                         Get Started Now
                     </Button>
                 </motion.div>

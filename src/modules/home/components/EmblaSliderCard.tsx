@@ -92,7 +92,7 @@ export default function EmblaSliderCard({ onHoverBackground }: { onHoverBackgrou
           <Button
             variant="outlined"
             size="large"
-            href="/post"
+            href="/campaign"
             sx={{
               bgcolor: "white",
               color: "#000",

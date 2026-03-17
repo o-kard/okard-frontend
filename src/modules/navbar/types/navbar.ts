@@ -1,6 +1,6 @@
 export interface SearchResult {
     id: string;
-    type: "user" | "post";
+    type: "user" | "campaign";
     name: string;
     thumbnail?: string;
     creator?: string;

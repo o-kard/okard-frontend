@@ -58,6 +58,7 @@ export default function ProgressForm({
   const [imagePreviews, setImagePreviews] = useState<
     { file?: File; preview: string }[]
   >([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -88,8 +89,15 @@ export default function ProgressForm({
   }, [open, initialData, reset, setValue]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setErrorMessage(null);
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMessage(`Image exceeds the 5MB limit: ${file.name}`);
+        return;
+      }
+
       // Replace existing image
       const newPreview = {
         file,
@@ -138,8 +146,10 @@ export default function ProgressForm({
       }
       onSuccess();
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to save progress", err);
+      const msg = err.response?.data?.detail || "Failed to save progress. Please try again.";
+      setErrorMessage(msg);
     }
   };
 
@@ -151,6 +161,11 @@ export default function ProgressForm({
       <form onSubmit={handleSubmit(onSubmit)}>
         <DialogContent dividers>
           <Stack spacing={3}>
+            {errorMessage && (
+              <Typography color="error" variant="body2" sx={{ fontWeight: 700 }}>
+                {errorMessage}
+              </Typography>
+            )}
             <TextField
               label="Title"
               fullWidth
@@ -241,10 +256,6 @@ export default function ProgressForm({
                         type="file"
                         hidden
                         accept="image/*"
-                        {...register("images", {
-                          validate: () =>
-                            (imagePreviews.length > 0) || "Picture is required",
-                        })}
                         onChange={handleFileChange}
                       />
                     </Button>

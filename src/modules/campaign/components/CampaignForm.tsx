@@ -256,6 +256,7 @@ export default function CampaignForm({
   );
   const [campaignMedia, setCampaignMedia] = useState<CampaignMediaItem[]>([]);
   const [campaignVideo, setCampaignVideo] = useState<CampaignMediaItem | null>(null);
+  const [imageSizeError, setImageSizeError] = useState<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor));
 
   const isSuspended = editItem?.state === "suspend";
@@ -284,6 +285,13 @@ export default function CampaignForm({
     const newFiles = Array.from(e.target.files || []);
     if (newFiles.length === 0) return;
 
+    setImageSizeError(null);
+    const oversized = newFiles.filter(f => f.size > 5 * 1024 * 1024);
+    if (oversized.length > 0) {
+      setImageSizeError(`Some images exceed the 5MB limit: ${oversized.map(f => f.name).join(", ")}`);
+      return;
+    }
+
     setCampaignMedia((currentMedia) => {
       const newItems = newFiles.map((f, i) => ({
         id: `${f.name}-${i}-${crypto.randomUUID()}`,
@@ -304,6 +312,13 @@ export default function CampaignForm({
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    setImageSizeError(null);
+    if (file.size > 50 * 1024 * 1024) {
+      setImageSizeError(`Video exceeds the 50MB limit: ${file.name}`);
+      return;
+    }
+
     if (campaignVideo?.preview) URL.revokeObjectURL(campaignVideo.preview);
     setCampaignVideo({
       id: `video-${crypto.randomUUID()}`,
@@ -356,6 +371,11 @@ export default function CampaignForm({
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const f = (e.target.files && e.target.files[0]) || null;
+    setImageSizeError(null);
+    if (f && f.size > 5 * 1024 * 1024) {
+      setImageSizeError(`Information image #${idx + 1} exceeds the 5MB limit.`);
+      return;
+    }
     setValue(`informations.${idx}.file`, f);
     if (informationPreviews[idx]) URL.revokeObjectURL(informationPreviews[idx]);
     setInformationPreviews((s) => ({
@@ -379,6 +399,11 @@ export default function CampaignForm({
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const f = (e.target.files && e.target.files[0]) || null;
+    setImageSizeError(null);
+    if (f && f.size > 5 * 1024 * 1024) {
+      setImageSizeError(`Reward image #${idx + 1} exceeds the 5MB limit.`);
+      return;
+    }
     setValue(`rewards.${idx}.file`, f);
     if (rewardPreviews[idx]) URL.revokeObjectURL(rewardPreviews[idx]);
     setRewardPreviews((s) => ({
@@ -1112,6 +1137,12 @@ export default function CampaignForm({
             />
           </Button>
 
+          {imageSizeError && (
+            <Typography color="error" variant="caption" display="block" sx={{ mt: 1, fontWeight: 700 }}>
+              {imageSizeError}
+            </Typography>
+          )}
+
           {/* Draggable Image Previews */}
           <Box mt={2}>
             <DndContext sensors={sensors} onDragEnd={onDragEnd}>
@@ -1200,6 +1231,11 @@ export default function CampaignForm({
                         {informationPreviews[idx] ? "Change Image" : "Upload Image"}
                       </Button>
                     </label>
+                    {imageSizeError && (
+                      <Typography color="error" variant="caption" sx={{ mt: 1, fontWeight: 700, textAlign: "center" }}>
+                        {imageSizeError}
+                      </Typography>
+                    )}
                     {informationPreviews[idx] && (
                       <Box mt={1} position="relative">
                         <img
@@ -1316,6 +1352,12 @@ export default function CampaignForm({
                       onChange={(e) => handleRewardFileChange(idx, e)}
                     />
                   </Button>
+
+                  {imageSizeError && (
+                    <Typography color="error" variant="caption" display="block" sx={{ mt: 1, fontWeight: 700 }}>
+                      {imageSizeError}
+                    </Typography>
+                  )}
 
                   {rewardPreviews[idx] && (
                     <Box sx={{ mt: 1 }}>

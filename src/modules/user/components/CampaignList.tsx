@@ -53,7 +53,7 @@ export default function CampaignList({ campaigns, showEditButton }: CampaignList
                         ? Math.min(100, (campaign.current_amount / campaign.goal_amount) * 100)
                         : 0;
 
-                const postImage =
+                const campaignImage =
                     campaign.images && campaign.images.length > 0
                         ? resolveMediaUrl(campaign.images[0].path)
                         : "/placeholder-image.png";
@@ -97,7 +97,7 @@ export default function CampaignList({ campaigns, showEditButton }: CampaignList
                                     >
                                         <Box
                                             component="img"
-                                            src={postImage}
+                                            src={campaignImage}
                                             alt={campaign.campaign_header}
                                             sx={{ width: "100%", height: "100%", objectFit: "cover" }}
                                         />
@@ -203,7 +203,7 @@ export default function CampaignList({ campaigns, showEditButton }: CampaignList
                             {showEditButton && (
                                 <IconButton
                                     component={Link}
-                                    href={`/post/edit/${campaign.id}`}
+                                    href={`/campaign/edit/${campaign.id}`}
                                     sx={{
                                         position: "absolute",
                                         top: 10,

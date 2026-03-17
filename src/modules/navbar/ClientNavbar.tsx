@@ -217,7 +217,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
       {/* 2. Menu Links */}
       <List sx={{ px: 1 }}>
         {[
-          { text: "Explore", href: "/post", icon: <ExploreIcon /> },
+          { text: "Explore", href: "/campaign", icon: <ExploreIcon /> },
           { text: "Creators", href: "/explore-user", icon: <PersonIcon /> },
           { text: "About Us", href: "/about", icon: <InfoIcon /> },
         ].map((item) => (
@@ -260,7 +260,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
         {userRole === "creator" && (
           <Button
             component={NextLink}
-            href="/post/create"
+            href="/campaign/create"
             variant="contained"
             onClick={() => setMobileOpen(false)}
             startIcon={<CampaignIcon />}
@@ -557,7 +557,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                 </IconButton>
                 <Button
                   component={NextLink}
-                  href="/post"
+                  href="/campaign"
                   sx={{
                     color: isHovered ? "black" : isHome ? "white" : "black",
                     fontFamily: "var(--font-montserrat)",
@@ -627,7 +627,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                 {userRole === "creator" && (
                   <Button
                     component={NextLink}
-                    href="/post/create"
+                    href="/campaign/create"
                     variant="contained"
                     size="small"
                     startIcon={
@@ -881,7 +881,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                       key={item.label}
                       icon={<item.icon sx={{ fontSize: 18 }} />}
                       component={NextLink}
-                      href={`/post?category=${encodeURIComponent(item.value)}`}
+                      href={`/campaign?category=${encodeURIComponent(item.value)}`}
                       label={item.label}
                       clickable
                       sx={{
@@ -914,14 +914,14 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                     </Typography>
                     <Box display="flex" flexDirection="column" gap={1.5}>
                       {[
-                        { text: "All Campaigns", href: "/post" },
+                        { text: "All Campaigns", href: "/campaign" },
                         {
                           text: "Technology",
-                          href: "/post?category=technology",
+                          href: "/campaign?category=technology",
                         },
-                        { text: "Just Launched", href: "/post?sort=newest" },
-                        { text: "Ending Soon", href: "/post?sort=ending_soon" },
-                        { text: "Latest Update", href: "/post?sort=updated" },
+                        { text: "Just Launched", href: "/campaign?sort=newest" },
+                        { text: "Ending Soon", href: "/campaign?sort=ending_soon" },
+                        { text: "Latest Update", href: "/campaign?sort=updated" },
                       ].map((item) => (
                         <Typography
                           key={item.text}

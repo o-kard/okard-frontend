@@ -27,7 +27,7 @@ export function useCommentActions(
     }
   };
 
-  const postComment = async (content: string, parentId?: string) => {
+  const campaignComment = async (content: string, parentId?: string) => {
     if (!apiBaseUrl) return;
 
     const fd = new FormData();
@@ -51,5 +51,5 @@ export function useCommentActions(
     }
   };
 
-  return { toggleLike, postComment };
+  return { toggleLike, campaignComment };
 }

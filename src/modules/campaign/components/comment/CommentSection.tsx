@@ -34,13 +34,13 @@ export default function CommentSections({
   const [posting, setPosting] = useState(false);
 
   const { tree, setTree, loading, error, reload } = useComments(campaignId, clerkId);
-  const { toggleLike, postComment } = useCommentActions(setTree, campaignId, clerkId, apiBaseUrl);
+  const { toggleLike, campaignComment } = useCommentActions(setTree, campaignId, clerkId, apiBaseUrl);
 
   const onSubmit = async () => {
     if (!text.trim()) return;
     try {
       setPosting(true);
-      await postComment(text);
+      await campaignComment(text);
       setText("");
     } finally {
       setPosting(false);
@@ -89,7 +89,7 @@ export default function CommentSections({
                   <CommentNode
                     node={c}
                     onToggleLike={toggleLike}
-                    onReply={(pid, text) => postComment(text, pid)}
+                    onReply={(pid, text) => campaignComment(text, pid)}
                     scrollMarginTop={scrollMarginTop}
                     apiBaseUrl={apiBaseUrl}
                   />

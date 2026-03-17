@@ -35,7 +35,7 @@ export default function ProjectCard({
 
   const category = CATEGORY_COLORS[categoryKey] ?? CATEGORY_COLORS.all;
   return (
-    <Link href={`/post/show/${campaign.id}`} style={{ textDecoration: "none" }}>
+    <Link href={`/campaign/show/${campaign.id}`} style={{ textDecoration: "none" }}>
       <Card
         onMouseEnter={() => {
           const img = campaign.images?.[0]?.path
