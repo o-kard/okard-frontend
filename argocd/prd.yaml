@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: 'https://github.com/o-kard/okard-frontend.git'
     targetRevision: main
-    path: k3s/overlays/prd
+    path: k3s/overlays/prd  #this comment is for commit test
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: prd
