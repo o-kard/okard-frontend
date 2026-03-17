@@ -7,6 +7,7 @@ metadata:
     argocd-image-updater.argoproj.io/image-list: frontend=ghcr.io/o-kard/okard-frontend
     argocd-image-updater.argoproj.io/frontend.update-strategy: latest
     argocd-image-updater.argoproj.io/write-back-method: argocd
+    argocd-image-updater.argoproj.io/frontend.allow-tags: regexp:^prd-.*$
 spec:
   project: default
   source:

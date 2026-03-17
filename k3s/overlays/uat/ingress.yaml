@@ -13,6 +13,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: okard-frontend
+                name: okard-frontend-svc
                 port:
                   number: 80

@@ -3,10 +3,8 @@ kind: Deployment
 metadata:
   name: okard-frontend
 spec:
+  replicas: 2
   template:
     spec:
       imagePullSecrets:
         - name: ghcr-secret
-      containers:
-        - name: okard-frontend
-          image: ghcr.io/o-kard/okard-frontend
