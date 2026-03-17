@@ -48,13 +48,13 @@ export default function PaymentForm({
             variant={amount === v ? "contained" : "outlined"}
             onClick={() => setAmount(v)}
           >
-            {v.toLocaleString()} THB
+            {v.toLocaleString()} USD
           </Button>
         ))}
       </Stack>
 
       <TextField
-        label="Specify amount (THB)"
+        label="Specify amount (USD)"
         type="number"
         value={amount || ""}
         onChange={(e) => setAmount(Number(e.target.value || 0))}

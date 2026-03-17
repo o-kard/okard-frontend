@@ -60,6 +60,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import ThemeRegistry from "../modules/themeRegister/ThemeRegistry";
 import AppShell from "../modules/layout/AppShell";
+import ProfileGatekeeper from "../components/common/ProfileGatekeeper";
 
 //import font
 import { Syncopate, Montserrat } from "next/font/google";
@@ -67,12 +68,12 @@ import { Syncopate, Montserrat } from "next/font/google";
 const syncopate = Syncopate({
   weight: ["400", "700"],
   subsets: ["latin"],
-  variable: "--font-syncopate", 
+  variable: "--font-syncopate",
   display: "swap",
 });
 
 const montserrat = Montserrat({
-  subsets: ["latin"], 
+  subsets: ["latin"],
   variable: "--font-montserrat",
   display: "swap",
 });
@@ -88,11 +89,63 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      appearance={{
+        variables: {
+          colorPrimary: "#12C998",
+          colorBackground: "#ffffff",
+          colorText: "#222222",
+          colorInputBackground: "#ffffff",
+          colorInputText: "#222222",
+          colorTextSecondary: "#666666",
+          borderRadius: "16px",
+        },
+        elements: {
+          cardBox: {
+            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+            borderRadius: "16px",
+            backgroundColor: "#ffffff",
+          },
+          headerTitle: {
+            fontWeight: "bold",
+          },
+          formFieldInput: {
+            borderRadius: "16px",
+            borderColor: "rgba(0, 0, 0, 0.23)",
+            "&:hover": {
+              borderColor: "#222222",
+            },
+            "&:focus": {
+              borderColor: "#12C998",
+              boxShadow: "0 0 0 1px #12C998",
+            },
+          },
+          formButtonPrimary: {
+            fontWeight: "bold",
+            padding: "12px 16px",
+            textTransform: "none",
+            backgroundColor: "#12C998",
+            color: "#ffffff",
+            "&:hover": {
+              backgroundColor: "#0ea880",
+            },
+          },
+          footerActionLink: {
+            color: "#12C998",
+            fontWeight: "bold",
+            "&:hover": {
+              color: "#0ea880",
+            },
+          },
+        },
+      }}
+    >
       <html lang="en">
         <body className={`${syncopate.variable} ${montserrat.variable}`}>
           <ThemeRegistry>
-            <AppShell>{children}</AppShell>
+            <ProfileGatekeeper>
+              <AppShell>{children}</AppShell>
+            </ProfileGatekeeper>
           </ThemeRegistry>
         </body>
       </html>

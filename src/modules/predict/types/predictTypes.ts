@@ -6,8 +6,8 @@ export interface PredictInput {
   end_date: string;
   country_displayable_name: string;
   category_group: string;
-  has_video: number;
-  has_photo: number;
+  has_video: boolean;
+  has_photo: boolean;
 }
 
 export interface HeadResult {

@@ -17,16 +17,17 @@ import PaymentDetail from "./components/PaymentDetail";
 import PaymentForm from "./components/PaymentForm";
 import PaymentMethodPicker from "./components/PaymentMethod";
 import PaymentSummary from "./components/PaymentSummary";
-import { Post } from "../post/types/post";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
+import { Campaign } from "../campaign/types/campaign";
 
 type Props = {
-  postId: string;
+  campaignId: string;
   userId: string;
 };
 
-export default function PaymentComponent({ postId, userId }: Props) {
+export default function PaymentComponent({ campaignId, userId }: Props) {
   const router = useRouter();
-  const [post, setPost] = useState<Post | null>(null);
+  const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [amount, setAmount] = useState<number>(0);
@@ -35,31 +36,31 @@ export default function PaymentComponent({ postId, userId }: Props) {
   const [agree, setAgree] = useState(false);
 
   useEffect(() => {
-    if (!postId) return;
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/post/${postId}`)
+    if (!campaignId) return;
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaign/${campaignId}`)
       .then((r) => r.json())
-      .then(setPost);
-  }, [postId]);
+      .then(setCampaign);
+  }, [campaignId]);
 
-  const goal = Math.max(0, post?.goal_amount ?? 0);
-  const current = Math.max(0, post?.current_amount ?? 0);
+  const goal = Math.max(0, campaign?.goal_amount ?? 0);
+  const current = Math.max(0, campaign?.current_amount ?? 0);
   const percent =
     goal > 0 ? Math.min(100, Math.round((current / goal) * 100)) : 0;
 
   const imgSrc = useMemo(
     () =>
-      post?.images?.[0]?.path
-        ? `${process.env.NEXT_PUBLIC_API_URL}${post.images[0].path}`
+      campaign?.images?.[0]?.path
+        ? resolveMediaUrl(campaign.images[0].path)
         : undefined,
-    [post],
+    [campaign],
   );
 
   const total = Math.max(0, (amount || 0) + (tip || 0));
 
   const handleSubmit = async () => {
-    if (!agree || !post || !userId) return;
+    if (!agree || !campaign || !userId) return;
     const payload: Payment = {
-      post_id: post.id,
+      campaign_id: campaign.id,
       full_name: fullName,
       email,
       payment_method: method,
@@ -67,7 +68,7 @@ export default function PaymentComponent({ postId, userId }: Props) {
     };
     const res = await createPayment(payload, userId);
     if (res) {
-      router.replace(`/post/show/${post.id}`);
+      router.replace(`/campaign/show/${campaign.id}`);
     }
   };
 
@@ -78,8 +79,8 @@ export default function PaymentComponent({ postId, userId }: Props) {
         <Grid size={{ xs: 12, md: 6 }}>
           <PaymentDetail
             imageSrc={imgSrc}
-            title={post?.post_header ?? ""}
-            category={post?.category ?? undefined}
+            title={campaign?.campaign_header ?? ""}
+            category={campaign?.category ?? undefined}
           />
           <Box
             sx={{
@@ -98,10 +99,10 @@ export default function PaymentComponent({ postId, userId }: Props) {
               sx={{ mb: 1 }}
             >
               <Typography variant="h5" fontWeight={800}>
-                {goal.toLocaleString()} THB
+                {goal.toLocaleString()} USD
               </Typography>
               <Typography color="text.secondary">
-                {current.toLocaleString()} THB raised
+                {current.toLocaleString()} USD raised
               </Typography>
             </Stack>
             <LinearProgress

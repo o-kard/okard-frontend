@@ -11,7 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 const tabList = [
   { label: "Campaigns", component: <CampaignsPage /> },
-  { label: "Creators", component: <CreatorsPage /> },
+  { label: "Users", component: <CreatorsPage /> },
   { label: "Reports", component: <ReportsPage /> },
   { label: "Requests", component: <RequestsPage /> },
 ];
@@ -82,7 +82,10 @@ export default function AdminDashboardTabs() {
                   key={t.label}
                   onClick={() => setTab(i)}
                   sx={{
-                    background: tab === i ? "linear-gradient(135deg, #12C998 0%, #F472B6 100%)" : "transparent",
+                    background:
+                      tab === i
+                        ? "linear-gradient(135deg, #12C998 0%, #F472B6 100%)"
+                        : "transparent",
                     color: tab === i ? "#ffffff" : "#666666",
                     fontWeight: 600,
                     letterSpacing: "0.02em",
@@ -92,11 +95,15 @@ export default function AdminDashboardTabs() {
                     borderRadius: 3,
                     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                     opacity: tab === i ? 1 : 0.8,
-                    boxShadow: tab === i ? "0 4px 15px rgba(244, 114, 182, 0.3)" : "none",
+                    boxShadow:
+                      tab === i
+                        ? "0 4px 15px rgba(244, 114, 182, 0.3)"
+                        : "none",
                     transform: tab === i ? "scale(1.02)" : "scale(1)",
                     "&:hover": {
                       color: tab !== i ? "#222222" : "#ffffff",
-                      bgcolor: tab !== i ? "rgba(0, 0, 0, 0.05)" : "transparent",
+                      bgcolor:
+                        tab !== i ? "rgba(0, 0, 0, 0.05)" : "transparent",
                     },
                   }}
                   aria-current={tab === i ? "page" : undefined}
@@ -116,7 +123,7 @@ export default function AdminDashboardTabs() {
               "@keyframes fadeIn": {
                 "0%": { opacity: 0, transform: "translateY(8px)" },
                 "100%": { opacity: 1, transform: "translateY(0)" },
-              }
+              },
             }}
           >
             {tabList[tab].component}

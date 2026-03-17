@@ -1,17 +1,18 @@
 import { Box, Typography } from "@mui/material";
-import { Post, PostSummary } from "@/modules/post/types/post";
+import { Campaign, CampaignSummary } from "@/modules/campaign/types/campaign";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import IconButton from "@mui/material/IconButton";
 import { useState } from "react";
 import Link from "next/dist/client/link";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 type ResponsiveNumber =
   | number
   | { xs?: number; sm?: number; md?: number; lg?: number; xl?: number };
 
 type ImageCardProps = {
-  campaign: Post | PostSummary;
+  campaign: Campaign | CampaignSummary;
   big?: boolean;
   minHeight?: ResponsiveNumber;
 };
@@ -19,7 +20,7 @@ type ImageCardProps = {
 export default function ImageCard({ campaign, big = false }: ImageCardProps) {
   const [bookmarked, setBookmarked] = useState(false);
   return (
-    <Link href={`/post/show/${campaign.id}`} style={{ textDecoration: "none" }}>
+    <Link href={`/campaign/show/${campaign.id}`} style={{ textDecoration: "none" }}>
       <Box
         className="campaign-card"
         sx={{
@@ -40,7 +41,7 @@ export default function ImageCard({ campaign, big = false }: ImageCardProps) {
           component="img"
           src={
             campaign?.images?.[0]?.path
-              ? `${process.env.NEXT_PUBLIC_API_URL}${campaign.images[0].path}`
+              ? resolveMediaUrl(campaign.images[0].path)
               : undefined
           }
           sx={{
@@ -134,7 +135,7 @@ export default function ImageCard({ campaign, big = false }: ImageCardProps) {
               },
             }}
           >
-            {campaign.post_header}
+            {campaign.campaign_header}
           </Typography>
 
           {/* User Info */}
@@ -172,7 +173,7 @@ export default function ImageCard({ campaign, big = false }: ImageCardProps) {
               {campaign.user.media?.path ? (
                 <Box
                   component="img"
-                  src={`${process.env.NEXT_PUBLIC_API_URL}${campaign.user.media.path}`}
+                  src={resolveMediaUrl(campaign.user.media.path)}
                   alt={campaign.user.username}
                   sx={{
                     width: "100%",

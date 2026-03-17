@@ -9,12 +9,13 @@ import {
   Box,
   Button,
 } from "@mui/material";
-import { Post, PostSummary } from "@/modules/post/types/post";
+import { Campaign, CampaignSummary } from "@/modules/campaign/types/campaign";
 import { FundingProgress } from "./LinearProgress";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import IconButton from "@mui/material/IconButton";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -25,7 +26,7 @@ export default function ProjectCard({
   campaign,
   onHoverBackground,
 }: {
-  campaign: Post | PostSummary;
+  campaign: Campaign | CampaignSummary;
   onHoverBackground?: (img: string | null) => void;
 }) {
   const [bookmarked, setBookmarked] = useState(false);
@@ -38,7 +39,7 @@ export default function ProjectCard({
       <Card
         onMouseEnter={() => {
           const img = campaign.images?.[0]?.path
-            ? `${process.env.NEXT_PUBLIC_API_URL}${campaign.images[0].path}`
+            ? resolveMediaUrl(campaign.images[0].path)
             : null;
 
           onHoverBackground?.(img);
@@ -69,10 +70,10 @@ export default function ProjectCard({
           component="img"
           image={
             campaign.images?.[0]?.path
-              ? `${process.env.NEXT_PUBLIC_API_URL}${campaign.images[0].path}`
+              ? resolveMediaUrl(campaign.images[0].path)
               : ""
           }
-          alt={campaign.post_header}
+          alt={campaign.campaign_header}
           sx={{
             width: "100%",
             height: "100%",
@@ -176,7 +177,7 @@ export default function ProjectCard({
                 "0 2px 8px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.9)",
             }}
           >
-            {campaign.post_header}
+            {campaign.campaign_header}
           </Typography>
           <Typography
             component="div"
@@ -206,7 +207,7 @@ export default function ProjectCard({
               {campaign.user.media?.path ? (
                 <Box
                   component="img"
-                  src={`${process.env.NEXT_PUBLIC_API_URL}${campaign.user.media.path}`}
+                  src={resolveMediaUrl(campaign.user.media.path)}
                   alt={campaign.user.username}
                   sx={{
                     width: "100%",
@@ -274,7 +275,7 @@ export default function ProjectCard({
                 textOverflow: "ellipsis",
               }}
             >
-              {campaign.post_description}
+              {campaign.campaign_description}
             </Typography>
           </Box>
 

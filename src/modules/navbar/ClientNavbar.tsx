@@ -34,23 +34,23 @@ import InfoIcon from "@mui/icons-material/Info";
 import PersonIcon from "@mui/icons-material/Person";
 import AddIcon from "@mui/icons-material/Add";
 import CampaignIcon from "@mui/icons-material/Campaign";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 
 import dynamic from "next/dynamic";
 import SearchBar from "./SearchBar";
 import { usePathname } from "next/navigation";
 
-import { getAllPosts } from "./api/api";
-import { Post } from "../post/types/post";
+import { getAllCampaigns } from "./api/api";
+import { getUser } from "../user/api/api";
+import { Campaign } from "../campaign/types/campaign";
 import { CATEGORIES_LIST } from "../home/utils/categoryColors";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useAuth } from "@clerk/nextjs";
 import CustomUserButton from "./CustomUserButton";
 
 const NotificationComponent = dynamic(
   () => import("@/modules/notification/NotificationComponent"),
-  { ssr: false }
+  { ssr: false },
 );
-
-
 
 export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
   const { openSignIn, openSignUp, signOut } = useClerk();
@@ -60,7 +60,33 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  const [popularPosts, setPopularPosts] = useState<Post[]>([])
+  // Extract user role
+  const { user } = useUser();
+  const { getToken } = useAuth();
+  const [userRole, setUserRole] = useState<string>("");
+
+  useEffect(() => {
+    async function fetchRole() {
+      if (user?.id) {
+        try {
+          const token = await getToken();
+          if (token) {
+            const dbUser = await getUser(token);
+            if (dbUser && dbUser.role) {
+              setUserRole(dbUser.role);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to fetch user role:", err);
+        }
+      } else {
+        setUserRole("");
+      }
+    }
+    fetchRole();
+  }, [user?.id, getToken]);
+
+  const [popularCampaigns, setPopularCampaigns] = useState<Campaign[]>([]);
 
   const pathname = usePathname();
 
@@ -71,10 +97,6 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
 
-  // --- ส่วนเนื้อหาใน Sidebar (Mobile Drawer) ---
-  const { user } = useUser();
-
-  // Check if screen resized to desktop, then close mobile menu
   useEffect(() => {
     if (isDesktop && mobileOpen) {
       setMobileOpen(false);
@@ -103,7 +125,6 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
     return () => clearInterval(interval);
   }, [isHovered, lastMoveTime]);
 
-
   useEffect(() => {
     setIsHovered(false);
     setMobileOpen(false);
@@ -113,10 +134,10 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
   useEffect(() => {
     async function load() {
       try {
-        const data = await getAllPosts();
-        setPopularPosts(data.slice(0, 2));
+        const data = await getAllCampaigns();
+        setPopularCampaigns(data.slice(0, 2));
       } catch (err) {
-        console.error("Failed to load posts:", err);
+        console.error("Failed to load campaigns:", err);
       }
     }
     load();
@@ -138,7 +159,14 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
       {/* 1. Header Section */}
       <Box sx={{ mb: 4, mt: 2, textAlign: "center" }}>
         <SignedIn>
-          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
             <Box sx={{ mb: 1 }}>
               <CustomUserButton size={64} />
             </Box>
@@ -153,7 +181,19 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
 
         <SignedOut>
           <Box sx={{ px: 2, textAlign: "center" }}>
-            <Typography variant="h4" fontWeight={800} sx={{ color: "#12C998", mb: 1, fontFamily: "var(--font-syncopate)", display: "flex", alignItems: "center", justifyContent: "center", gap: 1.5 }}>
+            <Typography
+              variant="h4"
+              fontWeight={800}
+              sx={{
+                color: "#12C998",
+                mb: 1,
+                fontFamily: "var(--font-syncopate)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 1.5,
+              }}
+            >
               <img src="/Logo_sun.svg" alt="Logo" width="56" height="56" />
               kard
             </Typography>
@@ -167,7 +207,11 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
 
       {/* Mobile Search */}
       <Box px={1} mb={2}>
-        <SearchBar isHome={isHome} closeSidebar={() => setMobileOpen(false)} isOpen={mobileOpen} />
+        <SearchBar
+          isHome={isHome}
+          closeSidebar={() => setMobileOpen(false)}
+          isOpen={mobileOpen}
+        />
       </Box>
 
       {/* 2. Menu Links */}
@@ -175,7 +219,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
         {[
           { text: "Explore", href: "/post", icon: <ExploreIcon /> },
           { text: "Creators", href: "/explore-user", icon: <PersonIcon /> },
-          { text: "About Us", href: "/about", icon: <InfoIcon /> }
+          { text: "About Us", href: "/about", icon: <InfoIcon /> },
         ].map((item) => (
           <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
             <ListItemButton
@@ -192,7 +236,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                 "&:hover": {
                   backgroundColor: "rgba(18, 201, 152, 0.1)",
                   color: "#12C998",
-                }
+                },
               }}
             >
               <Box sx={{ mr: 2, color: "inherit", display: "flex" }}>
@@ -203,7 +247,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                 primaryTypographyProps={{
                   fontFamily: "var(--font-montserrat)",
                   fontWeight: 600,
-                  fontSize: "1rem"
+                  fontSize: "1rem",
                 }}
               />
             </ListItemButton>
@@ -213,31 +257,61 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
 
       {/* 3. Bottom Actions (Sticky) */}
       <Box mt="auto" display="flex" flexDirection="column" gap={2} pb={2}>
-        <Button
-          component={NextLink}
-          href="/post/create"
-          variant="contained"
-          onClick={() => setMobileOpen(false)}
-          startIcon={<CampaignIcon />}
-          sx={{
-            borderRadius: 3,
-            py: 1.5,
-            background: "linear-gradient(45deg, #12c998 30%, #f070a1 90%)",
-            boxShadow: "0 4px 14px rgba(18, 201, 152, 0.4)",
-            fontWeight: 800,
-            textTransform: "none",
-            fontSize: "1rem",
-            transition: "all 0.3s ease",
-            "&:hover": {
-              transform: "translateY(-2px)",
-              boxShadow: "0 6px 20px rgba(18, 201, 152, 0.5)",
-              opacity: 0.9,
-            }
-          }}
-          fullWidth
-        >
-          START A CAMPAIGN
-        </Button>
+        {userRole === "creator" && (
+          <Button
+            component={NextLink}
+            href="/post/create"
+            variant="contained"
+            onClick={() => setMobileOpen(false)}
+            startIcon={<CampaignIcon />}
+            sx={{
+              borderRadius: 3,
+              py: 1.5,
+              background: "linear-gradient(45deg, #12c998 30%, #f070a1 90%)",
+              boxShadow: "0 4px 14px rgba(18, 201, 152, 0.4)",
+              fontWeight: 800,
+              textTransform: "none",
+              fontSize: "1rem",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                transform: "translateY(-2px)",
+                boxShadow: "0 6px 20px rgba(18, 201, 152, 0.5)",
+                opacity: 0.9,
+              },
+            }}
+            fullWidth
+          >
+            START A CAMPAIGN
+          </Button>
+        )}
+
+        {userRole === "admin" && (
+          <Button
+            component={NextLink}
+            href="/admin"
+            variant="contained"
+            onClick={() => setMobileOpen(false)}
+            startIcon={<AdminPanelSettingsIcon />}
+            sx={{
+              borderRadius: 3,
+              py: 1.5,
+              background: "linear-gradient(45deg, #12c998 30%, #f070a1 90%)",
+              boxShadow: "0 4px 14px rgba(18, 201, 152, 0.4)",
+              fontWeight: 800,
+              textTransform: "none",
+              fontSize: "1rem",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                transform: "translateY(-2px)",
+                boxShadow: "0 6px 20px rgba(18, 201, 152, 0.5)",
+                opacity: 0.9,
+              },
+            }}
+            fullWidth
+          >
+            ADMIN PANEL
+          </Button>
+        )}
 
         <SignedIn>
           <Button
@@ -272,7 +346,13 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
               href="/sign-up"
               variant="contained"
               fullWidth
-              sx={{ borderRadius: 3, bgcolor: "black", color: "white", py: 1.25, fontWeight: "bold" }}
+              sx={{
+                borderRadius: 3,
+                bgcolor: "black",
+                color: "white",
+                py: 1.25,
+                fontWeight: "bold",
+              }}
               onClick={() => setMobileOpen(false)}
             >
               Sign Up
@@ -304,7 +384,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
           zIndex: 10,
           backgroundColor: {
             xs: isHome ? "transparent" : "white",
-            md: (isHome && !isHovered) ? "transparent" : "white"
+            md: isHome && !isHovered ? "transparent" : "white",
           },
           backdropFilter: isHome ? "blur(12px)" : "none",
           WebkitBackdropFilter: isHome ? "none" : "none",
@@ -317,7 +397,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
           height: {
             xs: "64px",
             md: "70px",
-            lg: "70px"
+            lg: "70px",
           },
           paddingBottom: isHovered ? { md: 0.5 } : 0,
           overflow: "visible",
@@ -328,7 +408,6 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
         }}
       >
         <Container maxWidth={false}>
-
           {/* ======================================================== */}
           {/* 📱 MOBILE VIEW (แสดงเฉพาะ xs, sm) */}
           {/* ======================================================== */}
@@ -338,7 +417,12 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
             justifyContent="space-between"
             sx={{ height: "64px", display: { xs: "flex", md: "none" } }}
           >
-            <IconButton ref={menuBtnRef} onClick={handleDrawerToggle} edge="start" sx={{ color: "#12C998" }}>
+            <IconButton
+              ref={menuBtnRef}
+              onClick={handleDrawerToggle}
+              edge="start"
+              sx={{ color: "#12C998" }}
+            >
               <MenuIcon sx={{ fontSize: 28 }} />
             </IconButton>
             <Typography
@@ -356,7 +440,13 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                 alignItems: "center",
               }}
             >
-              <img src="/Logo_sun.svg" alt="Logo" width="40" height="40" style={{ marginRight: '8px' }} />
+              <img
+                src="/Logo_sun.svg"
+                alt="Logo"
+                width="40"
+                height="40"
+                style={{ marginRight: "8px" }}
+              />
               kard
             </Typography>
             <Box>
@@ -364,7 +454,8 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                 <CustomUserButton />
               </SignedIn>
               <SignedOut>
-                <Button variant="outlined"
+                <Button
+                  variant="outlined"
                   component={NextLink}
                   href="/sign-in"
                   sx={{
@@ -377,14 +468,16 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                       backgroundColor: "white",
                       color: "black",
                       borderColor: "white",
-                      borderWidth: 2
-                    }
+                      borderWidth: 2,
+                    },
                   }}
-                  onClick={() => setMobileOpen(false)}>Login</Button>
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Login
+                </Button>
               </SignedOut>
             </Box>
           </Grid>
-
 
           {/* ======================================================== */}
           {/* 💻 DESKTOP VIEW (แสดงเฉพาะ md ขึ้นไป) - โค้ดเดิมของคุณ */}
@@ -395,9 +488,13 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                 size={{ xs: 4, md: 3 }}
                 sx={{
                   display: "flex",
-                  justifyContent: { xs: "center", md: "flex-start", lg: "flex-start" },
+                  justifyContent: {
+                    xs: "center",
+                    md: "flex-start",
+                    lg: "flex-start",
+                  },
                   alignItems: "center",
-                  pl: { md: 2, lg: 0 }
+                  pl: { md: 2, lg: 0 },
                 }}
               >
                 <Typography
@@ -415,8 +512,17 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                     alignItems: "center",
                   }}
                 >
-                  <img src="/Logo_sun.svg" alt="Logo" width="40" height="40" style={{ marginRight: '8px' }} />
-                  <Box component="span" sx={{ display: { xs: "none", md: "inline", lg: "inline" } }}>
+                  <img
+                    src="/Logo_sun.svg"
+                    alt="Logo"
+                    width="40"
+                    height="40"
+                    style={{ marginRight: "8px" }}
+                  />
+                  <Box
+                    component="span"
+                    sx={{ display: { xs: "none", md: "inline", lg: "inline" } }}
+                  >
                     kard
                   </Box>
                 </Typography>
@@ -431,11 +537,23 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                   gap: { xs: 2, md: 2, lg: 4 },
                 }}
               >
-                <IconButton sx={{ backgroundColor: isSearchOpen ? "rgba(0, 0, 0, 0.1)" : "transparent", backdropFilter: isSearchOpen ? "blur(4px)" : "none" }} onClick={() => {
-                  setIsSearchOpen(!isSearchOpen);
-                  if (!isSearchOpen) setIsHovered(false);
-                }}>
-                  <SearchIcon sx={{ color: isHome ? (isHovered ? "black" : "white") : "black" }} />
+                <IconButton
+                  sx={{
+                    backgroundColor: isSearchOpen
+                      ? "rgba(0, 0, 0, 0.1)"
+                      : "transparent",
+                    backdropFilter: isSearchOpen ? "blur(4px)" : "none",
+                  }}
+                  onClick={() => {
+                    setIsSearchOpen(!isSearchOpen);
+                    if (!isSearchOpen) setIsHovered(false);
+                  }}
+                >
+                  <SearchIcon
+                    sx={{
+                      color: isHome ? (isHovered ? "black" : "white") : "black",
+                    }}
+                  />
                 </IconButton>
                 <Button
                   component={NextLink}
@@ -449,8 +567,8 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                     "&:hover": {
                       border: "none",
                       color: "#12C998",
-                      backgroundColor: "transparent"
-                    }
+                      backgroundColor: "transparent",
+                    },
                   }}
                 >
                   Explore
@@ -467,8 +585,8 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                     "&:hover": {
                       border: "none",
                       color: "#12C998",
-                      backgroundColor: "transparent"
-                    }
+                      backgroundColor: "transparent",
+                    },
                   }}
                 >
                   Creators
@@ -485,8 +603,8 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                     "&:hover": {
                       border: "none",
                       color: "#12C998",
-                      backgroundColor: "transparent"
-                    }
+                      backgroundColor: "transparent",
+                    },
                   }}
                 >
                   About Us
@@ -497,64 +615,144 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                 size={{ xs: 4, md: 3 }}
                 sx={{
                   display: "flex",
-                  justifyContent: { xs: "center", md: "flex-end", lg: "flex-end" },
+                  justifyContent: {
+                    xs: "center",
+                    md: "flex-end",
+                    lg: "flex-end",
+                  },
                   alignItems: "center",
                   gap: { xs: 2, md: 2, lg: 2 },
                 }}
               >
-                <Button
-                  component={NextLink}
-                  href="/post/create"
-                  variant="contained"
-                  size="small"
-                  startIcon={<AddIcon sx={{
-                    "@media (min-width: 1351px)": {
-                      display: "none"
+                {userRole === "creator" && (
+                  <Button
+                    component={NextLink}
+                    href="/post/create"
+                    variant="contained"
+                    size="small"
+                    startIcon={
+                      <AddIcon
+                        sx={{
+                          "@media (min-width: 1351px)": {
+                            display: "none",
+                          },
+                        }}
+                      />
                     }
-                  }} />}
-                  sx={{
-                    borderRadius: 3,
-                    whiteSpace: "nowrap",
-                    px: { md: 1.5, lg: 3 },
-                    py: { md: 0.8, lg: 1 },
-                    background: "linear-gradient(45deg, #12c998 30%, #0fb488 90%)",
-                    boxShadow: "0 4px 10px rgba(18, 201, 152, 0.3)",
-                    transition: "all 0.3s ease",
-                    textTransform: "none",
-                    minWidth: "auto",
-                    "&:hover": {
-                      transform: "scale(1.05)",
-                      boxShadow: "0 6px 15px rgba(18, 201, 152, 0.4)",
-                      background: "linear-gradient(45deg, #12c998 10%, #f070a1 90%)",
-                    }
-                  }}
-                >
-                  <Typography
                     sx={{
-                      fontFamily: "var(--font-montserrat)",
-                      fontSize: { md: "0.8rem", lg: "1rem" },
-                      fontWeight: 700,
-                      display: "flex",
-                      alignItems: "center"
+                      borderRadius: 3,
+                      whiteSpace: "nowrap",
+                      px: { md: 1.5, lg: 3 },
+                      py: { md: 0.8, lg: 1 },
+                      background:
+                        "linear-gradient(45deg, #12c998 30%, #0fb488 90%)",
+                      boxShadow: "0 4px 10px rgba(18, 201, 152, 0.3)",
+                      transition: "all 0.3s ease",
+                      textTransform: "none",
+                      minWidth: "auto",
+                      "&:hover": {
+                        transform: "scale(1.05)",
+                        boxShadow: "0 6px 15px rgba(18, 201, 152, 0.4)",
+                        background:
+                          "linear-gradient(45deg, #12c998 10%, #f070a1 90%)",
+                      },
                     }}
                   >
-                    <Box component="span" sx={{
-                      display: {
-                        md: "none",
-                        lg: "none",
+                    <Typography
+                      sx={{
+                        fontFamily: "var(--font-montserrat)",
+                        fontSize: { md: "0.8rem", lg: "1rem" },
+                        fontWeight: 700,
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Box
+                        component="span"
+                        sx={{
+                          display: {
+                            md: "none",
+                            lg: "none",
+                          },
+                          "@media (min-width: 1351px)": {
+                            display: "inline",
+                          },
+                        }}
+                      >
+                        START A&nbsp;
+                      </Box>
+                      CAMPAIGN
+                    </Typography>
+                  </Button>
+                )}
+
+                {userRole === "admin" && (
+                  <Button
+                    component={NextLink}
+                    href="/admin"
+                    variant="contained"
+                    size="small"
+                    startIcon={
+                      <AdminPanelSettingsIcon
+                        sx={{
+                          "@media (min-width: 1351px)": {
+                            display: "none",
+                          },
+                        }}
+                      />
+                    }
+                    sx={{
+                      borderRadius: 3,
+                      whiteSpace: "nowrap",
+                      px: { md: 1.5, lg: 3 },
+                      py: { md: 0.8, lg: 1 },
+                      background:
+                        "linear-gradient(45deg, #12c998 30%, #0fb488 90%)",
+                      boxShadow: "0 4px 10px rgba(18, 201, 152, 0.3)",
+                      transition: "all 0.3s ease",
+                      textTransform: "none",
+                      minWidth: "auto",
+                      "&:hover": {
+                        transform: "scale(1.05)",
+                        boxShadow: "0 6px 15px rgba(18, 201, 152, 0.4)",
+                        background:
+                          "linear-gradient(45deg, #12c998 10%, #f070a1 90%)",
                       },
-                      "@media (min-width: 1351px)": {
-                        display: "inline"
-                      }
-                    }}>
-                      START A&nbsp;
-                    </Box>
-                    CAMPAIGN
-                  </Typography>
-                </Button>
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontFamily: "var(--font-montserrat)",
+                        fontSize: { md: "0.8rem", lg: "1rem" },
+                        fontWeight: 700,
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Box
+                        component="span"
+                        sx={{
+                          display: {
+                            md: "none",
+                            lg: "none",
+                          },
+                          "@media (min-width: 1351px)": {
+                            display: "inline",
+                          },
+                        }}
+                      >
+                        ADMIN&nbsp;
+                      </Box>
+                      PANEL
+                    </Typography>
+                  </Button>
+                )}
 
                 <SignedIn>
-                  <NotificationComponent isHome={isHome} isHovered={isHovered} />
+                  <NotificationComponent
+                    isHome={isHome}
+                    isHovered={isHovered}
+                  />
                 </SignedIn>
 
                 <SignedOut>
@@ -572,8 +770,8 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                         "&:hover": {
                           border: "none",
                           color: "#12C998",
-                          backgroundColor: "transparent"
-                        }
+                          backgroundColor: "transparent",
+                        },
                       }}
                       onClick={() => setMobileOpen(false)}
                     >
@@ -591,8 +789,8 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                         "&:hover": {
                           border: "none",
                           color: "#12C998",
-                          backgroundColor: "transparent"
-                        }
+                          backgroundColor: "transparent",
+                        },
                       }}
                       onClick={() => setMobileOpen(false)}
                     >
@@ -609,21 +807,26 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
 
             {/* Floating Search Bar */}
             {isSearchOpen && (
-              <Box sx={{
-                position: "absolute",
-                top: "100%", // Just below Navbar
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: "600px", // Fixed width as requested "large"
-                maxWidth: "90vw",
-                zIndex: 1200,
-                pointerEvents: "auto", // Ensure interactivity
-                bgcolor: "transparent", // No full width bg
-                mt: 2, // Slight gap from navbar
-                boxShadow: "0 10px 40px rgba(0,0,0,0.1)", // Shadow on the bar container itself
-                borderRadius: 4
-              }}>
-                <SearchBar isHome={isHome} closeMegaMenu={() => setIsSearchOpen(false)} />
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: "100%", // Just below Navbar
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  width: "600px", // Fixed width as requested "large"
+                  maxWidth: "90vw",
+                  zIndex: 1200,
+                  pointerEvents: "auto", // Ensure interactivity
+                  bgcolor: "transparent", // No full width bg
+                  mt: 2, // Slight gap from navbar
+                  boxShadow: "0 10px 40px rgba(0,0,0,0.1)", // Shadow on the bar container itself
+                  borderRadius: 4,
+                }}
+              >
+                <SearchBar
+                  isHome={isHome}
+                  closeMegaMenu={() => setIsSearchOpen(false)}
+                />
               </Box>
             )}
 
@@ -652,22 +855,27 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                 visibility: isHovered ? "visible" : "hidden",
                 bgcolor: "white",
                 borderRadius: "0 0 24px 24px",
-                boxShadow: "0 15px 40px rgba(0, 0, 0, 0.1)"
+                boxShadow: "0 15px 40px rgba(0, 0, 0, 0.1)",
               }}
             >
-              <Box sx={{
-                transition: "opacity 0.3s ease 0.1s, transform 0.3s ease",
-                px: 8,
-                color: "black",
-              }}>
+              <Box
+                sx={{
+                  transition: "opacity 0.3s ease 0.1s, transform 0.3s ease",
+                  px: 8,
+                  color: "black",
+                }}
+              >
                 <Box
                   sx={{
                     display: "flex",
                     flexWrap: "wrap",
-                    gap: 2, mb: 4, pb: 3,
+                    gap: 2,
+                    mb: 4,
+                    pb: 3,
                     justifyContent: "center",
                     borderBottom: "2px solid rgba(0,0,0,0.05)",
-                  }}>
+                  }}
+                >
                   {categoryList.map((item) => (
                     <Chip
                       key={item.label}
@@ -688,28 +896,44 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                 </Box>
 
                 <Grid container spacing={4}>
-                  <Grid size={{ xs: 12, sm: 12, md: 4, lg: 4 }} sx={{ borderRight: "2px solid #eee", mb: { xs: 3, md: 0 } }}>
-                    <Typography variant="subtitle2" color="text.secondary" fontWeight="bold" mb={2}
+                  <Grid
+                    size={{ xs: 12, sm: 12, md: 4, lg: 4 }}
+                    sx={{ borderRight: "2px solid #eee", mb: { xs: 3, md: 0 } }}
+                  >
+                    <Typography
+                      variant="subtitle2"
+                      color="text.secondary"
+                      fontWeight="bold"
+                      mb={2}
                       sx={{
                         fontFamily: "var(--font-montserrat)",
-                        fontSize: "1.2rem"
-                      }}>
+                        fontSize: "1.2rem",
+                      }}
+                    >
                       QUICK FILTER
                     </Typography>
                     <Box display="flex" flexDirection="column" gap={1.5}>
                       {[
                         { text: "All Campaigns", href: "/post" },
-                        { text: "Technology", href: "/post?category=technology" },
+                        {
+                          text: "Technology",
+                          href: "/post?category=technology",
+                        },
                         { text: "Just Launched", href: "/post?sort=newest" },
                         { text: "Ending Soon", href: "/post?sort=ending_soon" },
-                        { text: "Latest Update", href: "/post?sort=updated" }
-                      ].map(item => (
+                        { text: "Latest Update", href: "/post?sort=updated" },
+                      ].map((item) => (
                         <Typography
                           key={item.text}
                           component={NextLink}
                           href={item.href}
                           color="text.secondary"
-                          sx={{ textDecoration: "none", cursor: "pointer", "&:hover": { color: "#12C998" }, fontSize: "0.95rem" }}
+                          sx={{
+                            textDecoration: "none",
+                            cursor: "pointer",
+                            "&:hover": { color: "#12C998" },
+                            fontSize: "0.95rem",
+                          }}
                         >
                           {item.text}
                         </Typography>
@@ -720,7 +944,11 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                   <Grid size={{ md: 4, lg: 4 }}>
                     <Card
                       component={NextLink}
-                      href={popularPosts[0] ? `/post/show/${popularPosts[0].id}` : "#"}
+                      href={
+                        popularCampaigns[0]
+                          ? `/campaign/show/${popularCampaigns[0].id}`
+                          : "#"
+                      }
                       sx={{
                         height: "100%",
                         borderRadius: 2,
@@ -729,7 +957,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                         overflow: "hidden",
                         backgroundImage: `
                         linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.4), transparent),
-                        url('${process.env.NEXT_PUBLIC_API_URL}${popularPosts[0]?.images?.[0]?.path || ""}')
+                        url('${process.env.NEXT_PUBLIC_API_URL}${popularCampaigns[0]?.images?.[0]?.path || ""}')
                       `,
                         backgroundSize: "cover",
                         backgroundPosition: "center center",
@@ -740,25 +968,50 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                       }}
                     >
                       <CardContent sx={{ p: 2 }}>
-                        <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ fontSize: "1rem", fontFamily: "var(--font-montserrat)" }}>
+                        <Typography
+                          variant="h6"
+                          fontWeight="bold"
+                          gutterBottom
+                          sx={{
+                            fontSize: "1rem",
+                            fontFamily: "var(--font-montserrat)",
+                          }}
+                        >
                           Now Popular
                         </Typography>
-                        <Typography variant="body1" sx={{ opacity: 0.9, mb: 2, fontWeight: 'medium', fontSize: "1rem", fontFamily: "var(--font-montserrat)" }}>
-                          {popularPosts[0] ? popularPosts[0].post_header : "#"}
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            opacity: 0.9,
+                            mb: 2,
+                            fontWeight: "medium",
+                            fontSize: "1rem",
+                            fontFamily: "var(--font-montserrat)",
+                          }}
+                        >
+                          {popularCampaigns[0] ? popularCampaigns[0].campaign_header : "#"}
                         </Typography>
-                        <Box display="flex" alignItems="center" gap={1.5} mt={2}>
+                        <Box
+                          display="flex"
+                          alignItems="center"
+                          gap={1.5}
+                          mt={2}
+                        >
                           <div
                             style={{
                               width: 36,
                               height: 36,
                               borderRadius: "50%",
-                              backgroundImage: `url('${process.env.NEXT_PUBLIC_API_URL}${popularPosts[0]?.user?.image?.path ?? ""
-                                }')`,
+                              backgroundImage: `url('${process.env.NEXT_PUBLIC_API_URL}${
+                                popularCampaigns[0]?.user?.media?.path ?? ""
+                              }')`,
                               backgroundSize: "cover",
                             }}
                           ></div>
                           <Typography variant="subtitle2" fontWeight="bold">
-                            {popularPosts[0] ? popularPosts[0].user.username : "#"}
+                            {popularCampaigns[0]
+                              ? popularCampaigns[0].user.username
+                              : "#"}
                           </Typography>
                         </Box>
                       </CardContent>
@@ -767,12 +1020,16 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                   <Grid size={{ md: 4, lg: 4 }}>
                     <Card
                       component={NextLink}
-                      href={popularPosts[1] ? `/post/show/${popularPosts[1].id}` : "#"}
+                      href={
+                        popularCampaigns[1]
+                          ? `/campaign/show/${popularCampaigns[1].id}`
+                          : "#"
+                      }
                       sx={{
                         display: {
                           xs: "none",
                           md: "flex",
-                          lg: "flex"
+                          lg: "flex",
                         },
                         height: "100%",
                         borderRadius: 2,
@@ -781,7 +1038,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                         overflow: "hidden",
                         backgroundImage: `
                         linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.4), transparent),
-                        url('${process.env.NEXT_PUBLIC_API_URL}${popularPosts[1]?.images?.[0]?.path || ""}')
+                        url('${process.env.NEXT_PUBLIC_API_URL}${popularCampaigns[1]?.images?.[0]?.path || ""}')
                       `,
                         backgroundSize: "cover",
                         backgroundPosition: "center center",
@@ -791,25 +1048,50 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                       }}
                     >
                       <CardContent sx={{ p: 2 }}>
-                        <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ fontSize: "1rem", fontFamily: "var(--font-montserrat)" }}>
+                        <Typography
+                          variant="h6"
+                          fontWeight="bold"
+                          gutterBottom
+                          sx={{
+                            fontSize: "1rem",
+                            fontFamily: "var(--font-montserrat)",
+                          }}
+                        >
                           Now Popular
                         </Typography>
-                        <Typography variant="body1" sx={{ opacity: 0.9, mb: 2, fontWeight: 'medium', fontSize: "1rem", fontFamily: "var(--font-montserrat)" }}>
-                          {popularPosts[1] ? popularPosts[1].post_header : "#"}
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            opacity: 0.9,
+                            mb: 2,
+                            fontWeight: "medium",
+                            fontSize: "1rem",
+                            fontFamily: "var(--font-montserrat)",
+                          }}
+                        >
+                          {popularCampaigns[1] ? popularCampaigns[1].campaign_header : "#"}
                         </Typography>
-                        <Box display="flex" alignItems="center" gap={1.5} mt={2}>
+                        <Box
+                          display="flex"
+                          alignItems="center"
+                          gap={1.5}
+                          mt={2}
+                        >
                           <div
                             style={{
                               width: 36,
                               height: 36,
                               borderRadius: "50%",
-                              backgroundImage: `url('${process.env.NEXT_PUBLIC_API_URL}${popularPosts[1]?.user?.image?.path ?? ""
-                                }')`,
+                              backgroundImage: `url('${process.env.NEXT_PUBLIC_API_URL}${
+                                popularCampaigns[1]?.user?.media?.path ?? ""
+                              }')`,
                               backgroundSize: "cover",
                             }}
                           ></div>
                           <Typography variant="subtitle2" fontWeight="bold">
-                            {popularPosts[1] ? popularPosts[1].user.username : "#"}
+                            {popularCampaigns[1]
+                              ? popularCampaigns[1].user.username
+                              : "#"}
                           </Typography>
                         </Box>
                       </CardContent>
@@ -819,9 +1101,8 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
               </Box>
             </Box>
           </Box>
-
         </Container>
-      </AppBar >
+      </AppBar>
 
       {/*DRAWER COMPONENT (Mobile Slide Menu) */}
       <Drawer

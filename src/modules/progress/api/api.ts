@@ -15,6 +15,6 @@ export function updateProgress(id: string, data: FormData): Promise<Progress> {
   });
 }
 
-export function getProgressByPostId(postId: string): Promise<Progress[]> {
-  return request<Progress[]>(`/api/progress?post_id=${postId}`);
+export function getProgressByCampaignId(campaignId: string): Promise<Progress[]> {
+  return request<Progress[]>(`/api/progress?campaign_id=${campaignId}`);
 }

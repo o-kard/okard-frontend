@@ -10,11 +10,11 @@ import { SearchIcon } from "lucide-react";
 import React, { useState, useMemo } from "react";
 import { useUser } from "@clerk/nextjs";
 import CampaignList from "./CampaignList";
-import { Post } from "../../post/types/post";
+import { Campaign } from "../../campaign/types/campaign";
 
 // Campaigns
 interface CampaignsPanelProps {
-  campaigns: Post[];
+  campaigns: Campaign[];
   loading: boolean;
 }
 
@@ -29,8 +29,8 @@ export default function CampaignsPanel({ campaigns, loading }: CampaignsPanelPro
     if (!searchQuery) return campaigns;
     const lowerQuery = searchQuery.toLowerCase();
     return campaigns.filter(c =>
-      c.post_header.toLowerCase().includes(lowerQuery) ||
-      c.post_description.toLowerCase().includes(lowerQuery)
+      c.campaign_header.toLowerCase().includes(lowerQuery) ||
+      c.campaign_description.toLowerCase().includes(lowerQuery)
     );
   }, [campaigns, searchQuery]);
 

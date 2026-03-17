@@ -1,9 +1,9 @@
-import { Box, Paper, Typography, Stack, Chip, IconButton } from "@mui/material";
+import { Box, Paper, Typography, Stack, Chip, IconButton, keyframes } from "@mui/material";
 import Link from "next/link";
-import { Post } from "@/modules/post/types/post";
+import { Campaign } from "@/modules/campaign/types/campaign";
 import { CATEGORY_COLORS } from "@/modules/home/utils/categoryColors";
-import { keyframes } from "@mui/system";
 import EditIcon from "@mui/icons-material/Edit";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 const grow = keyframes`
   0% { transform: scaleX(0); }
@@ -11,7 +11,7 @@ const grow = keyframes`
 `;
 
 interface CampaignListProps {
-    campaigns: Post[];
+    campaigns: Campaign[];
     showEditButton?: boolean;
 }
 
@@ -47,21 +47,21 @@ export default function CampaignList({ campaigns, showEditButton }: CampaignList
                 },
             }}
         >
-            {campaigns.map((post) => {
+            {campaigns.map((campaign) => {
                 const progress =
-                    post.current_amount && post.goal_amount
-                        ? Math.min(100, (post.current_amount / post.goal_amount) * 100)
+                    campaign.current_amount && campaign.goal_amount
+                        ? Math.min(100, (campaign.current_amount / campaign.goal_amount) * 100)
                         : 0;
 
                 const postImage =
-                    post.images && post.images.length > 0
-                        ? `${process.env.NEXT_PUBLIC_API_URL}${post.images[0].path}`
+                    campaign.images && campaign.images.length > 0
+                        ? resolveMediaUrl(campaign.images[0].path)
                         : "/placeholder-image.png";
 
-                const category = CATEGORY_COLORS[post.category] || CATEGORY_COLORS.all;
+                const category = CATEGORY_COLORS[campaign.category] || CATEGORY_COLORS.all;
 
                 return (
-                    <Box key={post.id} sx={{ position: "relative" }}>
+                    <Box key={campaign.id} sx={{ position: "relative" }}>
                         <Paper
                             sx={{
                                 borderRadius: 3,
@@ -80,7 +80,7 @@ export default function CampaignList({ campaigns, showEditButton }: CampaignList
                                 },
                             }}
                         >
-                            <Link href={`/post/show/${post.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+                            <Link href={`/campaign/show/${campaign.id}`} style={{ textDecoration: "none", color: "inherit" }}>
                                 <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, height: "100%" }}>
                                     {/* Image Section */}
                                     <Box
@@ -98,7 +98,7 @@ export default function CampaignList({ campaigns, showEditButton }: CampaignList
                                         <Box
                                             component="img"
                                             src={postImage}
-                                            alt={post.post_header}
+                                            alt={campaign.campaign_header}
                                             sx={{ width: "100%", height: "100%", objectFit: "cover" }}
                                         />
 
@@ -133,7 +133,7 @@ export default function CampaignList({ campaigns, showEditButton }: CampaignList
                                                         WebkitBoxOrient: "vertical"
                                                     }}
                                                 >
-                                                    {post.post_header}
+                                                    {campaign.campaign_header}
                                                 </Typography>
                                                 <Chip
                                                     label={category.label}
@@ -161,7 +161,7 @@ export default function CampaignList({ campaigns, showEditButton }: CampaignList
                                                     minHeight: 40
                                                 }}
                                             >
-                                                {post.post_description}
+                                                {campaign.campaign_description}
                                             </Typography>
                                         </Box>
 
@@ -171,8 +171,8 @@ export default function CampaignList({ campaigns, showEditButton }: CampaignList
                                                     {progress.toFixed(0)}% Funded
                                                 </Typography>
                                                 <Typography variant="caption" color="text.secondary">
-                                                    {new Intl.NumberFormat().format(post.current_amount)} /{" "}
-                                                    {new Intl.NumberFormat().format(post.goal_amount)} THB
+                                                    {new Intl.NumberFormat().format(campaign.current_amount)} /{" "}
+                                                    {new Intl.NumberFormat().format(campaign.goal_amount)} USD
                                                 </Typography>
                                             </Box>
                                             <Box
@@ -203,7 +203,7 @@ export default function CampaignList({ campaigns, showEditButton }: CampaignList
                             {showEditButton && (
                                 <IconButton
                                     component={Link}
-                                    href={`/post/edit/${post.id}`}
+                                    href={`/post/edit/${campaign.id}`}
                                     sx={{
                                         position: "absolute",
                                         top: 10,

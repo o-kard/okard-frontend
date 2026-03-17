@@ -1,16 +1,16 @@
-"use client"
-import { useEffect, useRef, useState } from "react"
-import useEmblaCarousel from "embla-carousel-react"
-import { Box, IconButton, Typography, } from "@mui/material"
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew"
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos"
-import { glowHover } from "../utils/glowHover"
-import { Post } from "@/modules/post/types/post";
+"use client";
+import { useEffect, useRef, useState } from "react";
+import useEmblaCarousel from "embla-carousel-react";
+import { Box, IconButton, Typography } from "@mui/material";
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import { glowHover } from "../utils/glowHover";
+import { CampaignSummary } from "@/modules/campaign/types/campaign";
 import InfiniteMenu from "./InifiniteMenu";
 
 type Group = {
   category: string;
-  projects: Post[];
+  projects: CampaignSummary[];
 };
 
 type BubbleCarouselProps = {
@@ -18,10 +18,10 @@ type BubbleCarouselProps = {
 };
 
 export default function BubbleCarousel({ groups }: BubbleCarouselProps) {
-  const videoRef = useRef<HTMLVideoElement | null>(null)
-  const [selectedIndex, setSelectedIndex] = useState(0)
-  const sectionRef = useRef<HTMLDivElement | null>(null)
-  const [isVisible, setIsVisible] = useState(true)
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const sectionRef = useRef<HTMLDivElement | null>(null);
+  const [isVisible, setIsVisible] = useState(true);
   const [emblaReady, setEmblaReady] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
 
@@ -37,53 +37,52 @@ export default function BubbleCarousel({ groups }: BubbleCarouselProps) {
       : allProjects.filter((p) => p.category === selectedCategory);
 
   useEffect(() => {
-    const el = sectionRef.current
-    if (!el) return
+    const el = sectionRef.current;
+    if (!el) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => setIsVisible(entry.isIntersecting),
       { threshold: 0.4 },
-    )
+    );
 
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
+    const video = videoRef.current;
+    if (!video) return;
 
     if (selectedIndex === 0 && isVisible) {
-        video.play().catch(() => {})
+      video.play().catch(() => { });
     } else {
-      video.pause()
+      video.pause();
     }
-  }, [selectedIndex, isVisible])
+  }, [selectedIndex, isVisible]);
 
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: true,
     align: "start",
     watchDrag: false,
-  })
+  });
 
   useEffect(() => {
-    if (!emblaApi) return
+    if (!emblaApi) return;
 
-    const onSelect = () => setSelectedIndex(emblaApi.selectedScrollSnap())
-    emblaApi.on("select", onSelect)
-    onSelect()
+    const onSelect = () => setSelectedIndex(emblaApi.selectedScrollSnap());
+    emblaApi.on("select", onSelect);
+    onSelect();
 
     return () => {
-      emblaApi.off("select", onSelect)
-    }
-  }, [emblaApi])
+      emblaApi.off("select", onSelect);
+    };
+  }, [emblaApi]);
 
   useEffect(() => {
     if (!emblaApi) return;
     emblaApi.scrollTo(0, true);
     setEmblaReady(true);
   }, [emblaApi]);
-
 
   return (
     <Box
@@ -197,7 +196,7 @@ export default function BubbleCarousel({ groups }: BubbleCarouselProps) {
                   mb: 2,
                   fontWeight: "bold",
                   fontFamily: "var(--font-syncopate)",
-                  fontSize: {xs: "2rem", sm: "4rem", md: "6rem" },
+                  fontSize: { xs: "2rem", sm: "4rem", md: "6rem" },
                   color: "#12C998",
                   ...glowHover,
                 }}
@@ -211,11 +210,11 @@ export default function BubbleCarousel({ groups }: BubbleCarouselProps) {
                   mb: 2,
                   fontWeight: "bold",
                   fontFamily: "var(--font-syncopate)",
-                  fontSize: {xs: "2.5rem", sm: "6rem", md: "8rem" },
+                  fontSize: { xs: "2.5rem", sm: "6rem", md: "8rem" },
                   color: "#12C998",
                   ...glowHover,
                   display: "inline-flex",
-                  alignItems: "center",  
+                  alignItems: "center",
                 }}
               >
                 <Box
@@ -227,7 +226,8 @@ export default function BubbleCarousel({ groups }: BubbleCarouselProps) {
                     height: { xs: 80, sm: 130, md: 180 },
                     mr: 1,
                   }}
-                />kard
+                />
+                kard
               </Typography>
 
               <Typography sx={{ color: "#ddd" }}>
@@ -252,5 +252,5 @@ export default function BubbleCarousel({ groups }: BubbleCarouselProps) {
         </Box>
       </Box>
     </Box>
-  )
+  );
 }

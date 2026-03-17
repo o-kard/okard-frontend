@@ -11,9 +11,10 @@ import {
   IconButton,
 } from "@mui/material";
 import { Progress } from "../types";
-import { useActiveSection } from "@/modules/post/hooks/useActiveSection";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import EditIcon from "@mui/icons-material/Edit";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
+import { useActiveSection } from "@/modules/campaign/hooks/useActiveSection";
 
 type Props = {
   items?: Progress[];
@@ -92,15 +93,20 @@ export default function ProgressSection({
                     onClick={() => handleNavClick(i)}
                     sx={{
                       justifyContent: "flex-start",
+                      textAlign: "left",
                       textTransform: "none",
                       fontWeight: 800,
-                      color: isActive ? "#e91e63" : "text.primary",
+                      color: isActive ? "#18c59b" : "text.primary",
                       bgcolor: isActive
-                        ? "rgba(233,30,99,0.08)"
+                        ? "rgba(24,197,155,0.08)"
                         : "transparent",
                       borderRadius: 2,
                       px: 1,
-                      "&:hover": { bgcolor: "rgba(233,30,99,0.12)" },
+                      "&:hover": { bgcolor: "rgba(24,197,155,0.12)" },
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
                     }}
                   >
                     {item.progress_header || `Progress #${i + 1}`}
@@ -116,7 +122,7 @@ export default function ProgressSection({
           <Stack spacing={4}>
             {data.map((item, i) => {
               const img = item.media?.[0]?.path
-                ? `${apiBaseUrl}${item.media[0].path}`
+                ? resolveMediaUrl(item.media[0].path)
                 : undefined;
 
               return (

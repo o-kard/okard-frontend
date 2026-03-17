@@ -3,12 +3,13 @@
 import { FC } from "react";
 import { Box, Typography, IconButton, Select, MenuItem } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { Post } from "@/modules/post/types/post";
+import { CampaignSummary } from "@/modules/campaign/types/campaign";
 import { CATEGORY_COLORS } from "../utils/categoryColors";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 type Props = {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
-  activeItem: Post | null;
+  activeItem: CampaignSummary | null;
   isMoving: boolean;
   onActionClick: () => void;
 
@@ -145,7 +146,7 @@ const InfiniteMenuUI: FC<Props> = ({
                 lineHeight: 1.1,
               }}
             >
-              {activeItem.post_header}
+              {activeItem.campaign_header}
             </Typography>
             {/* Creator */}
             <Box
@@ -177,7 +178,7 @@ const InfiniteMenuUI: FC<Props> = ({
                 {activeItem.user.media?.path ? (
                   <Box
                     component="img"
-                    src={`${process.env.NEXT_PUBLIC_API_URL}${activeItem.user.media.path}`}
+                    src={resolveMediaUrl(activeItem.user.media.path)}
                     alt={activeItem.user.username}
                     sx={{
                       width: "100%",
@@ -245,7 +246,7 @@ const InfiniteMenuUI: FC<Props> = ({
                 fontSize: "1rem",
               }}
             >
-              {activeItem.post_description}
+              {activeItem.campaign_description}
             </Typography>
 
             {/* Stats row (ด้านล่าง แถวเดียว) */}
@@ -285,7 +286,7 @@ const InfiniteMenuUI: FC<Props> = ({
                     color: "white",
                   }}
                 >
-                  {activeItem.supporter?.toLocaleString() || 0}
+                  {activeItem.supporters?.toLocaleString() || 0}
                 </Typography>
               </Box>
 

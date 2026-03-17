@@ -45,7 +45,7 @@ function UserSetupContent() {
           await user.setProfileImage({ file: null });
         }
         await user.reload();
-        router.replace(returnTo ?? "/");
+        router.replace("/");
       }
     } catch (e) {
       console.error(e);

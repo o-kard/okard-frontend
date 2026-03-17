@@ -1,12 +1,12 @@
-import { PostSummary } from "@/modules/post/types/post"
+import { CampaignSummary } from "@/modules/campaign/types/campaign"
 
 export type GroupedProjects = {
   category: string
-  projects: PostSummary[]
+  projects: CampaignSummary[]
 }
 
-export function groupByCategory(projects: PostSummary[]) {
-  const map: Record<string, PostSummary[]> = {}
+export function groupByCategory(projects: CampaignSummary[]) {
+  const map: Record<string, CampaignSummary[]> = {}
 
   projects.forEach((p) => {
     const key = p.category

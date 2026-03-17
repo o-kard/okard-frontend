@@ -1,0 +1,16 @@
+.git
+.gitignore
+.env
+.env.local
+.env.development
+.env.production
+.next
+node_modules
+README.md
+Dockerfile
+.dockerignore
+
+.env.uat
+
+pgdata/
+minio_data/
