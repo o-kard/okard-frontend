@@ -42,7 +42,7 @@ jobs:
             NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:prd-latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:prd-${{ github.sha }}
           cache-from: type=${{ env.CACHE_TYPE }},ref=${{ env.CACHE_REF }}
           cache-to: type=${{ env.CACHE_TYPE }},ref=${{ env.CACHE_REF }},mode=max
