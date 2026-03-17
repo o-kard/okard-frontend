@@ -23,20 +23,26 @@ import {
   TableCell,
   TableBody,
 } from "@mui/material";
-import { listUsers, deleteUser } from "@/modules/user/api/api";
+import { listUsers, deleteUser, suspendUser } from "@/modules/user/api/api";
 import { fetchCampaigns } from "@/modules/campaign/api/api";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
 
 const statusColors: Record<string, string> = {
-  Active: "#1de9b6",
-  Suspended: "#ff5252",
-  Pending: "#ffd600",
+  active: "#1de9b6",
+  suspended: "#ff5252",
+  pending: "#ffd600",
 };
 
 const ActionMenu = ({
   userId,
+  onSuspend,
   onDelete,
 }: {
   userId: string;
+  onSuspend: () => void;
   onDelete: () => void;
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -98,7 +104,7 @@ const ActionMenu = ({
         <MenuItem
           onClick={(e) => {
             handleClose(e);
-            alert("Suspend not implemented in Backend yet");
+            onSuspend();
           }}
           sx={{
             fontSize: "0.9rem",
@@ -132,6 +138,8 @@ const ActionMenu = ({
 export default function CreatorsPage() {
   const [search, setSearch] = useState("");
   const [creators, setCreators] = useState<any[]>([]);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadCreators() {
@@ -148,7 +156,7 @@ export default function CreatorsPage() {
             email: user.email || "-",
             role: user.role || "-",
             campaign_number,
-            status: "Active", // You may want to adjust this if user status is available
+            status: user.status || "active",
           };
         });
         setCreators(creatorsData);
@@ -331,18 +339,30 @@ export default function CreatorsPage() {
                 >
                   Campaigns
                 </TableCell>
-                <TableCell
-                  align="right"
-                  sx={{
-                    fontWeight: 600,
-                    color: "#666666",
-                    textTransform: "uppercase",
-                    fontSize: "0.8rem",
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  Actions
-                </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: 600,
+                      color: "#666666",
+                      textTransform: "uppercase",
+                      fontSize: "0.8rem",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    Status
+                  </TableCell>
+                  <TableCell
+                    align="right"
+                    sx={{
+                      fontWeight: 600,
+                      color: "#666666",
+                      textTransform: "uppercase",
+                      fontSize: "0.8rem",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    Actions
+                  </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -428,9 +448,28 @@ export default function CreatorsPage() {
                       {c.campaign_number}
                     </Box>
                   </TableCell>
+                  <TableCell align="center">
+                    <Chip
+                      label={c.status}
+                      sx={{
+                        background: `${statusColors[c.status] || "#eee"}20`,
+                        color: statusColors[c.status] || "#666",
+                        fontWeight: 700,
+                        fontSize: "0.85rem",
+                        px: 1,
+                        borderRadius: 1.5,
+                        border: `1px solid ${statusColors[c.status] || "#eee"}50`,
+                      }}
+                      size="small"
+                    />
+                  </TableCell>
                   <TableCell align="right">
                     <ActionMenu
                       userId={c.id}
+                      onSuspend={() => {
+                        setSelectedId(c.id);
+                        setConfirmOpen(true);
+                      }}
                       onDelete={() => handleDelete(c.id)}
                     />
                   </TableCell>
@@ -467,6 +506,39 @@ export default function CreatorsPage() {
             </Stack>
           )}
         </TableContainer>
+
+        <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+          <DialogTitle>Confirm Admin Action</DialogTitle>
+          <DialogContent>
+            <Typography>Do you want to suspend this user?</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setConfirmOpen(false)} color="inherit">
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!selectedId) return;
+                try {
+                  await suspendUser(selectedId);
+                  setCreators((prev) =>
+                    prev.map((u) =>
+                      u.id === selectedId ? { ...u, status: "suspended" } : u,
+                    ),
+                  );
+                } catch (e) {
+                  console.error("Failed to suspend user", e);
+                } finally {
+                  setConfirmOpen(false);
+                  setSelectedId(null);
+                }
+              }}
+              color="warning"
+            >
+              Confirm
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </AdminLayout>
   );

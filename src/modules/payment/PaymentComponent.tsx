@@ -31,7 +31,6 @@ export default function PaymentComponent({ campaignId, userId }: Props) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [amount, setAmount] = useState<number>(0);
-  const [tip, setTip] = useState<number>(0);
   const [method, setMethod] = useState<PaymentType>("promptpay");
   const [agree, setAgree] = useState(false);
 
@@ -55,7 +54,7 @@ export default function PaymentComponent({ campaignId, userId }: Props) {
     [campaign],
   );
 
-  const total = Math.max(0, (amount || 0) + (tip || 0));
+  const total = Math.max(0, amount || 0);
 
   const handleSubmit = async () => {
     if (!agree || !campaign || !userId) return;
@@ -126,10 +125,10 @@ export default function PaymentComponent({ campaignId, userId }: Props) {
 
           <PaymentSummary
             amount={amount}
-            tip={tip}
+            tip={0}
             total={total}
             agree={agree}
-            onChangeTip={setTip}
+            onChangeTip={() => {}}
             onChangeAgree={setAgree}
             onSubmit={handleSubmit}
             disabled={!agree || total <= 0 || !fullName || !email}

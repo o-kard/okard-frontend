@@ -49,3 +49,9 @@ export async function deleteUser(userId: string) {
     method: "DELETE",
   });
 }
+
+export async function suspendUser(userId: string) {
+  return request(`${API_URL}/${userId}/suspend`, {
+    method: "PUT",
+  });
+}

@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import PersonIcon from "@mui/icons-material/Person";
 import Avatar from "@mui/material/Avatar";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 export default function SearchBar({
   isHome,
@@ -70,7 +71,7 @@ export default function SearchBar({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && query.trim()) {
       closeMegaMenu?.(); // Close mega menu immediately
-      router.push(`/post?query=${encodeURIComponent(query)}`);
+      router.push(`/campaign?query=${encodeURIComponent(query)}`);
       setResults([]);
       setQuery(""); // Clear the search input
       setOpenModal(false);
@@ -158,7 +159,7 @@ export default function SearchBar({
     setResults([]);
 
     if (item.type === "user") router.push(`/user/${item.id}`);
-    else if (item.type === "post") router.push(`/post/show/${item.id}`);
+    else if (item.type === "campaign") router.push(`/campaign/show/${item.id}`);
 
     closeSidebar?.();
   };
@@ -234,7 +235,7 @@ export default function SearchBar({
                 {/* Avatar/Thumbnail */}
                 {item.thumbnail ? (
                   <img
-                    src={item.thumbnail}
+                    src={resolveMediaUrl(item.thumbnail)}
                     style={{
                       width: 40,
                       height: 40,
@@ -244,11 +245,16 @@ export default function SearchBar({
                   />
                 ) : (
                   <Box
+                    component="img"
+                    src="/Logo_sun.svg"
                     sx={{
                       width: 40,
                       height: 40,
-                      bgcolor: "#eee",
-                      borderRadius: 8,
+                      objectFit: "contain",
+                      bgcolor: "#f8fafc",
+                      p: 0.5,
+                      borderRadius: 2,
+                      border: "1px solid #e2e8f0",
                     }}
                   />
                 )}
@@ -258,7 +264,7 @@ export default function SearchBar({
                     {item.name}
                   </div>
 
-                  {item.type === "post" && (
+                  {item.type === "campaign" && (
                     <div style={{ fontSize: 11, color: "#777" }}>
                       Campaign by {item.creator}
                     </div>
@@ -370,11 +376,11 @@ export default function SearchBar({
                     </Avatar>
                   ))}
 
-                {/* POST TYPE */}
-                {item.type === "post" &&
+                {/* CAMPAIGN TYPE */}
+                {item.type === "campaign" &&
                   (item.thumbnail ? (
                     <img
-                      src={item.thumbnail}
+                      src={resolveMediaUrl(item.thumbnail)}
                       style={{
                         width: 60,
                         height: 60,
@@ -384,11 +390,16 @@ export default function SearchBar({
                     />
                   ) : (
                     <Box
+                      component="img"
+                      src="/Logo_sun.svg"
                       sx={{
                         width: 60,
                         height: 60,
-                        backgroundColor: "#e5e7eb",
+                        objectFit: "contain",
+                        backgroundColor: "#f8fafc",
+                        p: 1,
                         borderRadius: 99,
+                        border: "1px solid #e2e8f0",
                       }}
                     />
                   ))}
@@ -397,8 +408,8 @@ export default function SearchBar({
                   {/* NAME */}
                   <span style={{ fontWeight: 600 }}>{item.name}</span>
 
-                  {/* POST TYPE */}
-                  {item.type === "post" && item.creator && (
+                  {/* CAMPAIGN TYPE */}
+                  {item.type === "campaign" && item.creator && (
                     <span style={{ fontSize: 12, color: "#777" }}>
                       Campaign by {item.creator}
                     </span>

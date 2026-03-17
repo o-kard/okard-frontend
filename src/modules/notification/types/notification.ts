@@ -11,7 +11,7 @@ export interface Notification {
   id: UUID;
   user_id: UUID;
   actor_id?: UUID | null;
-  post_id?: UUID | null;
+  campaign_id?: UUID | null;
   notification_title: string;
   notification_message?: string | null;
   type: NotificationType;

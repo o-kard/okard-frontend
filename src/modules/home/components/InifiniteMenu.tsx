@@ -1188,7 +1188,7 @@ const InfiniteMenu: FC<InfiniteMenuProps> = ({ items = [], scale = 1.0, isActive
   const handleButtonClick = () => {
     if (!activeItem) return;
 
-    router.push(`/post/show/${activeItem.id}`);
+    router.push(`/campaign/show/${activeItem.id}`);
   };
 
   return (
