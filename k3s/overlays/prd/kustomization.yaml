@@ -8,18 +8,11 @@ resources:
 namePrefix: prd-
 namespace: prd
 
-# This setting patches the base deployment specifically for UAT
 patches:
-  - target:
-      kind: Deployment
-      name: okard-frontend
-    patch: |-
-      - op: replace
-        path: /spec/replicas
-        value: 2
   - path: deployment-patch.yaml
 
 images:
   - name: okard-frontend
+    newName: ghcr.io/o-kard/okard-frontend
     newTag: latest
     

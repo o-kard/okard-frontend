@@ -23,7 +23,3 @@ spec:
           envFrom:
             - secretRef:
                 name: okard-frontend-secrets
-          env:
-            - name: NODE_ENV
-              value: "production"
-          # Liveness and Readiness Probes can be added here
