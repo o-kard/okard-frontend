@@ -10,7 +10,3 @@ namespace: uat
 
 patches:
   - path: deployment-patch.yaml
-
-images:
-  - name: okard-frontend
-    newName: ghcr.io/o-kard/okard-frontend
