@@ -4,10 +4,10 @@ metadata:
   name: okard-frontend-uat
   namespace: argocd
   annotations:
-    argocd-image-updater.argoproj.io/image-list: frontend=ghcr.io/o-kard/okard-frontend
-    argocd-image-updater.argoproj.io/frontend.update-strategy: latest
+    argocd-image-updater.argoproj.io/image-list: okard-frontend=ghcr.io/o-kard/okard-frontend
+    argocd-image-updater.argoproj.io/okard-frontend.update-strategy: latest
+    argocd-image-updater.argoproj.io/okard-frontend.allow-tags: regexp:^uat-.*$
     argocd-image-updater.argoproj.io/write-back-method: argocd
-    argocd-image-updater.argoproj.io/frontend.allow-tags: regexp:^uat-.*$
 spec:
   project: default
   source:
