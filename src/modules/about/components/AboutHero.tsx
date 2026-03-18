@@ -41,7 +41,7 @@ export default function AboutHero() {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.5, duration: 0.5 }}
                 >
-                    <Link href="/post">
+                    <Link href="/campaign">
                         <Box
                             sx={{
                                 width: "64px",

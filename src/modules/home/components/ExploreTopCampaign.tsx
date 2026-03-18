@@ -50,7 +50,7 @@ export default function ExploreTopCampaign() {
         <Button
           variant="outlined"
           size="large"
-          href={`/post?category=${encodeURIComponent(selectedCategory)}`}
+          href={`/campaign?category=${encodeURIComponent(selectedCategory)}`}
           sx={{
             bgcolor: "white",
             color: "#000",

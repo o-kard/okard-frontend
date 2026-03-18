@@ -1,6 +1,7 @@
 import { Box, Typography, Button, Avatar, Paper } from "@mui/material";
 import { UserPublicResponse } from "@/modules/user/types/user";
 import { resolveMediaUrl } from "@/utils/mediaUrl";
+import Link from "next/link";
 
 type Props = {
   user: UserPublicResponse;
@@ -81,23 +82,25 @@ export default function CreatorCard({ user }: Props) {
         {user.user_description || "No biography available."}
       </Typography>
 
-      <Button
-        variant="outlined"
-        color="inherit"
-        fullWidth
-        sx={{
-          borderRadius: 3,
-          textTransform: "none",
-          fontWeight: 700,
-          borderColor: "rgba(0,0,0,0.12)",
-          "&:hover": {
-            borderColor: "rgba(0,0,0,0.3)",
-            bgcolor: "rgba(0,0,0,0.02)",
-          },
-        }}
-      >
-        See Profile
-      </Button>
+      <Link href={`/user/${user.clerk_id}`}>
+        <Button
+          variant="outlined"
+          color="inherit"
+          fullWidth
+          sx={{
+            borderRadius: 3,
+            textTransform: "none",
+            fontWeight: 700,
+            borderColor: "rgba(0,0,0,0.12)",
+            "&:hover": {
+              borderColor: "rgba(0,0,0,0.3)",
+              bgcolor: "rgba(0,0,0,0.02)",
+            },
+          }}
+        >
+          See Profile
+        </Button>
+      </Link>
     </Paper>
   );
 }

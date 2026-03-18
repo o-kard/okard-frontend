@@ -46,6 +46,7 @@ import { Campaign } from "../campaign/types/campaign";
 import { CATEGORIES_LIST } from "../home/utils/categoryColors";
 import { useUser, useAuth } from "@clerk/nextjs";
 import CustomUserButton from "./CustomUserButton";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 const NotificationComponent = dynamic(
   () => import("@/modules/notification/NotificationComponent"),
@@ -217,7 +218,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
       {/* 2. Menu Links */}
       <List sx={{ px: 1 }}>
         {[
-          { text: "Explore", href: "/post", icon: <ExploreIcon /> },
+          { text: "Explore", href: "/campaign", icon: <ExploreIcon /> },
           { text: "Creators", href: "/explore-user", icon: <PersonIcon /> },
           { text: "About Us", href: "/about", icon: <InfoIcon /> },
         ].map((item) => (
@@ -260,7 +261,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
         {userRole === "creator" && (
           <Button
             component={NextLink}
-            href="/post/create"
+            href="/campaign/create"
             variant="contained"
             onClick={() => setMobileOpen(false)}
             startIcon={<CampaignIcon />}
@@ -381,7 +382,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
           top: 0,
           left: 0,
           right: 0,
-          zIndex: 10,
+          zIndex: 67,
           backgroundColor: {
             xs: isHome ? "transparent" : "white",
             md: isHome && !isHovered ? "transparent" : "white",
@@ -557,7 +558,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                 </IconButton>
                 <Button
                   component={NextLink}
-                  href="/post"
+                  href="/campaign"
                   sx={{
                     color: isHovered ? "black" : isHome ? "white" : "black",
                     fontFamily: "var(--font-montserrat)",
@@ -627,7 +628,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                 {userRole === "creator" && (
                   <Button
                     component={NextLink}
-                    href="/post/create"
+                    href="/campaign/create"
                     variant="contained"
                     size="small"
                     startIcon={
@@ -881,7 +882,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                       key={item.label}
                       icon={<item.icon sx={{ fontSize: 18 }} />}
                       component={NextLink}
-                      href={`/post?category=${encodeURIComponent(item.value)}`}
+                      href={`/campaign?category=${encodeURIComponent(item.value)}`}
                       label={item.label}
                       clickable
                       sx={{
@@ -914,14 +915,14 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                     </Typography>
                     <Box display="flex" flexDirection="column" gap={1.5}>
                       {[
-                        { text: "All Campaigns", href: "/post" },
+                        { text: "All Campaigns", href: "/campaign" },
                         {
                           text: "Technology",
-                          href: "/post?category=technology",
+                          href: "/campaign?category=technology",
                         },
-                        { text: "Just Launched", href: "/post?sort=newest" },
-                        { text: "Ending Soon", href: "/post?sort=ending_soon" },
-                        { text: "Latest Update", href: "/post?sort=updated" },
+                        { text: "Just Launched", href: "/campaign?sort=newest" },
+                        { text: "Ending Soon", href: "/campaign?sort=ending_soon" },
+                        { text: "Latest Update", href: "/campaign?sort=updated" },
                       ].map((item) => (
                         <Typography
                           key={item.text}
@@ -957,7 +958,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                         overflow: "hidden",
                         backgroundImage: `
                         linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.4), transparent),
-                        url('${process.env.NEXT_PUBLIC_API_URL}${popularCampaigns[0]?.images?.[0]?.path || ""}')
+                        url('${resolveMediaUrl(popularCampaigns[0]?.images?.[0]?.path || "")}')
                       `,
                         backgroundSize: "cover",
                         backgroundPosition: "center center",
@@ -1002,10 +1003,10 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                               width: 36,
                               height: 36,
                               borderRadius: "50%",
-                              backgroundImage: `url('${process.env.NEXT_PUBLIC_API_URL}${
-                                popularCampaigns[0]?.user?.media?.path ?? ""
-                              }')`,
+                              backgroundImage: `url('${resolveMediaUrl(popularCampaigns[0]?.user?.media?.path || "")}')`,
                               backgroundSize: "cover",
+                              backgroundPosition: "center",
+                              backgroundRepeat: "no-repeat"
                             }}
                           ></div>
                           <Typography variant="subtitle2" fontWeight="bold">
@@ -1038,7 +1039,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                         overflow: "hidden",
                         backgroundImage: `
                         linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.4), transparent),
-                        url('${process.env.NEXT_PUBLIC_API_URL}${popularCampaigns[1]?.images?.[0]?.path || ""}')
+                        url('${resolveMediaUrl(popularCampaigns[1]?.images?.[0]?.path || "")}')
                       `,
                         backgroundSize: "cover",
                         backgroundPosition: "center center",
@@ -1082,10 +1083,10 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                               width: 36,
                               height: 36,
                               borderRadius: "50%",
-                              backgroundImage: `url('${process.env.NEXT_PUBLIC_API_URL}${
-                                popularCampaigns[1]?.user?.media?.path ?? ""
-                              }')`,
+                              backgroundImage: `url('${resolveMediaUrl(popularCampaigns[1]?.user?.media?.path || "")}')`,
                               backgroundSize: "cover",
+                              backgroundPosition: "center",
+                              backgroundRepeat: "no-repeat"
                             }}
                           ></div>
                           <Typography variant="subtitle2" fontWeight="bold">

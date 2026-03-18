@@ -85,10 +85,10 @@ export default function BookmarkCard({
               position: "absolute",
               top: 8,
               right: 8,
-              bgcolor: "white",
-              color: "primary.main",
+              bgcolor: "rgba(255, 204, 0, 0.1)",
+              color: "rgba(255, 204, 0, 1)",
               boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-              "&:hover": { bgcolor: "grey.100", color: "error.main" },
+              "&:hover": { bgcolor: "rgba(255, 204, 0, 0.2)" },
             }}
           >
             <BookmarkIcon fontSize="small" />

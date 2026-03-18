@@ -10,9 +10,3 @@ namespace: prd
 
 patches:
   - path: deployment-patch.yaml
-
-images:
-  - name: okard-frontend
-    newName: ghcr.io/o-kard/okard-frontend
-    newTag: prd-latest
-    

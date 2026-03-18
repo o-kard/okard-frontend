@@ -112,7 +112,7 @@ function CampaignCard({
             position: "absolute",
             top: 12,
             left: 12,
-            zIndex: 10,
+            zIndex: 8,
             fontWeight: 700,
             textTransform: "capitalize",
             bgcolor: categoryConfig?.color ?? "primary.main",

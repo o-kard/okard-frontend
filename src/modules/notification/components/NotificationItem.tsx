@@ -43,8 +43,8 @@ export default function NotificationItem({
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   const handleClick = () => {
-    if (n.post_id) {
-      router.push(`/post/show/${n.post_id}`);
+    if (n.campaign_id) {
+      router.push(`/campaign/show/${n.campaign_id}`);
     }
   };
 
@@ -56,7 +56,7 @@ export default function NotificationItem({
       sx={(theme) => ({
         p: 1.5,
         borderRadius: 2,
-        cursor: n.post_id ? "pointer" : "default",
+        cursor: n.campaign_id ? "pointer" : "default",
         "&:hover": { backgroundColor: theme.palette.action.hover },
       })}
       alignItems="flex-start"
