@@ -18,7 +18,11 @@ import {
 import Grid from "@mui/material/Grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import type { Campaign, CampaignCategoryType, CampaignStateType } from "../types/campaign";
+import type {
+  Campaign,
+  CampaignCategoryType,
+  CampaignStateType,
+} from "../types/campaign";
 import PredictResultDialog from "@/modules/campaign/components/PredictResultDialog";
 import {
   DndContext,
@@ -247,7 +251,9 @@ export default function CampaignForm({
     },
   });
 
-  const [campaignMediaPreviews, setCampaignMediaPreviews] = useState<string[]>([]);
+  const [campaignMediaPreviews, setCampaignMediaPreviews] = useState<string[]>(
+    [],
+  );
   const [informationPreviews, setInformationPreviews] = useState<
     Record<number, string>
   >({});
@@ -255,7 +261,9 @@ export default function CampaignForm({
     {},
   );
   const [campaignMedia, setCampaignMedia] = useState<CampaignMediaItem[]>([]);
-  const [campaignVideo, setCampaignVideo] = useState<CampaignMediaItem | null>(null);
+  const [campaignVideo, setCampaignVideo] = useState<CampaignMediaItem | null>(
+    null,
+  );
   const [imageSizeError, setImageSizeError] = useState<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -281,14 +289,18 @@ export default function CampaignForm({
     };
   }, []);
 
-  const handleCampaignFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCampaignFilesChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const newFiles = Array.from(e.target.files || []);
     if (newFiles.length === 0) return;
 
     setImageSizeError(null);
-    const oversized = newFiles.filter(f => f.size > 5 * 1024 * 1024);
+    const oversized = newFiles.filter((f) => f.size > 5 * 1024 * 1024);
     if (oversized.length > 0) {
-      setImageSizeError(`Some images exceed the 5MB limit: ${oversized.map(f => f.name).join(", ")}`);
+      setImageSizeError(
+        `Some images exceed the 5MB limit: ${oversized.map((f) => f.name).join(", ")}`,
+      );
       return;
     }
 
@@ -923,7 +935,7 @@ export default function CampaignForm({
       )}
       <Grid container spacing={2}>
         {/* Campaign Header */}
-        <Grid size={{ xs: 12, md: 8 }}>
+        <Grid size={{ xs: 12 }}>
           <TextField
             {...register("campaign_header", { required: "Header is required" })}
             label="Campaign Header"
@@ -1138,31 +1150,42 @@ export default function CampaignForm({
           </Button>
 
           {imageSizeError && (
-            <Typography color="error" variant="caption" display="block" sx={{ mt: 1, fontWeight: 700 }}>
+            <Typography
+              color="error"
+              variant="caption"
+              display="block"
+              sx={{ mt: 1, fontWeight: 700 }}
+            >
               {imageSizeError}
             </Typography>
           )}
 
           {/* Draggable Image Previews */}
-          <Box mt={2}>
+          {campaignMedia.length > 0 && (
             <DndContext sensors={sensors} onDragEnd={onDragEnd}>
               <SortableContext
                 items={campaignMedia.map((it) => it.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <Grid container spacing={2}>
+                <Box
+                  sx={{
+                    mt: 1,
+                    display: "grid",
+                    gridTemplateColumns: "repeat(2, 1fr)",
+                    gap: 2,
+                  }}
+                >
                   {campaignMedia.map((it) => (
-                    <Grid size={{ xs: 4, sm: 3, md: 2 }} key={it.id}>
-                      <SortableThumb
-                        item={it}
-                        onRemove={handleRemoveCampaignMedia}
-                      />
-                    </Grid>
+                    <SortableThumb
+                      key={it.id}
+                      item={it}
+                      onRemove={handleRemoveCampaignMedia}
+                    />
                   ))}
-                </Grid>
+                </Box>
               </SortableContext>
             </DndContext>
-          </Box>
+          )}
 
           {campaignMedia.length + (campaignVideo ? 1 : 0) >= 2 && (
             <Box>
@@ -1181,89 +1204,126 @@ export default function CampaignForm({
 
         {/* Information Section */}
         <Grid size={{ xs: 12 }}>
-          <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-            <Typography variant="h6" fontWeight={600}>
-              Information Items
-            </Typography>
-            <Button
-              startIcon={<AddIcon />}
-              onClick={() => appendInformation({ display_order: informationFields.length + 1, file: null })}
-              disabled={isSuspended}
-            >
-              Add Item
-            </Button>
-          </Box>
+          <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+            Informations
+          </Typography>
+
           {informationFields.map((field, idx) => (
-            <Box key={field.id} p={2} border="1px solid #eee" borderRadius={2} mb={2}>
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 8 }}>
-                  <TextField
-                    {...register(`informations.${idx}.information_header`, { required: "Header required" })}
-                    label="Header"
-                    fullWidth
-                    size="small"
+            <Grid
+              container
+              spacing={1}
+              key={field.id}
+              sx={{ mb: 2, p: 1, border: "1px solid #ddd", borderRadius: 1 }}
+            >
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  label="Information Header"
+                  fullWidth
+                  {...register(
+                    `informations.${idx}.information_header` as const,
+                    {
+                      required: "Information header is required",
+                    },
+                  )}
+                  error={!!errors.informations?.[idx]?.information_header}
+                  helperText={
+                    errors.informations?.[idx]?.information_header?.message
+                  }
+                  disabled={isSuspended}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  label="Order"
+                  type="number"
+                  fullWidth
+                  {...register(`informations.${idx}.display_order` as const, {
+                    valueAsNumber: true,
+                  })}
+                  disabled={isSuspended}
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  label="Information Description"
+                  fullWidth
+                  multiline
+                  rows={3}
+                  {...register(
+                    `informations.${idx}.information_description` as const,
+                  )}
+                  disabled={isSuspended}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <Button variant="outlined" component="label" fullWidth>
+                  {watch(`informations.${idx}.file`)
+                    ? "Change Image (optional for update)"
+                    : "Upload Information Image"}
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={(e) => handleInformationFileChange(idx, e)}
                     disabled={isSuspended}
                   />
-                  <Box mt={2}>
-                    <TextField
-                      {...register(`informations.${idx}.information_description`)}
-                      label="Description"
-                      multiline
-                      rows={3}
-                      fullWidth
-                      size="small"
-                      disabled={isSuspended}
+                </Button>
+
+                {informationPreviews[idx] && (
+                  <Box sx={{ mt: 1 }}>
+                    <img
+                      src={toAbsolute(informationPreviews[idx])}
+                      alt={`camp-${idx}`}
+                      style={{
+                        width: "auto",
+                        height: "auto",
+                        objectFit: "cover",
+                        borderRadius: 8,
+                        border: "1px solid #ddd",
+                      }}
                     />
-                  </Box>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <Box display="flex" flexDirection="column" alignItems="center">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      style={{ display: "none" }}
-                      id={`info-img-${idx}`}
-                      onChange={(e) => handleInformationFileChange(idx, e)}
-                      disabled={isSuspended}
-                    />
-                    <label htmlFor={`info-img-${idx}`}>
-                      <Button variant="outlined" component="span" size="small" disabled={isSuspended}>
-                        {informationPreviews[idx] ? "Change Image" : "Upload Image"}
+                    <Box>
+                      <Button
+                        size="small"
+                        variant="text"
+                        color="error"
+                        onClick={() => handleClearInformationImage(idx)}
+                        disabled={isSuspended}
+                      >
+                        Clear image
                       </Button>
-                    </label>
-                    {imageSizeError && (
-                      <Typography color="error" variant="caption" sx={{ mt: 1, fontWeight: 700, textAlign: "center" }}>
-                        {imageSizeError}
-                      </Typography>
-                    )}
-                    {informationPreviews[idx] && (
-                      <Box mt={1} position="relative">
-                        <img
-                          src={informationPreviews[idx]}
-                          style={{ width: 100, height: 100, objectFit: "cover", borderRadius: 8 }}
-                        />
-                        <IconButton
-                          size="small"
-                          onClick={() => handleClearInformationImage(idx)}
-                          sx={{ position: "absolute", top: -8, right: -8, bgcolor: "white" }}
-                          disabled={isSuspended}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    )}
+                    </Box>
                   </Box>
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <Box display="flex" justifyContent="flex-end">
-                    <IconButton onClick={() => removeInformation(idx)} color="error" disabled={isSuspended}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
-                </Grid>
+                )}
               </Grid>
-            </Box>
+
+              <Grid size={{ xs: 12 }}>
+                {!editItem && (
+                  <IconButton
+                    color="error"
+                    onClick={() => removeInformation(idx)}
+                    disabled={isSuspended}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                )}
+              </Grid>
+            </Grid>
           ))}
+
+          <Button
+            startIcon={<AddIcon />}
+            variant="outlined"
+            onClick={() =>
+              appendInformation({
+                display_order: informationFields.length + 1,
+                file: null,
+              })
+            }
+          >
+            Add Information
+          </Button>
         </Grid>
 
         <Grid size={{ xs: 12 }}>
@@ -1284,7 +1344,7 @@ export default function CampaignForm({
                 container
                 spacing={1}
                 key={field.id}
-                sx={{ mb: 2, p: 1, border: "1px dashed #ddd", borderRadius: 1 }}
+                sx={{ mb: 2, p: 1, border: "1px solid #ddd", borderRadius: 1 }}
               >
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
@@ -1354,7 +1414,12 @@ export default function CampaignForm({
                   </Button>
 
                   {imageSizeError && (
-                    <Typography color="error" variant="caption" display="block" sx={{ mt: 1, fontWeight: 700 }}>
+                    <Typography
+                      color="error"
+                      variant="caption"
+                      display="block"
+                      sx={{ mt: 1, fontWeight: 700 }}
+                    >
                       {imageSizeError}
                     </Typography>
                   )}
