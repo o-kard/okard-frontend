@@ -23,22 +23,22 @@ export const fetchCampaigns = async (
   return request<Campaign[]>(`${API_PATH}?${qs}`);
 };
 
-export async function createCampaignWithImages(
-  data: Omit<Campaign, "id" | "user_id">,
-  clerkId: string,
-  files: File[],
-) {
-  const formData = new FormData();
-  formData.append("campaign_data", JSON.stringify(data));
-  files.forEach((file) => formData.append("images", file));
+// export async function createCampaignWithImages(
+//   data: Omit<Campaign, "id" | "user_id">,
+//   clerkId: string,
+//   files: File[],
+// ) {
+//   const formData = new FormData();
+//   formData.append("campaign_data", JSON.stringify(data));
+//   files.forEach((file) => formData.append("images", file));
 
-  await request(`${API_PATH}/with-images?clerk_id=${clerkId}`, {
-    method: "POST",
-    body: formData,
-  });
+//   await request(`${API_PATH}/with-images?clerk_id=${clerkId}`, {
+//     method: "POST",
+//     body: formData,
+//   });
 
-  return true;
-}
+//   return true;
+// }
 
 export async function createCampaignWithInformations(fd: FormData, clerkId: string) {
   return request(`${API_PATH}/with-informations?clerk_id=${clerkId}`, {
