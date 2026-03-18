@@ -46,6 +46,7 @@ import { Campaign } from "../campaign/types/campaign";
 import { CATEGORIES_LIST } from "../home/utils/categoryColors";
 import { useUser, useAuth } from "@clerk/nextjs";
 import CustomUserButton from "./CustomUserButton";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 const NotificationComponent = dynamic(
   () => import("@/modules/notification/NotificationComponent"),
@@ -381,7 +382,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
           top: 0,
           left: 0,
           right: 0,
-          zIndex: 10,
+          zIndex: 67,
           backgroundColor: {
             xs: isHome ? "transparent" : "white",
             md: isHome && !isHovered ? "transparent" : "white",
@@ -957,7 +958,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                         overflow: "hidden",
                         backgroundImage: `
                         linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.4), transparent),
-                        url('${process.env.NEXT_PUBLIC_API_URL}${popularCampaigns[0]?.images?.[0]?.path || ""}')
+                        url('${resolveMediaUrl(popularCampaigns[0]?.images?.[0]?.path || "")}')
                       `,
                         backgroundSize: "cover",
                         backgroundPosition: "center center",
@@ -1002,10 +1003,10 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                               width: 36,
                               height: 36,
                               borderRadius: "50%",
-                              backgroundImage: `url('${process.env.NEXT_PUBLIC_API_URL}${
-                                popularCampaigns[0]?.user?.media?.path ?? ""
-                              }')`,
+                              backgroundImage: `url('${resolveMediaUrl(popularCampaigns[0]?.user?.media?.path || "")}')`,
                               backgroundSize: "cover",
+                              backgroundPosition: "center",
+                              backgroundRepeat: "no-repeat"
                             }}
                           ></div>
                           <Typography variant="subtitle2" fontWeight="bold">
@@ -1038,7 +1039,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                         overflow: "hidden",
                         backgroundImage: `
                         linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.4), transparent),
-                        url('${process.env.NEXT_PUBLIC_API_URL}${popularCampaigns[1]?.images?.[0]?.path || ""}')
+                        url('${resolveMediaUrl(popularCampaigns[1]?.images?.[0]?.path || "")}')
                       `,
                         backgroundSize: "cover",
                         backgroundPosition: "center center",
@@ -1082,10 +1083,10 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                               width: 36,
                               height: 36,
                               borderRadius: "50%",
-                              backgroundImage: `url('${process.env.NEXT_PUBLIC_API_URL}${
-                                popularCampaigns[1]?.user?.media?.path ?? ""
-                              }')`,
+                              backgroundImage: `url('${resolveMediaUrl(popularCampaigns[1]?.user?.media?.path || "")}')`,
                               backgroundSize: "cover",
+                              backgroundPosition: "center",
+                              backgroundRepeat: "no-repeat"
                             }}
                           ></div>
                           <Typography variant="subtitle2" fontWeight="bold">
