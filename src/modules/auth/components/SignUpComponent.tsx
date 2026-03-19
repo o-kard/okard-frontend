@@ -109,6 +109,7 @@ export default function SignUpComponent() {
           )}
 
           <Box component="form" onSubmit={handleSubmit} noValidate>
+            <div id="clerk-captcha"></div>
             <TextField
               margin="normal"
               required
