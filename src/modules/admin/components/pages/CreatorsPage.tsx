@@ -33,7 +33,7 @@ import DialogActions from "@mui/material/DialogActions";
 const statusColors: Record<string, string> = {
   active: "#1de9b6",
   suspended: "#ff5252",
-  pending: "#ffd600",
+  pending: "#ff8000",
 };
 
 const ActionMenu = ({
@@ -88,7 +88,7 @@ const ActionMenu = ({
         <MenuItem
           onClick={(e) => {
             handleClose(e);
-            window.open(`/explore/${userId}`, "_blank");
+            window.open(`/user/${userId}`, "_blank");
           }}
           sx={{
             fontSize: "0.9rem",
@@ -459,6 +459,7 @@ export default function CreatorsPage() {
                         px: 1,
                         borderRadius: 1.5,
                         border: `1px solid ${statusColors[c.status] || "#eee"}50`,
+                        textTransform: "capitalize",
                       }}
                       size="small"
                     />

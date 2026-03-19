@@ -35,7 +35,7 @@ import { fetchCampaigns } from "@/modules/campaign/api/api";
 import { ReportStatus } from "@/modules/report/types/report";
 
 const statusColors: Record<string, string> = {
-  pending: "#ffd600",
+  pending: "#ff8000",
   reviewed: "#12C998",
 };
 
@@ -304,6 +304,7 @@ export default function ReportsPage() {
                   Project
                 </TableCell>
                 <TableCell
+                  align="center"
                   sx={{
                     fontWeight: 600,
                     color: "#666666",
@@ -315,6 +316,7 @@ export default function ReportsPage() {
                   Reporter
                 </TableCell>
                 <TableCell
+                  align="center"
                   sx={{
                     fontWeight: 600,
                     color: "#666666",
@@ -326,6 +328,7 @@ export default function ReportsPage() {
                   Reason
                 </TableCell>
                 <TableCell
+                  align="center"
                   sx={{
                     fontWeight: 600,
                     color: "#666666",
@@ -394,9 +397,9 @@ export default function ReportsPage() {
                       </Typography>
                     </Stack>
                   </TableCell>
-                  <TableCell sx={{ color: "#666666" }}>{r.reporter}</TableCell>
-                  <TableCell sx={{ color: "#666666" }}>{r.reason}</TableCell>
-                  <TableCell>
+                  <TableCell align="center" sx={{ color: "#666666" }}>{r.reporter}</TableCell>
+                  <TableCell align="center" sx={{ color: "#666666" }}>{r.reason}</TableCell>
+                  <TableCell align="center">
                     <Chip
                       label={r.status}
                       sx={{
@@ -407,6 +410,7 @@ export default function ReportsPage() {
                         px: 1,
                         borderRadius: 1.5,
                         border: `1px solid ${statusColors[r.status]}50`,
+                        textTransform: "capitalize",
                       }}
                       size="small"
                     />
