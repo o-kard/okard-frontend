@@ -1,6 +1,7 @@
 "use client";
 
 import { FC } from "react";
+import Link from "next/link";
 import { Box, Typography, IconButton, Select, MenuItem } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { CampaignSummary } from "@/modules/campaign/types/campaign";
@@ -136,6 +137,8 @@ const InfiniteMenuUI: FC<Props> = ({
             </Typography>
             {/* Title */}
             <Typography
+              component={Link}
+              href={`/campaign/show/${activeItem.id}`}
               variant="h3"
               sx={{
                 fontWeight: 900,
@@ -144,12 +147,21 @@ const InfiniteMenuUI: FC<Props> = ({
                 overflowWrap: "break-word",
                 whiteSpace: "normal",
                 lineHeight: 1.1,
+                textDecoration: "none",
+                display: "block",
+                transition: "0.4s ease",
+                "&:hover": {
+                  transform: "scale(1.02)",
+                  color: "#12C998",
+                },
               }}
             >
               {activeItem.campaign_header}
             </Typography>
             {/* Creator */}
             <Box
+              component={Link}
+              href={`/user/${activeItem.user.id}`}
               sx={{
                 mt: 1,
                 display: "flex",
@@ -158,6 +170,11 @@ const InfiniteMenuUI: FC<Props> = ({
                 color: "white",
                 fontSize: "1.25rem",
                 fontWeight: 500,
+                textDecoration: "none",
+                width: "fit-content",
+                "&:hover": {
+                  "& .MuiTypography-root": { color: "#12C998" },
+                },
               }}
             >
               <Box
