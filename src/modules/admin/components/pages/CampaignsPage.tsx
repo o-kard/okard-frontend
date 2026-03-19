@@ -33,7 +33,7 @@ import { useAuth } from "@clerk/nextjs";
 const statusColors: Record<string, string> = {
   active: "#12C998",
   suspended: "#ff5252",
-  pending: "#ffd600",
+  pending: "#ff8000",
 };
 
 const ActionMenu = ({
@@ -352,6 +352,7 @@ export default function CampaignsPage() {
                   Creator
                 </TableCell>
                 <TableCell
+                  align="center"
                   sx={{
                     fontWeight: 600,
                     color: "#666666",
@@ -363,6 +364,7 @@ export default function CampaignsPage() {
                   Category
                 </TableCell>
                 <TableCell
+                  align="center"
                   sx={{
                     fontWeight: 600,
                     color: "#666666",
@@ -493,7 +495,7 @@ export default function CampaignsPage() {
                       </Typography>
                     </Stack>
                   </TableCell>
-                  <TableCell>
+                  <TableCell align="center">
                     <Box
                       component="span"
                       sx={{
@@ -510,7 +512,7 @@ export default function CampaignsPage() {
                       {p.category}
                     </Box>
                   </TableCell>
-                  <TableCell>
+                  <TableCell align="center">
                     <Chip
                       label={p.status}
                       sx={{
@@ -521,6 +523,7 @@ export default function CampaignsPage() {
                         px: 1,
                         borderRadius: 1.5,
                         border: `1px solid ${statusColors[p.status]}50`,
+                        textTransform: "capitalize",
                       }}
                       size="small"
                     />
