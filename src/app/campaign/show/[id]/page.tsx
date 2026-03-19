@@ -542,42 +542,56 @@ export default function CampaignDetailPage() {
               </Typography>
 
               {/* author */}
-              <Stack
-                direction="row"
-                alignItems="center"
-                spacing={1.5}
-                sx={{ mb: 1.5 }}
+              <Link 
+                href={`/user/${campaign.user_id}`} 
+                style={{ textDecoration: "none", color: "inherit" }}
               >
-                <Box
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: "50%",
-                    bgcolor: "#FFE6F2",
-                    display: "grid",
-                    placeItems: "center",
-                    overflow: "hidden",
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  spacing={1.5}
+                  sx={{ 
+                    mb: 1.5,
+                    cursor: "pointer",
+                    "&:hover": {
+                      "& .MuiTypography-root": { color: "primary.main" },
+                      "& .author-avatar": { boxShadow: "0 0 0 2px #18C59B" }
+                    }
                   }}
                 >
-                  {campaign.user?.media?.path ? (
-                    <Box
-                      component="img"
-                      src={resolveMediaUrl(campaign.user.media.path)}
-                      alt={campaign.user.username}
-                      sx={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    />
-                  ) : (
-                    <PersonIcon sx={{ color: "#ff4081" }} />
-                  )}
-                </Box>
-                <Typography fontWeight={700}>
-                  {[campaign.user?.first_name, campaign.user?.surname]
-                    .filter(Boolean)
-                    .join(" ") ||
-                    campaign.user?.username ||
-                    "Unknown creator"}
-                </Typography>
-              </Stack>
+                  <Box
+                    className="author-avatar"
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: "50%",
+                      bgcolor: "#FFE6F2",
+                      display: "grid",
+                      placeItems: "center",
+                      overflow: "hidden",
+                      transition: "all 0.2s ease"
+                    }}
+                  >
+                    {campaign.user?.media?.path ? (
+                      <Box
+                        component="img"
+                        src={resolveMediaUrl(campaign.user.media.path)}
+                        alt={campaign.user.username}
+                        sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    ) : (
+                      <PersonIcon sx={{ color: "#ff4081" }} />
+                    )}
+                  </Box>
+                  <Typography fontWeight={700} sx={{ transition: "all 0.2s ease" }}>
+                    {[campaign.user?.first_name, campaign.user?.surname]
+                      .filter(Boolean)
+                      .join(" ") ||
+                      campaign.user?.username ||
+                      "Unknown creator"}
+                  </Typography>
+                </Stack>
+              </Link>
 
               <Typography color="text.secondary" sx={{ mb: 2 }}>
                 {campaign.campaign_description}

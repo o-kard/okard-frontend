@@ -82,7 +82,7 @@ export default function CreatorCard({ user }: Props) {
         {user.user_description || "No biography available."}
       </Typography>
 
-      <Link href={`/user/${user.clerk_id}`}>
+      <Link href={`/user/${user.id}`}>
         <Button
           variant="outlined"
           color="inherit"
