@@ -43,7 +43,9 @@ function CampaignCard({
   img?: string;
 }) {
   const { getToken } = useAuth();
-  const [isBookmarked, setIsBookmarked] = useState(campaign.is_bookmarked || false);
+  const [isBookmarked, setIsBookmarked] = useState(
+    campaign.is_bookmarked || false,
+  );
   const [isHoveringBookmark, setIsHoveringBookmark] = useState(false);
 
   useEffect(() => {
