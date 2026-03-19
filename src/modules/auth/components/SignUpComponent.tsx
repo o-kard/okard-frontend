@@ -29,37 +29,75 @@ export default function SignUpComponent() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [code, setCode] = useState("");
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    console.log("Submit clicked. isLoaded:", isLoaded, "isLoading:", isLoading);
 
-    if (!isLoaded || isLoading) return;
+    if (!isLoaded || !signUp || isLoading) return;
     setIsLoading(true);
 
     try {
-      await signUp.create({
+      console.log("Calling signUp.create with:", { username, email, password: "***" });
+      const response = await signUp.create({
         username,
         emailAddress: email || undefined,
         password,
       });
+      console.log("signUp.create response status:", response.status);
 
-      // Assuming username signup doesn't require immediate verification like email code
-      if (signUp.status === "complete") {
-        await setActive({ session: signUp.createdSessionId });
+      if (response.status === "complete") {
+        await setActive({ session: response.createdSessionId });
+        router.push("/user/setup");
+      } else if (response.status === "missing_requirements") {
+        console.log("Status is missing_requirements. Preparation for email verification...");
+        await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+        setVerifying(true);
+      } else {
+        console.warn("SignUp not complete. Status:", signUp.status, "Missing fields:", signUp.unverifiedFields);
+        setError(`Registration Incomplete: ${signUp.status}. Please check verification requirements.`);
+      }
+    } catch (err: any) {
+      console.error("Full signup error object:", err);
+      const msg = err.errors?.[0]?.longMessage || err.message || "An unknown error occurred during signup";
+      console.error("Signup error message:", msg);
+      setError(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (!isLoaded || !signUp || isLoading) return;
+    setIsLoading(true);
+
+    try {
+      const completeSignUp = await signUp.attemptEmailAddressVerification({
+        code,
+      });
+      console.log("Verification result:", completeSignUp.status);
+      if (completeSignUp.status !== "complete") {
+        console.warn("Verification level status:", completeSignUp.status);
+        setError("Verification successful, but registration still incomplete.");
+      } else {
+        await setActive({ session: completeSignUp.createdSessionId });
         router.push("/user/setup");
       }
     } catch (err: any) {
-      console.error("error", err.errors[0].longMessage);
-      setError(err.errors[0].longMessage);
+      console.error("Verification error:", err);
+      setError(err.errors?.[0]?.longMessage || "An error occurred during verification");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleSignUp = async () => {
-    if (!isLoaded || isLoading) return;
+    if (!isLoaded || !signUp || isLoading) return;
     setIsLoading(true);
     try {
       await signUp.authenticateWithRedirect({
@@ -99,7 +137,7 @@ export default function SignUpComponent() {
             mb={3}
             textAlign="center"
           >
-            Create Account
+            {verifying ? "Verify Your Email" : "Create Account"}
           </Typography>
 
           {error && (
@@ -108,112 +146,151 @@ export default function SignUpComponent() {
             </Alert>
           )}
 
-          <Box component="form" onSubmit={handleSubmit} noValidate>
-            <div id="clerk-captcha"></div>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="username"
-              label="Username"
-              name="username"
-              autoComplete="username"
-              autoFocus
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              sx={{ mb: 2, "& .MuiOutlinedInput-root": { borderRadius: 4 } }}
-            />
-            <TextField
-              margin="normal"
-              fullWidth
-              id="email"
-              label="Email Address (Optional)"
-              name="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              sx={{ mb: 2, "& .MuiOutlinedInput-root": { borderRadius: 4 } }}
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              type={showPassword ? "text" : "password"}
-              id="password"
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle password visibility"
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ mb: 3, "& .MuiOutlinedInput-root": { borderRadius: 4 } }}
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              disabled={isLoading}
-              sx={{
-                mt: 1,
-                mb: 2,
-                bgcolor: "#12C998",
-                color: "white",
-                py: 1.5,
-                borderRadius: 4,
-                fontWeight: "bold",
-                "&:hover": { bgcolor: "#0ea880" },
-              }}
-            >
-              {isLoading ? "Working..." : "Sign Up"}
-            </Button>
+          {!verifying ? (
+            <Box component="form" onSubmit={handleSubmit} noValidate>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="username"
+                label="Username"
+                name="username"
+                autoComplete="username"
+                autoFocus
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                sx={{ mb: 2, "& .MuiOutlinedInput-root": { borderRadius: 4 } }}
+              />
+              <TextField
+                margin="normal"
+                fullWidth
+                id="email"
+                label="Email Address (Optional)"
+                name="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                sx={{ mb: 2, "& .MuiOutlinedInput-root": { borderRadius: 4 } }}
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="password"
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                id="password"
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ mb: 3, "& .MuiOutlinedInput-root": { borderRadius: 4 } }}
+              />
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                disabled={isLoading}
+                sx={{
+                  mt: 1,
+                  mb: 2,
+                  bgcolor: "#12C998",
+                  color: "white",
+                  py: 1.5,
+                  borderRadius: 4,
+                  fontWeight: "bold",
+                  "&:hover": { bgcolor: "#0ea880" },
+                }}
+              >
+                {isLoading ? "Working..." : "Sign Up"}
+              </Button>
 
-            <Divider sx={{ my: 2 }}>OR</Divider>
+              <div id="clerk-captcha"></div>
 
-            <Button
-              fullWidth
-              variant="outlined"
-              disabled={isLoading}
-              startIcon={<Google />}
-              onClick={handleGoogleSignUp}
-              sx={{
-                mb: 2,
-                py: 1.5,
-                borderRadius: 4,
-                borderColor: "#ddd",
-                color: "text.primary",
-                "&:hover": { borderColor: "#bbb", bgcolor: "rgba(0,0,0,0.02)" },
-              }}
-            >
-              {isLoading ? "Working..." : "Sign up with Google"}
-            </Button>
+              <Divider sx={{ my: 2 }}>OR</Divider>
 
-            <Box mt={2} textAlign="center">
-              <Typography variant="body2">
-                Already have an account?{" "}
-                <Link
-                  href="/sign-in"
-                  style={{
-                    color: "#12C998",
-                    textDecoration: "none",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Sign In
-                </Link>
-              </Typography>
+              <Button
+                fullWidth
+                variant="outlined"
+                disabled={isLoading}
+                startIcon={<Google />}
+                onClick={handleGoogleSignUp}
+                sx={{
+                  mb: 2,
+                  py: 1.5,
+                  borderRadius: 4,
+                  borderColor: "#ddd",
+                  color: "text.primary",
+                  "&:hover": { borderColor: "#bbb", bgcolor: "rgba(0,0,0,0.02)" },
+                }}
+              >
+                {isLoading ? "Working..." : "Sign up with Google"}
+              </Button>
             </Box>
+          ) : (
+            <Box component="form" onSubmit={handleVerify} noValidate>
+              <Typography variant="body2" color="text.secondary" mb={2} textAlign="center">
+                We've sent a verification code to <strong>{email}</strong>. Please enter it below.
+              </Typography>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="code"
+                label="Verification Code"
+                name="code"
+                autoFocus
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                sx={{ mb: 3, "& .MuiOutlinedInput-root": { borderRadius: 4 } }}
+              />
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                disabled={isLoading}
+                sx={{
+                  mt: 1,
+                  mb: 2,
+                  bgcolor: "#12C998",
+                  color: "white",
+                  py: 1.5,
+                  borderRadius: 4,
+                  fontWeight: "bold",
+                  "&:hover": { bgcolor: "#0ea880" },
+                }}
+              >
+                {isLoading ? "Verifying..." : "Verify Code"}
+              </Button>
+            </Box>
+          )}
+
+          <Box mt={2} textAlign="center">
+            <Typography variant="body2">
+              Already have an account?{" "}
+              <Link
+                href="/sign-in"
+                style={{
+                  color: "#12C998",
+                  textDecoration: "none",
+                  fontWeight: "bold",
+                }}
+              >
+                Sign In
+              </Link>
+            </Typography>
           </Box>
         </Container>
       </Box>
