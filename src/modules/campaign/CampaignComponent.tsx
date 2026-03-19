@@ -11,7 +11,11 @@ import {
   Typography,
   Drawer,
   Chip,
+  TextField,
+  InputAdornment,
+  CircularProgress,
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 import MenuIcon from "@mui/icons-material/Menu";
 import ExploreHeader from "./components/ExploreHeader";
 import { useMediaQuery } from "@mui/material";
@@ -29,6 +33,10 @@ export default function CampaignComponent() {
   const { getToken } = useAuth();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const LIMIT = 12;
 
   const searchParams = useSearchParams();
   const initialCategory = (searchParams.get("category") || "all").toLowerCase();
@@ -85,6 +93,12 @@ export default function CampaignComponent() {
       setSort(incomingSort);
     }
   }, [searchParams]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setOffset(0);
+    setHasMore(true);
+  }, [category, searchQuery, sort, timing, includeClosed]);
 
   useEffect(() => {
     // If user is not passing query params, maybe we don't load?
@@ -151,7 +165,6 @@ export default function CampaignComponent() {
           setCampaigns(campaigns);
         } else {
           // Pass filters to backend
-          // Map timing to state (timing can be draft, published, all)
           const stateParam = timing === "all" ? "all" : timing;
 
           const data = await fetchCampaigns(
@@ -160,18 +173,27 @@ export default function CampaignComponent() {
             sort,
             stateParam,
             user?.id,
+            LIMIT,
+            offset,
+            includeClosed,
           );
 
-          // Backend now handles filtering, so we just set the data
-          setCampaigns(data);
+          if (offset === 0) {
+            setCampaigns(data);
+          } else {
+            setCampaigns((prev) => [...prev, ...data]);
+          }
+          setHasMore(data.length === LIMIT);
         }
       } catch (err) {
         console.error(err);
+      } finally {
+        setLoading(false);
       }
     };
 
     load();
-  }, [viewMode, user, category, searchQuery, sort, timing, includeClosed]);
+  }, [viewMode, user, category, searchQuery, sort, timing, includeClosed, offset]);
 
   const router = useRouter();
 
@@ -234,7 +256,9 @@ export default function CampaignComponent() {
                 selectedCategory={category}
                 onSelectCategory={setCategory}
                 timing={timing}
-                onTimingChange={setTiming}
+                onTimingChange={(v) => {
+                  setTiming(v as any);
+                }}
                 includeClosed={includeClosed}
                 onToggleClosed={setIncludeClosed}
                 onViewModeChange={setViewMode}
@@ -242,54 +266,128 @@ export default function CampaignComponent() {
                 sort={sort}
                 onSortChange={setSort}
                 onClear={handleClearAll}
+                searchQuery={searchQuery}
+                onSearchChange={(v) => {
+                  const newParams = new URLSearchParams(searchParams.toString());
+                  if (v) newParams.set("query", v);
+                  else newParams.delete("query");
+                  router.push(`/campaign?${newParams.toString()}`);
+                }}
               />
             </Grid>
           )}
 
           <Grid size={{ xs: 12, md: isMdUp ? 9 : 12 }} sx={{ pt: 2 }}>
-            <Box display="flex" alignItems="center" gap={2} mb={2}>
-              <Typography variant="body2" color="text.secondary">
-                Found : {filtered.length} Campaigns
-              </Typography>
-              {category !== "all" &&
-                (() => {
-                  const categoryConfig =
-                    CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS] ??
-                    CATEGORY_COLORS.all;
-                  const CategoryIcon = categoryConfig?.icon;
-                  return (
-                    <Chip
-                      icon={CategoryIcon ? <CategoryIcon /> : undefined}
-                      label={categoryConfig?.label ?? category}
-                      onDelete={() => setCategory("all")}
-                      size="small"
-                      sx={{
-                        fontWeight: 700,
-                        textTransform: "capitalize",
-                        bgcolor: categoryConfig?.color ?? "primary.main",
-                        color: "white",
-                        "& .MuiChip-icon": {
+            {/* Search and Found Count Header */}
+            <Box
+              display="flex"
+              flexDirection={{ xs: "column", sm: "row" }}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="space-between"
+              gap={2}
+              mb={3}
+            >
+              <Box display="flex" alignItems="center" gap={2}>
+                <Typography variant="body2" color="text.secondary">
+                  Found : {campaigns.length} Campaigns
+                </Typography>
+                {category !== "all" &&
+                  (() => {
+                    const categoryConfig =
+                      CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS] ??
+                      CATEGORY_COLORS.all;
+                    const CategoryIcon = categoryConfig?.icon;
+                    return (
+                      <Chip
+                        icon={CategoryIcon ? <CategoryIcon /> : undefined}
+                        label={categoryConfig?.label ?? category}
+                        onDelete={() => setCategory("all")}
+                        size="small"
+                        sx={{
+                          fontWeight: 700,
+                          textTransform: "capitalize",
+                          bgcolor: categoryConfig?.color ?? "primary.main",
                           color: "white",
-                        },
-                      }}
-                    />
-                  );
-                })()}
-              {searchQuery && (
-                <Chip
-                  label={`Search: ${searchQuery}`}
-                  onDelete={handleClearSearch}
-                  color="primary"
-                  variant="outlined"
+                          "& .MuiChip-icon": {
+                            color: "white",
+                          },
+                        }}
+                      />
+                    );
+                  })()}
+              </Box>
+
+              {!isMdUp && (
+                <TextField
+                  fullWidth
                   size="small"
+                  placeholder="Search campaigns..."
+                  variant="outlined"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    const newParams = new URLSearchParams(searchParams.toString());
+                    if (v) newParams.set("query", v);
+                    else newParams.delete("query");
+                    router.push(`/campaign?${newParams.toString()}`);
+                  }}
+                  sx={{
+                    bgcolor: "rgba(255,255,255,0.5)",
+                    borderRadius: 4,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 4,
+                      fontSize: "0.9rem",
+                      height: "36px",
+                      paddingRight: "2px",
+                    },
+                    "& .MuiOutlinedInput-input": {
+                      padding: "2px 2px",
+                    },
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon color="action" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               )}
             </Box>
+
             <CampaignList
               campaigns={filtered}
               onEdit={() => {}}
               onDelete={handleDelete}
             />
+
+            {hasMore && (
+              <Box display="flex" justifyContent="center" mt={6}>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  disabled={loading}
+                  onClick={() => setOffset((prev) => prev + LIMIT)}
+                  sx={{
+                    borderRadius: "12px",
+                    fontWeight: 700,
+                    px: 4,
+                    borderColor: "black",
+                    color: "black",
+                    "&:hover": {
+                      borderColor: "#12C998",
+                      bgcolor: "rgba(18, 201, 152, 0.04)",
+                    },
+                  }}
+                >
+                  {loading ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    "LOAD MORE"
+                  )}
+                </Button>
+              </Box>
+            )}
           </Grid>
         </Grid>
 
@@ -327,6 +425,13 @@ export default function CampaignComponent() {
                 onClear={() => {
                   handleClearAll();
                   setMobileOpen(false);
+                }}
+                searchQuery={searchQuery}
+                onSearchChange={(v) => {
+                  const newParams = new URLSearchParams(searchParams.toString());
+                  if (v) newParams.set("query", v);
+                  else newParams.delete("query");
+                  router.push(`/campaign?${newParams.toString()}`);
                 }}
               />
             </Box>

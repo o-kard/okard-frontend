@@ -11,6 +11,9 @@ export const fetchCampaigns = async (
   sort?: string,
   state?: string,
   clerkId?: string,
+  limit?: number,
+  offset?: number,
+  includeClosed?: boolean,
 ): Promise<Campaign[]> => {
   const params = new URLSearchParams();
   if (category) params.append("category", category);
@@ -18,6 +21,9 @@ export const fetchCampaigns = async (
   if (sort) params.append("sort", sort);
   if (state) params.append("state", state);
   if (clerkId) params.append("clerk_id", clerkId);
+  if (limit !== undefined) params.append("limit", limit.toString());
+  if (offset !== undefined) params.append("offset", offset.toString());
+  if (includeClosed !== undefined) params.append("include_closed", includeClosed.toString());
 
   const qs = params.toString();
   return request<Campaign[]>(`${API_PATH}?${qs}`);

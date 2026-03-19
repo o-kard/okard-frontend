@@ -18,6 +18,9 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
+import SearchIcon from "@mui/icons-material/Search";
+import { TextField, InputAdornment } from "@mui/material";
+
 type Timing = "all" | "draft" | "published" | "archived";
 type ViewMode = "popular" | "recommended";
 type CategoryOption = { value: string; label: string };
@@ -35,6 +38,9 @@ type Props = {
   onClear?: () => void;
   sort?: string;
   onSortChange?: (v: string) => void;
+  searchQuery?: string;
+  onSearchChange?: (v: string) => void;
+  hideSearch?: boolean;
 };
 
 export default function SideFilters(props: Props) {
@@ -49,6 +55,9 @@ export default function SideFilters(props: Props) {
     onViewModeChange,
     viewMode,
     onClear,
+    searchQuery,
+    onSearchChange,
+    hideSearch = false,
   } = props;
 
   return (
@@ -64,6 +73,42 @@ export default function SideFilters(props: Props) {
         boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
       }}
     >
+      {!hideSearch && onSearchChange && (
+        <>
+          <Typography variant="body2" fontWeight={600} sx={{ mb: 2 }}>
+            Search
+          </Typography>
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="Search campaigns..."
+            variant="outlined"
+            value={searchQuery || ""}
+            onChange={(e) => onSearchChange(e.target.value)}
+            sx={{
+              mb: 2,
+              bgcolor: "rgba(255,255,255,0.5)",
+              borderRadius: 4,
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 4,
+                fontSize: "0.9rem",
+                height: "36px",
+                paddingRight: "2px",
+              },
+              "& .MuiOutlinedInput-input": {
+                padding: "2px 2px",
+              },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </>
+      )}
       <Typography variant="body2" fontWeight={600} sx={{ mb: 2 }}>
         Feed Options
       </Typography>
