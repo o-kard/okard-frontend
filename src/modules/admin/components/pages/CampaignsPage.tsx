@@ -23,7 +23,11 @@ import {
   TableCell,
   TableBody,
 } from "@mui/material";
-import { fetchCampaigns, changeCampaignState, deleteCampaign } from "@/modules/campaign/api/api";
+import {
+  fetchCampaigns,
+  changeCampaignState,
+  deleteCampaign,
+} from "@/modules/campaign/api/api";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -31,7 +35,9 @@ import DialogActions from "@mui/material/DialogActions";
 import { useAuth } from "@clerk/nextjs";
 
 const statusColors: Record<string, string> = {
+  published: "#12C998",
   active: "#12C998",
+  suspend: "#ff5252",
   suspended: "#ff5252",
   pending: "#ff8000",
 };
@@ -205,7 +211,7 @@ export default function CampaignsPage() {
     if (!selectedId) return;
     try {
       const token = await getToken();
-      const newStatus = currentStatus === "active" ? "suspended" : "active";
+      const newStatus = currentStatus === "published" ? "suspend" : "published";
       await changeCampaignState(selectedId, newStatus, token);
       setCampaigns((prev) =>
         prev.map((c) =>

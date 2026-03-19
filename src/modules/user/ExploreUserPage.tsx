@@ -50,8 +50,10 @@ export default function ExploreUserPage() {
         const matchesRole = roleFilter === "all" ||
             (roleFilter === "creator" && user.role?.toLowerCase() === "creator") ||
             (roleFilter === "user" && user.role?.toLowerCase() === "user");
+        
+        const isNotSuspended = user.status !== "suspended";
 
-        return matchesSearch && matchesRole;
+        return matchesSearch && matchesRole && isNotSuspended;
     });
 
     // Pagination

@@ -206,6 +206,14 @@ export default function PublicProfilePanel({
               >
                 {displayEmail}
               </Typography>
+              {profile?.status === "suspended" && (
+                <Chip
+                  label="Suspended"
+                  size="small"
+                  color="error"
+                  sx={{ mt: 1.5, fontWeight: 700, borderRadius: 1.5 }}
+                />
+              )}
             </Box>
 
             <Divider sx={{ my: 3 }} />
@@ -277,6 +285,19 @@ export default function PublicProfilePanel({
                       "& .MuiChip-icon": {
                         color: "white",
                       },
+                    }}
+                  />
+                )}
+                {profile?.status === "suspended" && (
+                  <Chip
+                    label="Suspended"
+                    color="error"
+                    variant="outlined"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: "0.9rem",
+                      px: 1,
+                      borderWidth: 2,
                     }}
                   />
                 )}
