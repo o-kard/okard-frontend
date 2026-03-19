@@ -51,7 +51,7 @@ import ContributionsPanel from "@/modules/user/components/UserContributionsPanel
 import CampaignsPanel from "@/modules/user/components/UserCampaignsPanel";
 import UserBookmarksPanel from "@/modules/user/components/UserBookmarksPanel";
 import { getUser, updateUser } from "@/modules/user/api/api";
-import { fetchCampaigns } from "@/modules/campaign/api/api";
+import { fetchCampaigns, fetchCampaignById, fetchCampaignsByUserId } from "@/modules/campaign/api/api";
 import { Campaign } from "@/modules/campaign/types/campaign";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { updateCreator } from "@/modules/creator/api/api";
@@ -61,7 +61,6 @@ import { useAddEmailAddress } from "@/hooks/useAddEmailAddress";
 import { validatePwdPair } from "@/utils/validation";
 import { getContributeByUserId } from "@/modules/contributor/api/api";
 import { ContributorWithCampaign } from "@/modules/contributor/types";
-import { fetchCampaignById } from "@/modules/campaign/api/api";
 
 // Optional: gate page behind DB user check
 // import { useRequireUserInDb } from "@/hooks/useRequireUserInDb";
@@ -177,45 +176,44 @@ function UserContent() {
         if (r) {
           console.log("Fetched user profile:", r);
           if (!abort) setProfile(r);
-        }
-
-        // Fetch campaigns
-        if (user?.id) {
-          const userCampaigns = await fetchCampaigns(
-            undefined,
-            undefined,
-            "newest",
-            "all",
-            user.id,
-          );
-          if (!abort) {
-            setCampaigns(userCampaigns || []);
-            setCampaignsLoading(false);
+          
+          // Fetch campaigns only if creator
+          if (r.role === "creator") {
+            const userCampaigns = await fetchCampaignsByUserId(r.id);
+            if (!abort) {
+              setCampaigns(userCampaigns || []);
+              setCampaignsLoading(false);
+            }
+          } else {
+            if (!abort) setCampaignsLoading(false);
           }
-        }
 
-        // Fetch contributions
-        if (profile?.id || r?.id) {
-          const userId_ = profile?.id || r?.id;
-          const userContribs = await getContributeByUserId(userId_);
+          // Fetch contributions
+          const userContribs = await getContributeByUserId(r.id);
           if (!abort) {
             setContributions(userContribs || []);
             setContributionsLoading(false);
           }
-        } else {
-          if (!abort) setContributionsLoading(false);
         }
-
-        // router.replace("/");
       } catch (err) {
         console.error("Failed to fetch user or campaigns:", err);
-        if (!abort) setCampaignsLoading(false);
+        if (!abort) {
+          setCampaignsLoading(false);
+          setContributionsLoading(false);
+        }
       }
     })();
     return () => {
       abort = true;
     };
   }, [isLoaded, user, haveUserDb]);
+
+  // Tab guard: if user is not a creator, they shouldn't be in the campaigns tab
+  useEffect(() => {
+    if (profile && profile.role !== "creator" && tab === "campaigns") {
+      router.replace(buildTabHref("profile"));
+    }
+  }, [profile, tab, router]);
 
   useEffect(() => {
     if (tab === "edit") {
@@ -489,12 +487,14 @@ function UserContent() {
                     label="Contributions"
                     active={isActiveTab(tab, "contributions")}
                   />
-                  <NavItem
-                    href={buildTabHref("campaigns")}
-                    icon={<DashboardCustomizeIcon />}
-                    label="My Campaigns"
-                    active={isActiveTab(tab, "campaigns")}
-                  />
+                  {profile?.role === "creator" && (
+                    <NavItem
+                      href={buildTabHref("campaigns")}
+                      icon={<DashboardCustomizeIcon />}
+                      label="My Campaigns"
+                      active={isActiveTab(tab, "campaigns")}
+                    />
+                  )}
                   <NavItem
                     href={buildTabHref("bookmarks")}
                     icon={<BookmarkIcon />}

@@ -255,7 +255,7 @@ export default function PublicProfilePanel({
 
         {/* RIGHT CONTENT */}
         <Grid size={{ xs: 12, md: 9, lg: 9.5 }}>
-          {tab === "profile" && (
+          {(tab === "profile" || (tab === "campaigns" && !isCreator)) && (
             <Paper sx={{ p: 3, borderRadius: 3, bgcolor: "#fff" }}>
               <Box
                 sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}
