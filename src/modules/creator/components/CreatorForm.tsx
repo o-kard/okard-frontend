@@ -481,7 +481,7 @@ export default function CreatorRegisterForm({
                           htmlFor="email"
                           sx={{ mb: 0.5, fontSize: "0.875rem", fontWeight: 500 }}
                         >
-                          Email
+                          Email <span style={{ color: "#d32f2f" }}>*</span>
                         </InputLabel>
                         <TextField
                           id="email"
@@ -491,7 +491,9 @@ export default function CreatorRegisterForm({
                           size="small"
                           type="email"
                           disabled={!!initial?.email}
-                          {...register("user.email")}
+                          {...register("user.email", { required: "Email is required" })}
+                          error={!!errors.user?.email}
+                          helperText={errors.user?.email?.message}
                           sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
                         />
                       </Box>

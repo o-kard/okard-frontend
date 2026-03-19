@@ -88,7 +88,9 @@ export default function ProfilePanel({ campaignCount, contributionsCount }: Prof
 
 
   const isCreator = profile?.role === 'creator';
+  const isAdmin = profile?.role === 'admin';
   const creatorData = profile?.creator;
+  const pendingCreator = !isCreator && creatorData?.status === 'pending';
 
   return (
     <Paper sx={{ p: 3, borderRadius: 3 }}>
@@ -311,7 +313,7 @@ export default function ProfilePanel({ campaignCount, contributionsCount }: Prof
         )}
       </Grid>
 
-      {!isCreator && (
+      {!isCreator && !pendingCreator && !isAdmin && (
         <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 4 }}>
           <Link href="/creator/register" style={{ textDecoration: "none" }}>
             <Button
@@ -337,6 +339,29 @@ export default function ProfilePanel({ campaignCount, contributionsCount }: Prof
               Become A Creator
             </Button>
           </Link>
+        </Box>
+      )}
+
+      {pendingCreator && (
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 4 }}>
+          <Button
+            variant="contained"
+            disabled
+            sx={{
+              fontWeight: 700,
+              textTransform: "none",
+              fontSize: "1rem",
+              px: 4,
+              py: 1.2,
+              borderRadius: 2,
+              "&.Mui-disabled": {
+                background: "rgba(0, 0, 0, 0.08)",
+                color: "rgba(0, 0, 0, 0.38)",
+              }
+            }}
+          >
+            Status: Pending Approval
+          </Button>
         </Box>
       )}
     </Paper>
