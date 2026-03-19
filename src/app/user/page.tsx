@@ -35,6 +35,7 @@ import {
   IconButton,
   CircularProgress,
   Stack,
+  Chip,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
@@ -462,6 +463,14 @@ function UserContent() {
                       >
                         {user?.primaryEmailAddress?.emailAddress ?? ""}
                       </Typography>
+                      {profile?.status === "suspended" && (
+                        <Chip
+                          label="Suspended"
+                          size="small"
+                          color="error"
+                          sx={{ mt: 1.5, fontWeight: 700, borderRadius: 1.5 }}
+                        />
+                      )}
                     </MuiBox>
                   </MuiBox>
                 )}
