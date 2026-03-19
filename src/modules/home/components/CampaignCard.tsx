@@ -17,10 +17,12 @@ import BookmarkIcon from "@mui/icons-material/Bookmark";
 import IconButton from "@mui/material/IconButton";
 import { resolveMediaUrl } from "@/utils/mediaUrl";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CATEGORY_COLORS } from "../utils/categoryColors";
+import { useAuth } from "@clerk/nextjs";
+import { toggleBookmark } from "@/modules/campaign/api/api";
 
 export default function ProjectCard({
   campaign,
@@ -29,13 +31,22 @@ export default function ProjectCard({
   campaign: Campaign | CampaignSummary;
   onHoverBackground?: (img: string | null) => void;
 }) {
-  const [bookmarked, setBookmarked] = useState(false);
+  const { getToken } = useAuth();
+  const [bookmarked, setBookmarked] = useState(campaign.is_bookmarked ?? false);
+
+  useEffect(() => {
+    setBookmarked(campaign.is_bookmarked ?? false);
+  }, [campaign.is_bookmarked]);
+
   const router = useRouter();
   const categoryKey = String(campaign.category) as keyof typeof CATEGORY_COLORS;
 
   const category = CATEGORY_COLORS[categoryKey] ?? CATEGORY_COLORS.all;
   return (
-    <Link href={`/campaign/show/${campaign.id}`} style={{ textDecoration: "none" }}>
+    <Link
+      href={`/campaign/show/${campaign.id}`}
+      style={{ textDecoration: "none" }}
+    >
       <Card
         onMouseEnter={() => {
           const img = campaign.images?.[0]?.path
@@ -98,10 +109,22 @@ export default function ProjectCard({
         >
           <IconButton
             onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
+            onClick={async (e) => {
               e.preventDefault();
               e.stopPropagation();
-              setBookmarked((prev) => !prev);
+
+              try {
+                const token = await getToken();
+                if (!token) {
+                  // Maybe redirect to sign-in or show a message
+                  router.push("/sign-in");
+                  return;
+                }
+                const res = await toggleBookmark(campaign.id, token);
+                setBookmarked(res.bookmarked);
+              } catch (err) {
+                console.error("Failed to toggle bookmark", err);
+              }
             }}
             sx={{
               width: 44,
@@ -120,7 +143,7 @@ export default function ProjectCard({
             }}
           >
             {bookmarked ? (
-              <BookmarkIcon sx={{ color: "rgba(255, 204, 0, 1)" }} />
+              <BookmarkIcon sx={{ color: "rgba(18, 201, 152, 1)" }} />
             ) : (
               <BookmarkBorderIcon sx={{ color: "#333" }} />
             )}

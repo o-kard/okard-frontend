@@ -20,7 +20,10 @@ type ImageCardProps = {
 export default function ImageCard({ campaign, big = false }: ImageCardProps) {
   const [bookmarked, setBookmarked] = useState(false);
   return (
-    <Link href={`/campaign/show/${campaign.id}`} style={{ textDecoration: "none" }}>
+    <Link
+      href={`/campaign/show/${campaign.id}`}
+      style={{ textDecoration: "none" }}
+    >
       <Box
         className="campaign-card"
         sx={{
@@ -105,12 +108,12 @@ export default function ImageCard({ campaign, big = false }: ImageCardProps) {
             }}
           >
             {bookmarked ? (
-              <BookmarkIcon sx={{ color: "rgba(255, 204, 0, 1)" }} />
+              <BookmarkIcon sx={{ color: "rgba(18, 201, 152,1)" }} />
             ) : (
               <BookmarkBorderIcon sx={{ color: "#333" }} />
             )}
           </IconButton>
-        </Box>
+        </Box>ดรป
         {/* Text */}
         <Box
           sx={{

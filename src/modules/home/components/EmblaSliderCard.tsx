@@ -43,7 +43,7 @@ export default function EmblaSliderCard({ onHoverBackground }: { onHoverBackgrou
               textShadow: "0 4px 20px rgba(18,201,152,0.45)",
             }}
           >
-            INTEREST IN
+            INTERESTED IN
           </span>
         </Typography>
 

@@ -7,7 +7,7 @@ import { Campaign, CampaignSummary } from "@/modules/campaign/types/campaign";
 import CampaignTabs from "./CampaignTabs";
 import CampaignSlider from "./CampaignSlider";
 import { getTopPledgedCampaigns } from "../api/api";
-import { getForYouCampaigns } from "@/modules/campaign/api/api";
+import { getForYouCampaigns, fetchBookmarks } from "@/modules/campaign/api/api";
 import { useUser, useAuth } from "@clerk/nextjs";
 
 const DEFAULT_LIMIT = 10;
@@ -22,7 +22,9 @@ export default function CampaignPart({ onHoverBackground }: Props) {
   const clerkId = user?.id;
   const [tab, setTab] = useState<TabKey>("popular");
   const [category, setCategory] = useState<string | null>(null);
-  const [campaigns, setCampaigns] = useState<(Campaign | CampaignSummary)[]>([]);
+  const [campaigns, setCampaigns] = useState<(Campaign | CampaignSummary)[]>(
+    [],
+  );
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -32,6 +34,17 @@ export default function CampaignPart({ onHoverBackground }: Props) {
     const fetchData = async () => {
       try {
         let data: (Campaign | CampaignSummary)[] = [];
+        let bookmarks: Campaign[] = [];
+
+        const token = await getToken();
+
+        if (isSignedIn && token) {
+          try {
+            bookmarks = await fetchBookmarks(token);
+          } catch (err) {
+            console.error("Failed to fetch bookmarks for merging", err);
+          }
+        }
 
         if (tab === "popular") {
           data = await getTopPledgedCampaigns({
@@ -41,8 +54,16 @@ export default function CampaignPart({ onHoverBackground }: Props) {
         }
 
         if (tab === "forYou") {
-          const token = await getToken();
           data = await getForYouCampaigns(token || "");
+        }
+
+        // Merge bookmarks
+        if (isSignedIn && bookmarks.length > 0) {
+          const bookmarkIds = new Set(bookmarks.map((b) => b.id));
+          data = data.map((c) => ({
+            ...c,
+            is_bookmarked: bookmarkIds.has(c.id),
+          }));
         }
 
         if (!cancelled) {
