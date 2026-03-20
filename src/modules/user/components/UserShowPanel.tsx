@@ -33,7 +33,8 @@ import {
   Globe,
   ExternalLink,
 } from "lucide-react";
-import { SocialLink } from "@/modules/creator/types/creator";
+import { SocialLink, VerificationStatus } from "@/modules/creator/types/creator";
+import { User } from "@/modules/user/types/user";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { InfoItem } from "@/components/ui/InfoItem";
 
@@ -59,7 +60,7 @@ interface ProfilePanelProps {
 export default function ProfilePanel({ campaignCount, contributionsCount }: ProfilePanelProps) {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
-  const [profile, setProfile] = useState<any | null>(null);
+  const [profile, setProfile] = useState<User | null>(null);
 
   useEffect(() => {
     if (!isLoaded || !user) return;
@@ -90,7 +91,7 @@ export default function ProfilePanel({ campaignCount, contributionsCount }: Prof
   const isCreator = profile?.role === 'creator';
   const isAdmin = profile?.role === 'admin';
   const creatorData = profile?.creator;
-  const pendingCreator = !isCreator && creatorData?.status === 'pending';
+  const pendingCreator = creatorData?.verification_status === VerificationStatus.pending;
 
   return (
     <Paper sx={{ p: 3, borderRadius: 3 }}>
@@ -304,7 +305,7 @@ export default function ProfilePanel({ campaignCount, contributionsCount }: Prof
                   <CampaignIcon sx={{ color: "#fff" }} />
                 </Box>
                 <Typography variant="h4" fontWeight={700}>
-                  {campaignCount ?? profile?.campaignCount ?? 0}
+                  {campaignCount ?? creatorData?.campaign_number ?? 0}
                 </Typography>
               </Stack>
               <Typography color="text.secondary">My Campaign(s)</Typography>
