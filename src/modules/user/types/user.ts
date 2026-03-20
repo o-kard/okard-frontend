@@ -1,4 +1,5 @@
 import { Media } from "@/modules/campaign/types/campaign";
+import { Creator } from "@/modules/creator/types/creator";
 
 export type User = {
   id: string;
@@ -11,7 +12,7 @@ export type User = {
   tel: string;
   address: string;
   country_id: string | null;
-  country?: string | null;
+  country?: { en_name: string } | null;
   birth_date?: Date | null;
   role: string | null;
   contribution_number: number;
@@ -19,7 +20,7 @@ export type User = {
   created_at: Date;
   updated_at: Date;
   user_description?: string;
-  creator?: any; // Avoiding circular dependency or complex import for now, or import properly if possible.
+  creator?: Creator | null;
   media?: Media | null;
 };
 
