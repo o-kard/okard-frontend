@@ -3,10 +3,13 @@ import { Campaign, CampaignSummary } from "@/modules/campaign/types/campaign";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import IconButton from "@mui/material/IconButton";
-import { useState } from "react";
+import { toggleBookmark } from "@/modules/campaign/api/api";
+import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import Link from "next/dist/client/link";
 import { resolveMediaUrl } from "@/utils/mediaUrl";
+import { dispatchBookmarkToggled, subscribeToBookmarkToggled } from "@/utils/events";
 
 type ResponsiveNumber =
   | number
@@ -19,8 +22,23 @@ type ImageCardProps = {
 };
 
 export default function ImageCard({ campaign, big = false }: ImageCardProps) {
-  const [bookmarked, setBookmarked] = useState(false);
-  const { isSignedIn } = useAuth();
+  const { getToken, isSignedIn } = useAuth();
+  const [bookmarked, setBookmarked] = useState(campaign.is_bookmarked ?? false);
+  const router = useRouter();
+
+  useEffect(() => {
+    setBookmarked(campaign.is_bookmarked ?? false);
+  }, [campaign.is_bookmarked]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToBookmarkToggled((payload) => {
+      if (payload.campaignId === campaign.id) {
+        setBookmarked(payload.isBookmarked);
+      }
+    });
+    return unsubscribe;
+  }, [campaign.id]);
+
   return (
     <Link
       href={`/campaign/show/${campaign.id}`}
@@ -89,10 +107,22 @@ export default function ImageCard({ campaign, big = false }: ImageCardProps) {
           >
             <IconButton
               onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setBookmarked((prev) => !prev);
+
+                try {
+                  const token = await getToken();
+                  if (!token) {
+                    router.push("/sign-in");
+                    return;
+                  }
+                  const res = await toggleBookmark(campaign.id, token);
+                  setBookmarked(res.bookmarked);
+                  dispatchBookmarkToggled(campaign.id, res.bookmarked);
+                } catch (err) {
+                  console.error("Failed to toggle bookmark", err);
+                }
               }}
               sx={{
                 width: 44,

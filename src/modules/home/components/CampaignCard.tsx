@@ -23,6 +23,7 @@ import { useRouter } from "next/navigation";
 import { CATEGORY_COLORS } from "../utils/categoryColors";
 import { useAuth } from "@clerk/nextjs";
 import { toggleBookmark } from "@/modules/campaign/api/api";
+import { dispatchBookmarkToggled, subscribeToBookmarkToggled } from "@/utils/events";
 
 export default function ProjectCard({
   campaign,
@@ -37,6 +38,15 @@ export default function ProjectCard({
   useEffect(() => {
     setBookmarked(campaign.is_bookmarked ?? false);
   }, [campaign.is_bookmarked]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToBookmarkToggled((payload) => {
+      if (payload.campaignId === campaign.id) {
+        setBookmarked(payload.isBookmarked);
+      }
+    });
+    return unsubscribe;
+  }, [campaign.id]);
 
   const router = useRouter();
   const categoryKey = String(campaign.category) as keyof typeof CATEGORY_COLORS;
@@ -123,6 +133,7 @@ export default function ProjectCard({
                   }
                   const res = await toggleBookmark(campaign.id, token);
                   setBookmarked(res.bookmarked);
+                  dispatchBookmarkToggled(campaign.id, res.bookmarked);
                 } catch (err) {
                   console.error("Failed to toggle bookmark", err);
                 }
