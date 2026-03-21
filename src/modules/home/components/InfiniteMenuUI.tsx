@@ -2,7 +2,7 @@
 
 import { FC } from "react";
 import Link from "next/link";
-import { Box, Typography, IconButton, Select, MenuItem } from "@mui/material";
+import { Box, Typography, IconButton, Select, MenuItem, Chip } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { CampaignSummary } from "@/modules/campaign/types/campaign";
 import { CATEGORY_COLORS } from "../utils/categoryColors";
@@ -123,18 +123,33 @@ const InfiniteMenuUI: FC<Props> = ({
               // bgcolor: "red",
             }}
           >
-            <Typography
-              sx={{
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              {activeItem?.effective_start_from && new Date((activeItem.effective_start_from as string).replace(" ", "T")) > new Date() && (
+                <Chip
+                  label="Upcoming"
+                  size="small"
+                  sx={{
+                    bgcolor: "warning.main",
+                    color: "warning.contrastText",
+                    fontWeight: 800,
+                    fontSize: "0.75rem",
+                    height: 24,
+                  }}
+                />
+              )}
+              <Typography
+                sx={{
                 mb: 1,
-                fontSize: "1rem",
-                fontWeight: 700,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                color: "rgba(255,255,255,0.7)",
-              }}
-            >
-              {activeItem?.category}
-            </Typography>
+                  fontSize: "1rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.7)",
+                }}
+              >
+                {activeItem?.category}
+              </Typography>
+            </Box>
             {/* Title */}
             <Typography
               component={Link}

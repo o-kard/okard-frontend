@@ -31,7 +31,7 @@ export default function ProjectCard({
   campaign: Campaign | CampaignSummary;
   onHoverBackground?: (img: string | null) => void;
 }) {
-  const { getToken } = useAuth();
+  const { getToken, isSignedIn } = useAuth();
   const [bookmarked, setBookmarked] = useState(campaign.is_bookmarked ?? false);
 
   useEffect(() => {
@@ -94,61 +94,63 @@ export default function ProjectCard({
         />
 
         {/* 🔖 Bookmark button */}
-        <Box
-          className="favorite"
-          sx={{
-            position: "absolute",
-            top: 12,
-            right: 12,
-            zIndex: 3,
-
-            opacity: 0,
-            transform: "scale(0.9)",
-            transition: "all 0.25s ease",
-          }}
-        >
-          <IconButton
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={async (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-
-              try {
-                const token = await getToken();
-                if (!token) {
-                  // Maybe redirect to sign-in or show a message
-                  router.push("/sign-in");
-                  return;
-                }
-                const res = await toggleBookmark(campaign.id, token);
-                setBookmarked(res.bookmarked);
-              } catch (err) {
-                console.error("Failed to toggle bookmark", err);
-              }
-            }}
+        {isSignedIn && (
+          <Box
+            className="favorite"
             sx={{
-              width: 44,
-              height: 44,
-              borderRadius: "50%",
+              position: "absolute",
+              top: 12,
+              right: 12,
+              zIndex: 3,
 
-              background: "rgba(255,255,255,0.65)",
-              backdropFilter: "blur(8px)",
-              WebkitBackdropFilter: "blur(8px)",
-
-              boxShadow: "0 6px 20px rgba(0,0,0,0.25)",
-
-              "&:hover": {
-                background: "rgba(255,255,255,0.85)",
-              },
+              opacity: 0,
+              transform: "scale(0.9)",
+              transition: "all 0.25s ease",
             }}
           >
-            {bookmarked ? (
-              <BookmarkIcon sx={{ color: "rgba(18, 201, 152, 1)" }} />
-            ) : (
-              <BookmarkBorderIcon sx={{ color: "#333" }} />
-            )}
-          </IconButton>
-        </Box>
+            <IconButton
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                try {
+                  const token = await getToken();
+                  if (!token) {
+                    // Maybe redirect to sign-in or show a message
+                    router.push("/sign-in");
+                    return;
+                  }
+                  const res = await toggleBookmark(campaign.id, token);
+                  setBookmarked(res.bookmarked);
+                } catch (err) {
+                  console.error("Failed to toggle bookmark", err);
+                }
+              }}
+              sx={{
+                width: 44,
+                height: 44,
+                borderRadius: "50%",
+
+                background: "rgba(255,255,255,0.65)",
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
+
+                boxShadow: "0 6px 20px rgba(0,0,0,0.25)",
+
+                "&:hover": {
+                  background: "rgba(255,255,255,0.85)",
+                },
+              }}
+            >
+              {bookmarked ? (
+                <BookmarkIcon sx={{ color: "rgba(18, 201, 152, 1)" }} />
+              ) : (
+                <BookmarkBorderIcon sx={{ color: "#333" }} />
+              )}
+            </IconButton>
+          </Box>
+        )}
 
         {/* Gradient shadow */}
         <Box
@@ -316,28 +318,106 @@ export default function ProjectCard({
               goal={campaign.goal_amount ?? 0}
             />
 
-            <Button
-              variant="contained"
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                router.push(`/payment/${campaign.id}`);
-              }}
-              sx={{
-                alignSelf: "center",
-                color: "#fff",
-                bgcolor: "#12C998",
-                borderRadius: 2,
-                fontWeight: "bold",
-                fontFamily: "var(--font-montserrat)",
-                px: 3,
-              }}
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between"
+              width="100%"
             >
-              <Box display="flex" alignItems="center" gap={1}>
-                Contribute <ThumbUpAltIcon />
+              <Box>
+                {(() => {
+                  const now = new Date();
+                  const startDate = campaign.effective_start_from
+                    ? new Date(campaign.effective_start_from.replace(" ", "T"))
+                    : null;
+                  const endDate = campaign.effective_end_date
+                    ? new Date(campaign.effective_end_date.replace(" ", "T"))
+                    : null;
+
+                  const isExpired = endDate ? endDate < now : false;
+                  const isUpcoming = startDate ? startDate > now : false;
+                  const isSuspended = campaign.state === "suspend";
+                  const isOngoing =
+                    (campaign.state === "published" ||
+                      campaign.state === "success") &&
+                    !isExpired &&
+                    !isUpcoming;
+
+                  if (isSuspended)
+                    return (
+                      <Chip
+                        label="SUSPENDED"
+                        size="small"
+                        sx={{
+                          fontWeight: 700,
+                          bgcolor: "error.main",
+                          color: "white",
+                        }}
+                      />
+                    );
+                  if (isUpcoming)
+                    return (
+                      <Chip
+                        label="UPCOMING"
+                        size="small"
+                        sx={{
+                          fontWeight: 700,
+                          bgcolor: "info.main",
+                          color: "white",
+                        }}
+                      />
+                    );
+                  if (isExpired)
+                    return (
+                      <Chip
+                        label="END"
+                        size="small"
+                        sx={{
+                          fontWeight: 700,
+                          bgcolor: "grey.500",
+                          color: "white",
+                        }}
+                      />
+                    );
+                  if (isOngoing)
+                    return (
+                      <Chip
+                        label="ONGOING"
+                        size="small"
+                        sx={{
+                          fontWeight: 700,
+                          bgcolor: "warning.main",
+                          color: "black",
+                        }}
+                      />
+                    );
+                  return null;
+                })()}
               </Box>
-            </Button>
+
+              <Button
+                variant="contained"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  router.push(`/payment/${campaign.id}`);
+                }}
+                sx={{
+                  alignSelf: "center",
+                  color: "#fff",
+                  bgcolor: "#12C998",
+                  borderRadius: 2,
+                  fontWeight: "bold",
+                  fontFamily: "var(--font-montserrat)",
+                  px: 3,
+                }}
+              >
+                <Box display="flex" alignItems="center" gap={1}>
+                  Contribute <ThumbUpAltIcon />
+                </Box>
+              </Button>
+            </Box>
           </Box>
         </Box>
       </Card>

@@ -56,7 +56,12 @@ export default function UserForm({
   isUserHavePassword,
   imageUrl,
 }: Props) {
-  const { register, handleSubmit, setValue } = useForm<FormValues>({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<FormValues>({
     defaultValues: {
       clerk_id: "",
       email: null,
@@ -340,7 +345,19 @@ export default function UserForm({
                 fullWidth
                 required
                 size="small"
-                {...register("tel", { required: true })}
+                {...register("tel", {
+                  required: "Phone number is required",
+                  minLength: {
+                    value: 9,
+                    message: "Phone number must be at least 9 characters",
+                  },
+                  pattern: {
+                    value: /^[0-9+() -]+$/,
+                    message: "Invalid phone number format",
+                  },
+                })}
+                error={!!errors.tel}
+                helperText={errors.tel?.message}
                 sx={{ bgcolor: "white" }}
               />
             </Grid>
@@ -351,7 +368,17 @@ export default function UserForm({
                 fullWidth
                 size="small"
                 InputLabelProps={{ shrink: true }}
-                {...register("birth_date")}
+                {...register("birth_date", {
+                  validate: (value) => {
+                    if (!value) return true;
+                    const selected = new Date(value);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return selected <= today || "Birth date cannot be in the future";
+                  },
+                })}
+                error={!!errors.birth_date}
+                helperText={errors.birth_date?.message}
                 sx={{ bgcolor: "white" }}
               />
             </Grid>

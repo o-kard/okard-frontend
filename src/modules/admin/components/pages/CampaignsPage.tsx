@@ -156,7 +156,7 @@ export default function CampaignsPage() {
           const goal = campaign.goal_amount || 0;
           const raised = campaign.current_amount || 0;
           const progress =
-            goal > 0 ? Math.min(100, Math.round((raised / goal) * 100)) : 0;
+            goal > 0 ? Math.round((raised / goal) * 100) : 0;
           return {
             id: campaign.id,
             name: campaign.campaign_header,
