@@ -135,8 +135,15 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
   useEffect(() => {
     async function load() {
       try {
-        const data = await getAllCampaigns();
-        setPopularCampaigns(data.slice(0, 2));
+        const data: Campaign[] = await getAllCampaigns();
+        console.log(data);
+        const ongoing = data.filter((c) => {
+          const isExpired = c.effective_end_date
+            ? new Date(c.effective_end_date.replace(" ", "T")) < new Date()
+            : false;
+          return c.state === "published" || (c.state === "success" && !isExpired);
+        });
+        setPopularCampaigns(ongoing.slice(0, 2));
       } catch (err) {
         console.error("Failed to load campaigns:", err);
       }

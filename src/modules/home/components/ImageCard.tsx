@@ -4,6 +4,7 @@ import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import IconButton from "@mui/material/IconButton";
 import { useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import Link from "next/dist/client/link";
 import { resolveMediaUrl } from "@/utils/mediaUrl";
 
@@ -19,6 +20,7 @@ type ImageCardProps = {
 
 export default function ImageCard({ campaign, big = false }: ImageCardProps) {
   const [bookmarked, setBookmarked] = useState(false);
+  const { isSignedIn } = useAuth();
   return (
     <Link
       href={`/campaign/show/${campaign.id}`}
@@ -71,49 +73,51 @@ export default function ImageCard({ campaign, big = false }: ImageCardProps) {
           }}
         />
         {/* Bookmark button */}
-        <Box
-          className="favorite"
-          sx={{
-            position: "absolute",
-            top: 12,
-            right: 12,
-            zIndex: 3,
-
-            opacity: 0,
-            transform: "scale(0.9)",
-            transition: "all 0.25s ease",
-          }}
-        >
-          <IconButton
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setBookmarked((prev) => !prev);
-            }}
+        {isSignedIn && (
+          <Box
+            className="favorite"
             sx={{
-              width: 44,
-              height: 44,
-              borderRadius: "50%",
+              position: "absolute",
+              top: 12,
+              right: 12,
+              zIndex: 3,
 
-              background: "rgba(255,255,255,0.65)",
-              backdropFilter: "blur(8px)",
-              WebkitBackdropFilter: "blur(8px)",
-
-              boxShadow: "0 6px 20px rgba(0,0,0,0.25)",
-
-              "&:hover": {
-                background: "rgba(255,255,255,0.85)",
-              },
+              opacity: 0,
+              transform: "scale(0.9)",
+              transition: "all 0.25s ease",
             }}
           >
-            {bookmarked ? (
-              <BookmarkIcon sx={{ color: "rgba(18, 201, 152,1)" }} />
-            ) : (
-              <BookmarkBorderIcon sx={{ color: "#333" }} />
-            )}
-          </IconButton>
-        </Box>ดรป
+            <IconButton
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setBookmarked((prev) => !prev);
+              }}
+              sx={{
+                width: 44,
+                height: 44,
+                borderRadius: "50%",
+
+                background: "rgba(255,255,255,0.65)",
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
+
+                boxShadow: "0 6px 20px rgba(0,0,0,0.25)",
+
+                "&:hover": {
+                  background: "rgba(255,255,255,0.85)",
+                },
+              }}
+            >
+              {bookmarked ? (
+                <BookmarkIcon sx={{ color: "rgba(18, 201, 152,1)" }} />
+              ) : (
+                <BookmarkBorderIcon sx={{ color: "#333" }} />
+              )}
+            </IconButton>
+          </Box>
+        )}ดรป
         {/* Text */}
         <Box
           sx={{

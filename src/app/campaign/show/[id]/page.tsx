@@ -49,6 +49,8 @@ import BookmarkIcon from "@mui/icons-material/Bookmark";
 import { predictionLabel } from "@/utils/label";
 import CommunityLeaderboard from "@/modules/campaign/components/CommunityLeaderboard";
 import { resolveMediaUrl } from "@/utils/mediaUrl";
+import LoadingScreen from "@/components/common/LoadingScreen";
+import { notFound } from "next/navigation";
 
 export default function CampaignDetailPage() {
   const params = useParams();
@@ -156,8 +158,20 @@ export default function CampaignDetailPage() {
       : `${process.env.NEXT_PUBLIC_API_URL}/api/campaign/${id}`;
 
     fetch(url)
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) {
+           if (r.status === 404) {
+             return null;
+           }
+           const data = await r.json().catch(() => ({}));
+           throw new Error(data.message || `HTTP ${r.status}`);
+        }
+        return r.json();
+      })
       .then((data) => {
+        if (!data) {
+          notFound();
+        }
         setCampaign(data);
         setIsBookmarked(data.is_bookmarked || false);
 
@@ -180,7 +194,7 @@ export default function CampaignDetailPage() {
           .finally(() => setLoadingRecommendations(false));
       })
       .catch(console.error);
-  }, [id, user?.id]);
+  }, [id, user?.id, isLoaded]);
 
   const handleBookmarkClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -207,7 +221,7 @@ export default function CampaignDetailPage() {
   const goal = Math.max(0, campaign?.goal_amount ?? 0);
   const current = Math.max(0, campaign?.current_amount ?? 0);
   const percent =
-    goal > 0 ? Math.min(100, Math.round((current / goal) * 100)) : 0;
+    goal > 0 ? Math.round((current / goal) * 100) : 0;
 
   const daysLeft = useMemo(() => {
     if (!campaign?.effective_end_date) return undefined;
@@ -216,12 +230,14 @@ export default function CampaignDetailPage() {
     return isFinite(diff) ? diff : undefined;
   }, [campaign?.effective_end_date]);
 
+  const isUpcoming = useMemo(() => {
+    if (!campaign?.effective_start_from) return false;
+    const start = new Date(campaign.effective_start_from.replace(" ", "T"));
+    return start > new Date();
+  }, [campaign?.effective_start_from]);
+
   if (!campaign) {
-    return (
-      <Container maxWidth={false}>
-        <Box sx={{ py: 8 }}>Loading...</Box>
-      </Container>
-    );
+    return <LoadingScreen message="Loading..." />;
   }
 
   const categoryConfig = CATEGORY_COLORS[campaign.category as keyof typeof CATEGORY_COLORS];
@@ -468,7 +484,6 @@ export default function CampaignDetailPage() {
                           component="span"
                           sx={{
                             fontSize: 20,
-                            color: "text.secondary",
                             fontWeight: 600,
                           }}
                         >
@@ -495,7 +510,7 @@ export default function CampaignDetailPage() {
 
                   <LinearProgress
                     variant="determinate"
-                    value={percent}
+                    value={Math.min(100, percent)}
                     sx={{
                       height: 12,
                       borderRadius: 6,
@@ -674,26 +689,28 @@ export default function CampaignDetailPage() {
                 alignItems="center"
                 sx={{ mb: 2.5, flexWrap: "wrap" }}
               >
-                <Button
-                  variant="outlined"
-                  onClick={handleBookmarkClick}
-                  startIcon={
-                    isBookmarked ? <BookmarkIcon /> : <BookmarkIconMini />
-                  }
-                  sx={{
-                    borderRadius: 2,
-                    textTransform: "none",
-                    fontWeight: 700,
-                    borderColor: "divider",
-                    color: isBookmarked ? "primary.main" : "text.primary",
-                    "&:hover": {
-                      borderColor: "text.primary",
-                      bgcolor: "transparent",
-                    },
-                  }}
-                >
-                  {isBookmarked ? "Saved" : "Save"}
-                </Button>
+                {user && (
+                  <Button
+                    variant="outlined"
+                    onClick={handleBookmarkClick}
+                    startIcon={
+                      isBookmarked ? <BookmarkIcon /> : <BookmarkIconMini />
+                    }
+                    sx={{
+                      borderRadius: 2,
+                      textTransform: "none",
+                      fontWeight: 700,
+                      borderColor: "divider",
+                      color: isBookmarked ? "primary.main" : "text.primary",
+                      "&:hover": {
+                        borderColor: "text.primary",
+                        bgcolor: "transparent",
+                      },
+                    }}
+                  >
+                    {isBookmarked ? "Saved" : "Save"}
+                  </Button>
+                )}
                 <IconButton
                   sx={{
                     color: "#1877F2",
@@ -790,17 +807,20 @@ export default function CampaignDetailPage() {
                 fullWidth
                 disabled={
                   campaign.state === "suspend" ||
-                  (daysLeft !== undefined && daysLeft < 0)
+                  (daysLeft !== undefined && daysLeft < 0) ||
+                  isUpcoming
                 }
                 sx={{
                   bgcolor:
                     campaign.state === "suspend" ||
-                    (daysLeft !== undefined && daysLeft < 0)
+                    (daysLeft !== undefined && daysLeft < 0) ||
+                    isUpcoming
                       ? "grey.400"
                       : "#18C59B",
                   background:
                     campaign.state === "suspend" ||
-                    (daysLeft !== undefined && daysLeft < 0)
+                    (daysLeft !== undefined && daysLeft < 0) ||
+                    isUpcoming
                       ? "grey.400"
                       : "linear-gradient(45deg, #18C59B 30%, #12a884 90%)",
                   color: "white",
@@ -809,19 +829,19 @@ export default function CampaignDetailPage() {
                   height: 60,
                   fontSize: 18,
                   letterSpacing: "0.02em",
-                  textTransform: "none",
+                  textTransform: "uppercase",
                   boxShadow:
-                    daysLeft !== undefined && daysLeft < 0
+                    (daysLeft !== undefined && daysLeft < 0) || isUpcoming
                       ? "none"
                       : "0 8px 24px rgba(24, 197, 155, 0.35)",
                   transition: "all 0.3s ease",
                   "&:hover": {
                     boxShadow:
-                      daysLeft !== undefined && daysLeft < 0
+                      (daysLeft !== undefined && daysLeft < 0) || isUpcoming
                         ? "none"
                         : "0 12px 28px rgba(24, 197, 155, 0.5)",
                     transform:
-                      daysLeft !== undefined && daysLeft < 0
+                      (daysLeft !== undefined && daysLeft < 0) || isUpcoming
                         ? "none"
                         : "translateY(-2px)",
                   },
@@ -829,10 +849,12 @@ export default function CampaignDetailPage() {
                 onClick={() => router.push(`/payment/${id}`)}
               >
                 {campaign.state === "suspend"
-                  ? "Campaign Suspended"
+                  ? "Suspended"
                   : daysLeft !== undefined && daysLeft < 0
-                    ? "Campaign Ended"
-                    : "Contribute this Campaign"}
+                    ? "Ended"
+                    : isUpcoming
+                      ? "Upcoming"
+                      : "Contribute this Campaign"}
               </Button>
             </Grid>
           </Grid>

@@ -12,7 +12,7 @@ export async function search(query: string): Promise<SearchResponse> {
 }
 
 export async function getAllCampaigns() {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaign`);
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaign?state=all`);
     if (!res.ok) throw new Error("Failed to fetch campaigns");
     return res.json();
 }

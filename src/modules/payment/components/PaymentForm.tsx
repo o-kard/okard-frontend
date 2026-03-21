@@ -37,6 +37,12 @@ export default function PaymentForm({
         label="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        error={email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
+        helperText={
+          email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+            ? "Invalid email format"
+            : ""
+        }
         fullWidth
       />
 

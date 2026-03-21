@@ -153,14 +153,27 @@ export default function CampaignComponent() {
 
           // Common filtering
           if (!includeClosed) {
-            campaigns = campaigns.filter((p) =>
-              ["published", "success"].includes(p.state),
-            );
+            campaigns = campaigns.filter((p) => {
+              const isExpired = p.effective_end_date
+                ? new Date(p.effective_end_date.replace(" ", "T")) < new Date()
+                : false;
+              return (
+                p.state === "published" || (p.state === "success" && !isExpired)
+              );
+            });
           }
           if (timing === "draft")
             campaigns = campaigns.filter((p) => p.state === "draft");
-          else if (timing === "published")
-            campaigns = campaigns.filter((p) => p.state === "published");
+          else if (timing === "published") {
+            campaigns = campaigns.filter((p) => {
+              const isExpired = p.effective_end_date
+                ? new Date(p.effective_end_date.replace(" ", "T")) < new Date()
+                : false;
+              return (
+                p.state === "published" || (p.state === "success" && !isExpired)
+              );
+            });
+          }
 
           setCampaigns(campaigns);
         } else {

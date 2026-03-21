@@ -136,6 +136,8 @@ export type CampaignSummary = {
   supporters: number;
   progress: number;
   suupporter: number | null;
+  effective_start_from?: string | null;
+  effective_end_date?: string | null;
   state: CampaignStateType;
   created_at?: string;
   updated_at?: string;

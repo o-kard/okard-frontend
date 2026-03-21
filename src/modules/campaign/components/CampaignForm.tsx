@@ -396,6 +396,23 @@ export default function CampaignForm({
     }));
   };
 
+  const handleRemoveInformation = (idx: number) => {
+    if (informationPreviews[idx]) URL.revokeObjectURL(informationPreviews[idx]);
+    setInformationPreviews((s) => {
+      const n = { ...s };
+      delete n[idx];
+      const maxIdx = Math.max(-1, ...Object.keys(n).map(Number));
+      for (let i = idx + 1; i <= maxIdx; i++) {
+        if (n[i] !== undefined) {
+          n[i - 1] = n[i];
+          delete n[i];
+        }
+      }
+      return n;
+    });
+    removeInformation(idx);
+  };
+
   const handleClearInformationImage = (idx: number) => {
     if (informationPreviews[idx]) URL.revokeObjectURL(informationPreviews[idx]);
     setInformationPreviews((s) => {
@@ -404,6 +421,23 @@ export default function CampaignForm({
       return n;
     });
     setValue(`informations.${idx}.file`, null);
+  };
+
+  const handleRemoveReward = (idx: number) => {
+    if (rewardPreviews[idx]) URL.revokeObjectURL(rewardPreviews[idx]);
+    setRewardPreviews((s) => {
+      const n = { ...s };
+      delete n[idx];
+      const maxIdx = Math.max(-1, ...Object.keys(n).map(Number));
+      for (let i = idx + 1; i <= maxIdx; i++) {
+        if (n[i] !== undefined) {
+          n[i - 1] = n[i];
+          delete n[i];
+        }
+      }
+      return n;
+    });
+    removeReward(idx);
   };
 
   const handleRewardFileChange = (
@@ -948,7 +982,7 @@ export default function CampaignForm({
 
         <Grid size={{ xs: 12 }}>
           <TextField
-            label="Goal Amount"
+            label="Goal Amount (USD)"
             fullWidth
             type="number"
             disabled={isSuspended}
@@ -1302,7 +1336,7 @@ export default function CampaignForm({
                 {!editItem && (
                   <IconButton
                     color="error"
-                    onClick={() => removeInformation(idx)}
+                    onClick={() => handleRemoveInformation(idx)}
                     disabled={isSuspended}
                   >
                     <DeleteIcon />
@@ -1381,7 +1415,7 @@ export default function CampaignForm({
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <TextField
-                    label="Reward Amount"
+                    label="Reward Amount (USD)"
                     fullWidth
                     disabled={isSuspended || isDisabled}
                     {...register(`rewards.${idx}.reward_amount` as const, {
@@ -1454,7 +1488,7 @@ export default function CampaignForm({
                 <Grid size={{ xs: 12 }}>
                   <IconButton
                     color="error"
-                    onClick={() => removeReward(idx)}
+                    onClick={() => handleRemoveReward(idx)}
                     disabled={isSuspended || isDisabled}
                   >
                     <DeleteIcon />

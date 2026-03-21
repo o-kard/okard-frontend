@@ -50,7 +50,7 @@ export default function CampaignList({ campaigns, showEditButton }: CampaignList
             {campaigns.map((campaign) => {
                 const progress =
                     campaign.current_amount && campaign.goal_amount
-                        ? Math.min(100, (campaign.current_amount / campaign.goal_amount) * 100)
+                        ? (campaign.current_amount / campaign.goal_amount) * 100
                         : 0;
 
                 const campaignImage =
@@ -135,18 +135,111 @@ export default function CampaignList({ campaigns, showEditButton }: CampaignList
                                                 >
                                                     {campaign.campaign_header}
                                                 </Typography>
-                                                <Chip
-                                                    label={category.label}
-                                                    size="small"
-                                                    sx={{
-                                                        bgcolor: category.color,
-                                                        color: "#fff",
-                                                        fontWeight: 700,
-                                                        height: 24,
-                                                        fontSize: "0.7rem",
-                                                        flexShrink: 0,
-                                                    }}
-                                                />
+                                                <Box display="flex" gap={1}>
+                                                    <Chip
+                                                        label={category.label}
+                                                        size="small"
+                                                        sx={{
+                                                            bgcolor: category.color,
+                                                            color: "#fff",
+                                                            fontWeight: 700,
+                                                            height: 24,
+                                                            fontSize: "0.7rem",
+                                                            flexShrink: 0,
+                                                        }}
+                                                    />
+                                                    {(() => {
+                                                        const now = new Date();
+                                                        const startDate = campaign.effective_start_from
+                                                            ? new Date(campaign.effective_start_from.replace(" ", "T"))
+                                                            : null;
+                                                        const endDate = campaign.effective_end_date
+                                                            ? new Date(campaign.effective_end_date.replace(" ", "T"))
+                                                            : null;
+
+                                                        const isExpired = endDate ? endDate < now : false;
+                                                        const isUpcoming = startDate ? startDate > now : false;
+                                                        const isSuspended = campaign.state === "suspend";
+                                                        const isDraft = campaign.state === "draft";
+                                                        const isOngoing =
+                                                            (campaign.state === "published" ||
+                                                                campaign.state === "success") &&
+                                                            !isExpired &&
+                                                            !isUpcoming;
+
+                                                        if (isSuspended)
+                                                            return (
+                                                                <Chip
+                                                                    label="SUSPENDED"
+                                                                    size="small"
+                                                                    sx={{
+                                                                        fontWeight: 700,
+                                                                        bgcolor: "error.main",
+                                                                        color: "white",
+                                                                        height: 24,
+                                                                        fontSize: "0.7rem",
+                                                                    }}
+                                                                />
+                                                            );
+                                                        if (isDraft)
+                                                            return (
+                                                                <Chip
+                                                                    label="DRAFT"
+                                                                    size="small"
+                                                                    sx={{
+                                                                        fontWeight: 700,
+                                                                        bgcolor: "grey.400",
+                                                                        color: "white",
+                                                                        height: 24,
+                                                                        fontSize: "0.7rem",
+                                                                    }}
+                                                                />
+                                                            );
+                                                        if (isUpcoming)
+                                                            return (
+                                                                <Chip
+                                                                    label="UPCOMING"
+                                                                    size="small"
+                                                                    sx={{
+                                                                        fontWeight: 700,
+                                                                        bgcolor: "info.main",
+                                                                        color: "white",
+                                                                        height: 24,
+                                                                        fontSize: "0.7rem",
+                                                                    }}
+                                                                />
+                                                            );
+                                                        if (isExpired)
+                                                            return (
+                                                                <Chip
+                                                                    label="END"
+                                                                    size="small"
+                                                                    sx={{
+                                                                        fontWeight: 700,
+                                                                        bgcolor: "grey.500",
+                                                                        color: "white",
+                                                                        height: 24,
+                                                                        fontSize: "0.7rem",
+                                                                    }}
+                                                                />
+                                                            );
+                                                        if (isOngoing)
+                                                            return (
+                                                                <Chip
+                                                                    label="ONGOING"
+                                                                    size="small"
+                                                                    sx={{
+                                                                        fontWeight: 700,
+                                                                        bgcolor: "warning.main",
+                                                                        color: "black",
+                                                                        height: 24,
+                                                                        fontSize: "0.7rem",
+                                                                    }}
+                                                                />
+                                                            );
+                                                        return null;
+                                                    })()}
+                                                </Box>
                                             </Box>
 
                                             <Typography
@@ -188,7 +281,7 @@ export default function CampaignList({ campaigns, showEditButton }: CampaignList
                                                 <Box
                                                     className="progress-bar-fill"
                                                     sx={{
-                                                        width: `${progress}%`,
+                                                        width: `${Math.min(100, progress)}%`,
                                                         height: "100%",
                                                         bgcolor: "#12C998",
                                                         transformOrigin: "left",
