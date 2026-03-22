@@ -7,6 +7,7 @@ import {
   Button,
   TextField,
   Typography,
+  Box,
 } from "@mui/material";
 
 interface EditRequestModalProps {
@@ -35,7 +36,12 @@ export default function EditRequestModal({
     setError(null);
 
     try {
-      const finalProposed = JSON.parse(JSON.stringify(proposedChanges || {}));
+      const finalProposed = { ...proposedChanges };
+      if (proposedChanges?.rewards_payload) {
+        finalProposed.rewards_payload = JSON.parse(
+          JSON.stringify(proposedChanges.rewards_payload),
+        );
+      }
 
       if (proposedChanges?.files_map && finalProposed.rewards_payload) {
         const uploadPromises = Object.entries(proposedChanges.files_map).map(
@@ -50,7 +56,7 @@ export default function EditRequestModal({
             fd.append("clerk_id", clerkId);
 
             const res = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/api/image/upload`,
+              `${process.env.NEXT_PUBLIC_API_URL}/api/media/upload`,
               {
                 method: "POST",
                 body: fd,
@@ -120,6 +126,63 @@ export default function EditRequestModal({
           Describe what you want to change. Top 11 contributors will vote on
           this request.
         </Typography>
+
+        {proposedChanges && (
+          <Box
+            sx={{
+              mb: 3,
+              p: 2,
+              bgcolor: "grey.100",
+              borderRadius: 1,
+              border: "1px solid",
+              borderColor: "grey.300",
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: "bold" }}>
+              Proposed Changes:
+            </Typography>
+            {proposedChanges.category && (
+              <Typography variant="body2" sx={{ display: "block", textTransform: "capitalize" }}>
+                • <strong>Category:</strong> {proposedChanges.category}
+              </Typography>
+            )}
+            {proposedChanges.goal_amount !== undefined && (
+              <Typography variant="body2" sx={{ display: "block" }}>
+                • <strong>Goal Amount:</strong> {proposedChanges.goal_amount}
+              </Typography>
+            )}
+            {proposedChanges.effective_end_date && (
+              <Typography variant="body2" sx={{ display: "block" }}>
+                • <strong>End Date:</strong>{" "}
+                {new Date(proposedChanges.effective_end_date).toLocaleString()}
+              </Typography>
+            )}
+            {proposedChanges.rewards_payload &&
+              proposedChanges.rewards_payload.filter(
+                (r: any) => r.isEdited || !r.id,
+              ).length > 0 && (
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+                    • Rewards:
+                  </Typography>
+                  {proposedChanges.rewards_payload
+                    .filter((r: any) => r.isEdited || !r.id)
+                    .map((r: any, idx: number) => (
+                      <Typography
+                        key={idx}
+                        variant="caption"
+                        sx={{ display: "block", ml: 2, color: "text.secondary" }}
+                      >
+                        - <strong>{r.reward_header || "Untitled Reward"}</strong> (
+                        {r.reward_amount} THB)
+                        {r.reward_description && ` - ${r.reward_description.substring(0, 50)}${r.reward_description.length > 50 ? "..." : ""}`}
+                      </Typography>
+                    ))}
+                </Box>
+              )}
+          </Box>
+        )}
+
         <TextField
           autoFocus
           margin="dense"
@@ -150,9 +213,17 @@ export default function EditRequestModal({
           }}
         />
         {error && (
-          <Typography color="error" variant="caption">
-            {error}
-          </Typography>
+          <Box
+            sx={{
+              mt: 2,
+              p: 1.5,
+              bgcolor: "error.light",
+              color: "error.contrastText",
+              borderRadius: 1,
+            }}
+          >
+            <Typography variant="body2">{error}</Typography>
+          </Box>
         )}
       </DialogContent>
       <DialogActions>
