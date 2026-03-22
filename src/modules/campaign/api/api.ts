@@ -196,8 +196,17 @@ export async function getForYouCampaigns(token: string): Promise<Campaign[]> {
   return data.campaigns.map((c) => c.campaign);
 }
 
-export async function fetchCampaignById(campaignId: string): Promise<Campaign> {
-  return request<Campaign>(`${API_PATH}/${campaignId}`);
+export async function fetchCampaignById(
+  campaignId: string,
+  token?: string,
+): Promise<Campaign> {
+  const headers: HeadersInit = {};
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return request<Campaign>(`${API_PATH}/${campaignId}`, {
+    headers,
+  });
 }
 
 export async function fetchCampaignsByUserId(userId: string): Promise<Campaign[]> {

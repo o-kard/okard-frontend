@@ -147,54 +147,47 @@ export default function CampaignDetailPage() {
   useEffect(() => {
     if (!id || !isLoaded) return;
 
-    // ✅ Prevent duplicate fetches
-    if (hasFetchedCampaign.current) return;
-    hasFetchedCampaign.current = true;
+    async function fetchCampaign() {
+      if (!id || !isLoaded) return;
+      if (hasFetchedCampaign.current) return;
+      hasFetchedCampaign.current = true;
 
-    const clerkId = user?.id;
-
-    const url = clerkId
-      ? `${process.env.NEXT_PUBLIC_API_URL}/api/campaign/${id}?clerk_id=${clerkId}`
-      : `${process.env.NEXT_PUBLIC_API_URL}/api/campaign/${id}`;
-
-    fetch(url)
-      .then(async (r) => {
-        if (!r.ok) {
-           if (r.status === 404) {
-             return null;
-           }
-           const data = await r.json().catch(() => ({}));
-           throw new Error(data.message || `HTTP ${r.status}`);
-        }
-        return r.json();
-      })
-      .then((data) => {
+      try {
+        const token = await getToken();
+        const data = await fetchCampaignById(id, token || undefined);
+        
         if (!data) {
           notFound();
+          return;
         }
+
         setCampaign(data);
         setIsBookmarked(data.is_bookmarked || false);
 
-        // Fetch recommendations after getting the campaign
         setLoadingRecommendations(true);
         fetchRecommendedCampaigns(id, 4)
           .then(async (recData) => {
             if (recData && recData.recommendations) {
-              // Fetch full campaign details for each recommendation
               const campaignsData = await Promise.all(
                 recData.recommendations.map((rec: any) =>
-                  fetchCampaignById(rec.campaign_id),
+                  fetchCampaignById(rec.campaign_id, token || undefined),
                 ),
               );
-              // Filter out any failed fetches (nulls)
               setRecommendedCampaigns(campaignsData.filter(Boolean));
             }
           })
           .catch((err) => console.error("Failed to fetch recommendations", err))
           .finally(() => setLoadingRecommendations(false));
-      })
-      .catch(console.error);
-  }, [id, user?.id, isLoaded]);
+      } catch (err: any) {
+        console.error("Failed to fetch campaign:", err);
+        if (err.message?.includes("404") || err.message?.includes("Not found")) {
+          notFound();
+        }
+      }
+    }
+
+    fetchCampaign();
+  }, [id, user?.id, isLoaded, getToken]);
 
   const handleBookmarkClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -807,18 +800,24 @@ export default function CampaignDetailPage() {
                 fullWidth
                 disabled={
                   campaign.state === "suspend" ||
+                  campaign.state === "draft" ||
+                  campaign.state === "fail" ||
                   (daysLeft !== undefined && daysLeft < 0) ||
                   isUpcoming
                 }
                 sx={{
                   bgcolor:
                     campaign.state === "suspend" ||
+                    campaign.state === "draft" ||
+                    campaign.state === "fail" ||
                     (daysLeft !== undefined && daysLeft < 0) ||
                     isUpcoming
                       ? "grey.400"
                       : "#18C59B",
                   background:
                     campaign.state === "suspend" ||
+                    campaign.state === "draft" ||
+                    campaign.state === "fail" ||
                     (daysLeft !== undefined && daysLeft < 0) ||
                     isUpcoming
                       ? "grey.400"
@@ -831,17 +830,26 @@ export default function CampaignDetailPage() {
                   letterSpacing: "0.02em",
                   textTransform: "uppercase",
                   boxShadow:
-                    (daysLeft !== undefined && daysLeft < 0) || isUpcoming
+                    campaign.state === "draft" ||
+                    campaign.state === "fail" ||
+                    (daysLeft !== undefined && daysLeft < 0) ||
+                    isUpcoming
                       ? "none"
                       : "0 8px 24px rgba(24, 197, 155, 0.35)",
                   transition: "all 0.3s ease",
                   "&:hover": {
                     boxShadow:
-                      (daysLeft !== undefined && daysLeft < 0) || isUpcoming
+                      campaign.state === "draft" ||
+                      campaign.state === "fail" ||
+                      (daysLeft !== undefined && daysLeft < 0) ||
+                      isUpcoming
                         ? "none"
                         : "0 12px 28px rgba(24, 197, 155, 0.5)",
                     transform:
-                      (daysLeft !== undefined && daysLeft < 0) || isUpcoming
+                      campaign.state === "draft" ||
+                      campaign.state === "fail" ||
+                      (daysLeft !== undefined && daysLeft < 0) ||
+                      isUpcoming
                         ? "none"
                         : "translateY(-2px)",
                   },
@@ -850,11 +858,17 @@ export default function CampaignDetailPage() {
               >
                 {campaign.state === "suspend"
                   ? "Suspended"
-                  : daysLeft !== undefined && daysLeft < 0
-                    ? "Ended"
-                    : isUpcoming
-                      ? "Upcoming"
-                      : "Contribute this Campaign"}
+                  : campaign.state === "draft"
+                    ? "Draft"
+                    : campaign.state === "fail"
+                      ? "Failed"
+                      : daysLeft !== undefined && daysLeft < 0
+                        ? campaign.state === "success"
+                          ? "Successful"
+                          : "Ended"
+                        : isUpcoming
+                          ? "Upcoming"
+                          : "Contribute this Campaign"}
               </Button>
             </Grid>
           </Grid>
@@ -925,6 +939,11 @@ export default function CampaignDetailPage() {
                               <Button
                                 variant="contained"
                                 startIcon={<AddIcon />}
+                                disabled={
+                                  campaign.state === "suspend" ||
+                                  campaign.state === "fail" ||
+                                  (daysLeft !== undefined && daysLeft < 0)
+                                }
                                 onClick={() => {
                                   setEditProgressItem(null);
                                   setOpenProgressForm(true);
@@ -944,6 +963,11 @@ export default function CampaignDetailPage() {
                                     bgcolor: "#12a884",
                                     boxShadow:
                                       "0 6px 20px 0 rgba(24, 197, 155, 0.23)",
+                                  },
+                                  "&.Mui-disabled": {
+                                    bgcolor: "grey.400",
+                                    color: "white",
+                                    boxShadow: "none",
                                   },
                                 }}
                               >
