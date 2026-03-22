@@ -328,6 +328,7 @@ export default function CampaignForm({
       );
       return combinedMedia;
     });
+    e.target.value = "";
   };
 
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -347,6 +348,7 @@ export default function CampaignForm({
       preview: URL.createObjectURL(file),
       display_order: 0,
     });
+    e.target.value = "";
   };
 
   const handleRemoveVideo = () => {
@@ -403,6 +405,7 @@ export default function CampaignForm({
       ...s,
       [idx]: f ? URL.createObjectURL(f) : "",
     }));
+    e.target.value = "";
   };
 
   const handleRemoveInformation = (idx: number) => {
@@ -465,6 +468,7 @@ export default function CampaignForm({
       ...s,
       [idx]: f ? URL.createObjectURL(f) : "",
     }));
+    e.target.value = "";
   };
 
   const handleClearRewardImage = (idx: number) => {
@@ -684,6 +688,11 @@ export default function CampaignForm({
   };
 
   const handleFormSubmit: SubmitHandler<FormValues> = async (values) => {
+    if (campaignMedia.length === 0) {
+      alert("Please upload at least one campaign image.");
+      return;
+    }
+
     if (!values.informations || values.informations.length === 0) {
       alert("Please add at least one information item.");
       return;
