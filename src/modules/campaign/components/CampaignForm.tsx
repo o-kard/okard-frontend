@@ -827,7 +827,7 @@ export default function CampaignForm({
     let rewardsChanged = false;
 
     // Only check for sensitive changes if the campaign is already PUBLISHED
-    if (isEdit && editItem && isLive) {
+    if (isEdit && editItem && isLive && editItem.supporter && editItem.supporter > 0) {
       // Check Category
       if (values.category !== editItem.category) {
         hasSensitiveChanges = true;
