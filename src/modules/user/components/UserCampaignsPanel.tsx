@@ -37,7 +37,7 @@ export default function CampaignsPanel({ campaigns, loading }: CampaignsPanelPro
 
 
   return (
-    <Paper sx={{ p: 3, borderRadius: 3, bgcolor: "#fff", height: "60vh", display: "flex", flexDirection: "column" }}>
+    <Paper sx={{ p: 3, borderRadius: 3, bgcolor: "#fff", height: "623px", display: "flex", flexDirection: "column" }}>
       <Box
         display="flex"
         flexDirection={{ xs: "column", sm: "row" }}
