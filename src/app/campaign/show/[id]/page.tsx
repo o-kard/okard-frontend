@@ -883,8 +883,8 @@ export default function CampaignDetailPage() {
               isOwner={appUser === campaign.user_id}
               sections={[
                 {
-                  key: "campaign",
-                  label: "Campaign",
+                  key: "informations",
+                  label: "Informations",
                   content: (
                     <Grid container spacing={4}>
                       <Grid size={{ xs: 12, md: 8 }}>

@@ -47,6 +47,12 @@ export default function CommentNode({
     }
   };
 
+  const displayImage = node.author.media?.path
+    ? node.author.media.path.startsWith("http")
+      ? node.author.media.path
+      : `${apiBaseUrl || process.env.NEXT_PUBLIC_API_URL}${node.author.media.path.startsWith("/") ? "" : "/"}${node.author.media.path}`
+    : undefined;
+
   return (
     <Box
       id={`c-${node.id}`}
@@ -73,24 +79,13 @@ export default function CommentNode({
             color="text.secondary"
           >
             <Avatar
-              src={
-                node.author.media?.path
-                  ? resolveMediaUrl(node.author.media?.path)
-                  : undefined
-              }
+              src={displayImage}
               alt={node.author?.username || String(node.user_id)}
               sx={{
                 width: 28,
                 height: 28,
-                bgcolor: "#FFE6F2",
-                fontSize: 12,
-                fontWeight: 700,
               }}
-            >
-              {(node.author?.username ?? String(node.user_id))
-                .slice(0, 2)
-                .toUpperCase()}
-            </Avatar>
+            />
             <Typography variant="caption">{node.author.username}</Typography>
             <Typography variant="caption">
               {formatDate(node.created_at)}
@@ -98,7 +93,7 @@ export default function CommentNode({
           </Stack>
 
           {/* content */}
-          <Typography sx={{ whiteSpace: "pre-line" }}>
+          <Typography sx={{ whiteSpace: "pre-line", m: 1 }}>
             {(node as any).content}
           </Typography>
 
