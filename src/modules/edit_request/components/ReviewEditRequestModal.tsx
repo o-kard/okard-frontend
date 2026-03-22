@@ -65,18 +65,83 @@ export default function ReviewEditRequestModal({
       <DialogContent dividers>
         <Stack spacing={2}>
           <Typography variant="body2" color="text.secondary">
-            User <b>{request.requester_id}</b> requested changes:
+            User <b>{request.requester_username || request.requester_id}</b>{" "}
+            requested changes:
           </Typography>
 
-          <Box sx={{ p: 2, bgcolor: "grey.100", borderRadius: 2 }}>
-            <Typography
-              variant="body2"
-              sx={{ whiteSpace: "pre-wrap", fontFamily: "monospace" }}
+          {request.proposed_changes && (
+            <Box
+              sx={{
+                mb: 3,
+                p: 2,
+                bgcolor: "grey.100",
+                borderRadius: 1,
+                border: "1px solid",
+                borderColor: "grey.300",
+              }}
             >
-              {request.display_changes ||
-                JSON.stringify(request.proposed_changes, null, 2)}
-            </Typography>
-          </Box>
+              <Typography
+                variant="subtitle2"
+                sx={{ mb: 1, fontWeight: "bold" }}
+              >
+                Proposed Changes:
+              </Typography>
+              {request.proposed_changes.category && (
+                <Typography
+                  variant="body2"
+                  sx={{ display: "block", textTransform: "capitalize" }}
+                >
+                  • <strong>Category:</strong>{" "}
+                  {request.proposed_changes.category}
+                </Typography>
+              )}
+              {request.proposed_changes.goal_amount !== undefined && (
+                <Typography variant="body2" sx={{ display: "block" }}>
+                  • <strong>Goal Amount:</strong>{" "}
+                  {request.proposed_changes.goal_amount}
+                </Typography>
+              )}
+              {request.proposed_changes.effective_end_date && (
+                <Typography variant="body2" sx={{ display: "block" }}>
+                  • <strong>End Date:</strong>{" "}
+                  {new Date(
+                    request.proposed_changes.effective_end_date,
+                  ).toLocaleString()}
+                </Typography>
+              )}
+              {request.proposed_changes.rewards_payload &&
+                request.proposed_changes.rewards_payload.filter(
+                  (r: any) => r.isEdited || !r.id,
+                ).length > 0 && (
+                  <Box sx={{ mt: 1 }}>
+                    <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+                      • Rewards:
+                    </Typography>
+                    {request.proposed_changes.rewards_payload
+                      .filter((r: any) => r.isEdited || !r.id)
+                      .map((r: any, idx: number) => (
+                        <Typography
+                          key={idx}
+                          variant="caption"
+                          sx={{
+                            display: "block",
+                            ml: 2,
+                            color: "text.secondary",
+                          }}
+                        >
+                          -{" "}
+                          <strong>
+                            {r.reward_header || "Untitled Reward"}
+                          </strong>{" "}
+                          ({r.reward_amount} THB)
+                          {r.reward_description &&
+                            ` - ${r.reward_description.substring(0, 50)}${r.reward_description.length > 50 ? "..." : ""}`}
+                        </Typography>
+                      ))}
+                  </Box>
+                )}
+            </Box>
+          )}
 
           <TextField
             label="Comment (Optional)"
