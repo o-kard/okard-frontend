@@ -267,9 +267,18 @@ export default function CampaignForm({
   const [imageSizeError, setImageSizeError] = useState<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor));
 
-  const isSuspended = editItem?.state === "suspend";
+  const isSuspended = !!(editItem?.state === "suspend");
+  const isSuccess = !!(editItem?.state === "success");
+  const isFailed = !!(editItem?.state === "fail");
+  const isExpired = !!(
+    editItem?.effective_end_date &&
+    new Date(editItem.effective_end_date) < new Date()
+  );
+  const isLive = isSuccess || !!(editItem?.state === "published");
+  const isInactive = isSuspended || isFailed || (isSuccess && isExpired);
 
   const onDragEnd = (e: any) => {
+    if (isInactive) return;
     const { active, over } = e;
     if (!over || active.id === over.id) return;
     const oldIndex = campaignMedia.findIndex((x) => x.id === active.id);
@@ -809,7 +818,7 @@ export default function CampaignForm({
     let rewardsChanged = false;
 
     // Only check for sensitive changes if the campaign is already PUBLISHED
-    if (isEdit && editItem && editItem.state === "published") {
+    if (isEdit && editItem && isLive) {
       // Check Category
       if (values.category !== editItem.category) {
         hasSensitiveChanges = true;
@@ -952,7 +961,7 @@ export default function CampaignForm({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)}>
-      {isSuspended && (
+      {isInactive && (
         <Box
           sx={{
             bgcolor: "error.light",
@@ -964,7 +973,11 @@ export default function CampaignForm({
             fontWeight: 700,
           }}
         >
-          This post is suspended. Editing is disabled.
+          {isSuspended
+            ? "This post is suspended. Editing is disabled."
+            : isSuccess
+              ? "This campaign is successful. Editing is disabled."
+              : "This campaign has failed. Editing is disabled."}
         </Box>
       )}
       <Grid container spacing={2}>
@@ -976,7 +989,7 @@ export default function CampaignForm({
             fullWidth
             error={!!errors.campaign_header}
             helperText={errors.campaign_header?.message}
-            disabled={isSuspended}
+            disabled={isInactive}
           />
         </Grid>
 
@@ -985,11 +998,11 @@ export default function CampaignForm({
             label="Goal Amount (USD)"
             fullWidth
             type="number"
-            disabled={isSuspended}
+            disabled={isInactive}
             error={!!errors.goal_amount}
             helperText={
               errors.goal_amount?.message ||
-              (editItem && editItem.state === "published"
+              (editItem && isLive
                 ? "Changing this will trigger an Edit Request"
                 : "")
             }
@@ -1010,7 +1023,11 @@ export default function CampaignForm({
               select
               label="State"
               fullWidth
-              disabled={isSuspended || !!(editItem?.state === "published")}
+              disabled={
+                isInactive ||
+                isSuccess ||
+                isLive
+              }
               value={field.value ?? ""}
               onChange={field.onChange}
               slotProps={{
@@ -1019,6 +1036,15 @@ export default function CampaignForm({
             >
               <MenuItem value="draft">Draft</MenuItem>
               <MenuItem value="published">Published</MenuItem>
+              {editItem?.state === "success" && (
+                <MenuItem value="success">Success</MenuItem>
+              )}
+              {editItem?.state === "fail" && (
+                <MenuItem value="fail">Failed</MenuItem>
+              )}
+              {editItem?.state === "suspend" && (
+                <MenuItem value="suspend">Suspended</MenuItem>
+              )}
             </TextField>
           )}
         />
@@ -1031,11 +1057,11 @@ export default function CampaignForm({
               select
               label="Category"
               fullWidth
-              disabled={isSuspended}
+              disabled={isInactive}
               value={field.value ?? ""}
               onChange={field.onChange}
               helperText={
-                editItem && editItem.state === "published"
+                editItem && isLive
                   ? "Changing this will trigger an Edit Request"
                   : ""
               }
@@ -1057,7 +1083,7 @@ export default function CampaignForm({
             label="Start"
             type="datetime-local"
             fullWidth
-            disabled={isSuspended || !!(editItem?.state === "published")}
+            disabled={isInactive || isLive}
             defaultValue=""
             {...register("effective_start_from", {
               required: "Start date is required",
@@ -1073,7 +1099,7 @@ export default function CampaignForm({
             label="End"
             type="datetime-local"
             fullWidth
-            disabled={isSuspended}
+            disabled={isInactive}
             {...register("effective_end_date", {
               required: "End date is required",
               validate: (value) => {
@@ -1089,7 +1115,7 @@ export default function CampaignForm({
             error={!!errors.effective_end_date}
             helperText={
               errors.effective_end_date?.message ||
-              (editItem && editItem.state === "published"
+              (editItem && isLive
                 ? "Changing this will trigger an Edit Request"
                 : "")
             }
@@ -1102,7 +1128,7 @@ export default function CampaignForm({
             multiline
             rows={4}
             fullWidth
-            disabled={isSuspended}
+            disabled={isInactive}
             {...register("campaign_description", {
               required: "Description is required",
             })}
@@ -1149,7 +1175,7 @@ export default function CampaignForm({
               variant="outlined"
               component="label"
               fullWidth
-              disabled={isSuspended}
+              disabled={isInactive}
             >
               Upload Video
               <input
@@ -1171,7 +1197,7 @@ export default function CampaignForm({
             variant="outlined"
             component="label"
             fullWidth
-            disabled={isSuspended}
+            disabled={isInactive}
           >
             Upload Images
             <input
@@ -1227,7 +1253,7 @@ export default function CampaignForm({
                 size="small"
                 variant="text"
                 color="error"
-                disabled={isSuspended}
+                disabled={isInactive}
                 onClick={() => handleClearCampaignMedia()}
               >
                 Clear all media
@@ -1263,7 +1289,7 @@ export default function CampaignForm({
                   helperText={
                     errors.informations?.[idx]?.information_header?.message
                   }
-                  disabled={isSuspended}
+                  disabled={isInactive}
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
@@ -1274,7 +1300,7 @@ export default function CampaignForm({
                   {...register(`informations.${idx}.display_order` as const, {
                     valueAsNumber: true,
                   })}
-                  disabled={isSuspended}
+                  disabled={isInactive}
                 />
               </Grid>
               <Grid size={{ xs: 12 }}>
@@ -1286,7 +1312,7 @@ export default function CampaignForm({
                   {...register(
                     `informations.${idx}.information_description` as const,
                   )}
-                  disabled={isSuspended}
+                  disabled={isInactive}
                 />
               </Grid>
 
@@ -1300,7 +1326,7 @@ export default function CampaignForm({
                     hidden
                     accept="image/*"
                     onChange={(e) => handleInformationFileChange(idx, e)}
-                    disabled={isSuspended}
+                    disabled={isInactive}
                   />
                 </Button>
 
@@ -1323,7 +1349,7 @@ export default function CampaignForm({
                         variant="text"
                         color="error"
                         onClick={() => handleClearInformationImage(idx)}
-                        disabled={isSuspended}
+                        disabled={isInactive}
                       >
                         Clear image
                       </Button>
@@ -1337,7 +1363,7 @@ export default function CampaignForm({
                   <IconButton
                     color="error"
                     onClick={() => handleRemoveInformation(idx)}
-                    disabled={isSuspended}
+                    disabled={isInactive}
                   >
                     <DeleteIcon />
                   </IconButton>
@@ -1349,6 +1375,7 @@ export default function CampaignForm({
           <Button
             startIcon={<AddIcon />}
             variant="outlined"
+            disabled={isInactive}
             onClick={() =>
               appendInformation({
                 display_order: informationFields.length + 1,
@@ -1366,12 +1393,10 @@ export default function CampaignForm({
           </Typography>
           {rewardFields.map((field, idx) => {
             // Check if this reward has backers (backup_amount > 0) AND post is published
-            const isPublished = editItem?.state === "published";
+            const isPublishedOrSuccess = isLive;
             const hasBackers = Number(field.backup_amount) > 0;
-            const isDisabled = isPublished && hasBackers;
-            console.log("isDisabled", isDisabled);
-            console.log("hasBackers", hasBackers);
-            console.log("isPublished", isPublished);
+            const isDisabled = isPublishedOrSuccess && hasBackers;
+
 
             return (
               <Grid
@@ -1384,7 +1409,7 @@ export default function CampaignForm({
                   <TextField
                     label="Reward Header"
                     fullWidth
-                    disabled={isSuspended || isDisabled}
+                    disabled={isInactive || isDisabled}
                     {...register(`rewards.${idx}.reward_header` as const, {
                       required: "Reward header is required",
                     })}
@@ -1397,7 +1422,7 @@ export default function CampaignForm({
                     label="Order"
                     type="number"
                     fullWidth
-                    disabled={isSuspended}
+                    disabled={isInactive}
                     {...register(`rewards.${idx}.display_order` as const, {
                       valueAsNumber: true,
                     })}
@@ -1409,7 +1434,7 @@ export default function CampaignForm({
                     fullWidth
                     multiline
                     rows={3}
-                    disabled={isSuspended || isDisabled}
+                    disabled={isInactive || isDisabled}
                     {...register(`rewards.${idx}.reward_description` as const)}
                   />
                 </Grid>
@@ -1417,7 +1442,7 @@ export default function CampaignForm({
                   <TextField
                     label="Reward Amount (USD)"
                     fullWidth
-                    disabled={isSuspended || isDisabled}
+                    disabled={isInactive || isDisabled}
                     {...register(`rewards.${idx}.reward_amount` as const, {
                       valueAsNumber: true,
                       min: {
@@ -1434,7 +1459,7 @@ export default function CampaignForm({
                     variant="outlined"
                     component="label"
                     fullWidth
-                    disabled={isSuspended || isDisabled}
+                    disabled={isInactive || isDisabled}
                   >
                     {watch(`rewards.${idx}.file`)
                       ? "Change Image (optional for update)"
@@ -1476,7 +1501,7 @@ export default function CampaignForm({
                           size="small"
                           variant="text"
                           color="error"
-                          disabled={isSuspended || isDisabled}
+                          disabled={isInactive || isDisabled}
                           onClick={() => handleClearRewardImage(idx)}
                         >
                           Clear image
@@ -1489,7 +1514,7 @@ export default function CampaignForm({
                   <IconButton
                     color="error"
                     onClick={() => handleRemoveReward(idx)}
-                    disabled={isSuspended || isDisabled}
+                    disabled={isInactive || isDisabled}
                   >
                     <DeleteIcon />
                   </IconButton>
@@ -1505,7 +1530,7 @@ export default function CampaignForm({
           <Button
             startIcon={<AddIcon />}
             variant="outlined"
-            disabled={isSuspended}
+            disabled={isInactive}
             onClick={() =>
               appendReward({
                 display_order: rewardFields.length + 1,
@@ -1525,7 +1550,7 @@ export default function CampaignForm({
             variant="contained"
             color="success"
             fullWidth
-            disabled={isSuspended || isSubmitting}
+            disabled={isInactive || isSubmitting}
           >
             {editItem ? "Update (with campaigns)" : "Create (with campaigns)"}
           </Button>
@@ -1533,7 +1558,7 @@ export default function CampaignForm({
             variant="outlined"
             color="primary"
             type="button"
-            disabled={isSuspended}
+            disabled={isInactive}
             onClick={onPredictClick}
           >
             Predict
