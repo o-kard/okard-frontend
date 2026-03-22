@@ -34,36 +34,18 @@ export default function CampaignPart({ onHoverBackground }: Props) {
     const fetchData = async () => {
       try {
         let data: (Campaign | CampaignSummary)[] = [];
-        let bookmarks: Campaign[] = [];
-
         const token = await getToken();
-
-        if (isSignedIn && token) {
-          try {
-            bookmarks = await fetchBookmarks(token);
-          } catch (err) {
-            console.error("Failed to fetch bookmarks for merging", err);
-          }
-        }
 
         if (tab === "popular") {
           data = await getTopPledgedCampaigns({
             category: category ?? undefined,
             limit: DEFAULT_LIMIT,
+            token: token || undefined,
           });
         }
 
         if (tab === "forYou") {
           data = await getForYouCampaigns(token || "");
-        }
-
-        // Merge bookmarks
-        if (isSignedIn && bookmarks.length > 0) {
-          const bookmarkIds = new Set(bookmarks.map((b) => b.id));
-          data = data.map((c) => ({
-            ...c,
-            is_bookmarked: bookmarkIds.has(c.id),
-          }));
         }
 
         if (!cancelled) {
