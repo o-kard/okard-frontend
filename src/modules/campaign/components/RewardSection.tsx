@@ -39,9 +39,10 @@ export default function RewardSections({
   );
 
   const sectionRefs = useRef<Array<HTMLDivElement | null>>([]);
-  const activeIdx = useActiveSection(sectionRefs, data.length);
+  const [activeIdx, setActiveIdx] = useActiveSection(sectionRefs, data.length);
 
   const handleNavClick = (i: number) => {
+    setActiveIdx(i);
     const node = sectionRefs.current[i];
     if (node) node.scrollIntoView({ behavior: "smooth", block: "start" });
   };

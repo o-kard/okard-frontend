@@ -1,14 +1,26 @@
-import { RefObject, useEffect, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 
 export function useActiveSection(
   sectionRefs: RefObject<Array<HTMLDivElement | null>>,
   data: any
 ) {
   const [activeIdx, setActiveIdx] = useState(0);
+  const isClicking = useRef(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const setManualIdx = (idx: number) => {
+    setActiveIdx(idx);
+    isClicking.current = true;
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      isClicking.current = false;
+    }, 1000); // Wait 1s for smooth scroll to finish
+  };
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
+        if (isClicking.current) return;
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const idx = Number(entry.target.getAttribute("data-idx") || "0");
@@ -29,5 +41,5 @@ export function useActiveSection(
     return () => observer.disconnect();
   }, [data]);
 
-  return activeIdx;
+  return [activeIdx, setManualIdx] as const;
 }
