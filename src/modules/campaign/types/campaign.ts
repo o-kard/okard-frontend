@@ -33,14 +33,14 @@ export interface AIPrediction {
   stretch_label: string | null;
 }
 
-export interface CitySupporterStat {
-  city: string;
+export interface CountrySupporterStat {
+  country: string;
   supporter: number;
 }
 
 export interface CampaignCommunity {
   total_supporters: number;
-  top_cities: CitySupporterStat[];
+  top_countries: CountrySupporterStat[];
 }
 
 export type Campaign = {
