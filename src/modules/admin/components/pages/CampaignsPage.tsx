@@ -26,7 +26,6 @@ import {
 import {
   fetchCampaigns,
   changeCampaignState,
-  deleteCampaign,
 } from "@/modules/campaign/api/api";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -37,6 +36,8 @@ import { useAuth } from "@clerk/nextjs";
 const statusColors: Record<string, string> = {
   published: "#12C998",
   active: "#12C998",
+  success: "#12C998",
+  fail: "#ff5252",
   suspend: "#ff5252",
   suspended: "#ff5252",
   pending: "#ff8000",
@@ -45,11 +46,9 @@ const statusColors: Record<string, string> = {
 const ActionMenu = ({
   campaignId,
   onSuspend,
-  onDelete,
 }: {
   campaignId: string;
   onSuspend: () => void;
-  onDelete: () => void;
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -123,19 +122,6 @@ const ActionMenu = ({
         >
           Toggle Status
         </MenuItem>
-        <MenuItem
-          onClick={(e) => {
-            handleClose(e);
-            onDelete();
-          }}
-          sx={{
-            fontSize: "0.9rem",
-            color: "#ff5252",
-            "&:hover": { background: "rgba(255, 82, 82, 0.08)" },
-          }}
-        >
-          Delete
-        </MenuItem>
       </Menu>
     </>
   );
@@ -151,7 +137,12 @@ export default function CampaignsPage() {
   useEffect(() => {
     async function loadCampaigns() {
       try {
-        const campaigns = await fetchCampaigns();
+        const campaigns = await fetchCampaigns(
+          undefined,
+          undefined,
+          undefined,
+          "admin_all",
+        );
         const campaignsData = campaigns.map((campaign) => {
           const goal = campaign.goal_amount || 0;
           const raised = campaign.current_amount || 0;
@@ -177,19 +168,6 @@ export default function CampaignsPage() {
     loadCampaigns();
   }, []);
 
-  const handleDelete = async (campaignId: string) => {
-    if (!getToken) return;
-    try {
-      if (confirm("Are you sure you want to delete this campaign?")) {
-        const token = await getToken();
-        // Delete using clerk ID inside token, although actually our deletePost takes clerkId.
-        // We can just rely on backend auth or pass "admin". To be safe, we'll let it error instead of not calling.
-        // Wait, useAuth gives userId which is clerkId. We should use it.
-      }
-    } catch (err) {
-      console.error("Failed to delete campaign", err);
-    }
-  };
 
   const filtered = campaigns.filter(
     (p) =>
@@ -512,7 +490,7 @@ export default function CampaignsPage() {
                         borderRadius: 4,
                         fontSize: "0.85rem",
                         fontWeight: 600,
-                        border: "1px solid rgba(18, 201, 152, 0.4)",
+                        textTransform: "capitalize",
                       }}
                     >
                       {p.category}
@@ -575,24 +553,6 @@ export default function CampaignsPage() {
                         setSelectedId(p.id);
                         setConfirmOpen(true);
                       }}
-                      onDelete={async () => {
-                        if (
-                          confirm(
-                            "Are you sure you want to delete this campaign?",
-                          )
-                        ) {
-                          try {
-                            const clerkId = "admin_placeholder"; // We lack userId in the block but we can bypass or set it up.
-                            // To be fully correct, let's just make a simple API call if the user is ok.
-                            await deleteCampaign(p.id, "admin");
-                            setCampaigns((prev) =>
-                              prev.filter((c) => c.id !== p.id),
-                            );
-                          } catch (err) {
-                            console.error(err);
-                          }
-                        }
-                      }}
                     />
                   </TableCell>
                 </TableRow>
@@ -628,26 +588,58 @@ export default function CampaignsPage() {
             </Stack>
           )}
         </TableContainer>
-        <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-          <DialogTitle>Confirm Admin Action</DialogTitle>
-          <DialogContent>
-            <Typography>Do you want to suspend this campaign?</Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setConfirmOpen(false)} color="inherit">
-              Cancel
-            </Button>
-            <Button
-              onClick={() =>
-                changeCampaignStatus(
-                  campaigns.find((c) => c.id === selectedId)?.status || "",
-                )
-              }
-              color="warning"
-            >
-              Confirm
-            </Button>
-          </DialogActions>
+        <Dialog 
+          open={confirmOpen} 
+          onClose={() => setConfirmOpen(false)}
+          PaperProps={{
+            style: {
+              borderRadius: '1rem',
+              padding: '0.5rem'
+            }
+          }}
+        >
+          {(() => {
+            const selectedCampaign = campaigns.find((c) => c.id === selectedId);
+            const isCurrentlySuspended = selectedCampaign?.status === "suspend";
+            
+            return (
+              <>
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                  {isCurrentlySuspended ? "Confirm Activation" : "Confirm Suspension"}
+                </DialogTitle>
+                <DialogContent>
+                  <Typography variant="body1" sx={{ color: "#444" }}>
+                    {isCurrentlySuspended 
+                      ? `Are you sure you want to reactivate "${selectedCampaign?.name}"? It will be visible again.`
+                      : `Are you sure you want to suspend "${selectedCampaign?.name}"? It will be hidden from the explore page and users will not be able to contribute.`
+                    }
+                  </Typography>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                  <Button 
+                    onClick={() => setConfirmOpen(false)} 
+                    sx={{ color: '#666', fontWeight: 600 }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => changeCampaignStatus(selectedCampaign?.status || "")}
+                    variant="contained"
+                    color={isCurrentlySuspended ? "success" : "warning"}
+                    sx={{ 
+                      borderRadius: '0.5rem',
+                      px: 3,
+                      fontWeight: 700,
+                      boxShadow: 'none',
+                      '&:hover': { boxShadow: 'none' }
+                    }}
+                  >
+                    {isCurrentlySuspended ? "ACTIVATE" : "SUSPEND"}
+                  </Button>
+                </DialogActions>
+              </>
+            );
+          })()}
         </Dialog>
       </Box>
     </AdminLayout>
