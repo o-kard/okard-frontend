@@ -142,6 +142,7 @@ export default function ReportModal({
                     ...prev,
                     ...Array.from(e.target.files || []),
                   ]);
+                  e.target.value = "";
                 }
               }}
             />

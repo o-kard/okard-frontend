@@ -36,7 +36,7 @@ import { ReportStatus } from "@/modules/report/types/report";
 
 const statusColors: Record<string, string> = {
   pending: "#ff8000",
-  reviewed: "#12C998",
+  resolved: "#12C998",
 };
 
 const ActionMenu = ({
@@ -94,7 +94,7 @@ const ActionMenu = ({
           <MenuItem
             onClick={(e) => {
               handleClose(e);
-              onStatusChange(reportId, "reviewed");
+              onStatusChange(reportId, "resolved");
             }}
             sx={{
               fontSize: "0.9rem",
@@ -102,7 +102,7 @@ const ActionMenu = ({
               "&:hover": { background: "rgba(18, 201, 152, 0.08)" },
             }}
           >
-            Mark Reviewed
+            Mark Resolved
           </MenuItem>
         )}
         <MenuItem

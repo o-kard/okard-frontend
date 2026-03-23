@@ -65,6 +65,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
   const { user } = useUser();
   const { getToken } = useAuth();
   const [userRole, setUserRole] = useState<string>("");
+  const [userStatus, setUserStatus] = useState<string>("");
 
   useEffect(() => {
     async function fetchRole() {
@@ -73,15 +74,17 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
           const token = await getToken();
           if (token) {
             const dbUser = await getUser(token);
-            if (dbUser && dbUser.role) {
-              setUserRole(dbUser.role);
+            if (dbUser) {
+              if (dbUser.role) setUserRole(dbUser.role);
+              if (dbUser.status) setUserStatus(dbUser.status);
             }
           }
         } catch (err) {
-          console.error("Failed to fetch user role:", err);
+          console.error("Failed to fetch user role/status:", err);
         }
       } else {
         setUserRole("");
+        setUserStatus("");
       }
     }
     fetchRole();
@@ -270,6 +273,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
             component={NextLink}
             href="/campaign/create"
             variant="contained"
+            disabled={userStatus === "suspended"}
             onClick={() => setMobileOpen(false)}
             startIcon={<CampaignIcon />}
             sx={{
@@ -638,6 +642,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                     href="/campaign/create"
                     variant="contained"
                     size="small"
+                    disabled={userStatus === "suspended"}
                     startIcon={
                       <AddIcon
                         sx={{

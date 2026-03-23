@@ -105,8 +105,16 @@ export default function ReviewEditRequestModal({
                 <Typography variant="body2" sx={{ display: "block" }}>
                   • <strong>End Date:</strong>{" "}
                   {new Date(
-                    request.proposed_changes.effective_end_date,
-                  ).toLocaleString()}
+                  request.proposed_changes.effective_end_date,
+                ).toLocaleString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                  timeZoneName: "short",
+                })}
                 </Typography>
               )}
               {request.proposed_changes.rewards_payload &&

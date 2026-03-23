@@ -184,9 +184,13 @@ export const categoryOptions = [
 const toLocalInputValue = (iso?: string | null): string => {
   if (!iso) return "";
   const d = new Date(iso);
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 16);
+  if (isNaN(d.getTime())) return "";
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
 const toIso = (local: string): string | null =>
@@ -214,6 +218,18 @@ const toAbsolute = (p?: string) => {
   const base = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") ?? "";
   const rel = p.startsWith("/") ? p : `/${p}`;
   return `${base}${rel}`;
+};
+
+const getLocalTz = () => {
+  try {
+    return (
+      new Intl.DateTimeFormat(undefined, { timeZoneName: "short" })
+        .formatToParts(new Date())
+        .find((p) => p.type === "timeZoneName")?.value || ""
+    );
+  } catch (e) {
+    return "";
+  }
 };
 
 export default function CampaignForm({
@@ -1202,7 +1218,9 @@ export default function CampaignForm({
               htmlInput: { min: toLocalInputValue(new Date().toISOString()) },
             }}
             error={!!errors.effective_start_from}
-            helperText={errors.effective_start_from?.message}
+            helperText={
+              errors.effective_start_from?.message || `Local time (${getLocalTz()})`
+            }
           />
         </Grid>
 
@@ -1228,8 +1246,8 @@ export default function CampaignForm({
             helperText={
               errors.effective_end_date?.message ||
               (editItem && isLive
-                ? "Changing this will trigger an Edit Request"
-                : "")
+                ? `Changing this will trigger an Edit Request (${getLocalTz()})`
+                : `Local time (${getLocalTz()})`)
             }
           />
         </Grid>
@@ -1471,15 +1489,13 @@ export default function CampaignForm({
               </Grid>
 
               <Grid size={{ xs: 12 }}>
-                {!editItem && (
-                  <IconButton
-                    color="error"
-                    onClick={() => handleRemoveInformation(idx)}
-                    disabled={isInactive}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                )}
+                <IconButton
+                  color="error"
+                  onClick={() => handleRemoveInformation(idx)}
+                  disabled={isInactive}
+                >
+                  <DeleteIcon />
+                </IconButton>
               </Grid>
             </Grid>
           ))}
