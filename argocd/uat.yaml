@@ -14,6 +14,7 @@ spec:
     repoURL: 'https://github.com/o-kard/okard-frontend.git'
     targetRevision: dev
     path: k3s/overlays/uat
+    kustomize: {}
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: uat
