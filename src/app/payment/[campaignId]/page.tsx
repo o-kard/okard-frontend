@@ -12,7 +12,12 @@ export default function PaymentPage() {
   return (
     <>
       <SignedIn>
-        <PaymentComponent campaignId={campaignId} userId={user?.id ?? ""} />
+        <PaymentComponent
+          campaignId={campaignId}
+          userId={user?.id ?? ""}
+          initialFullName={user?.fullName ?? ""}
+          initialEmail={user?.primaryEmailAddress?.emailAddress ?? ""}
+        />
       </SignedIn>
       <SignedOut>
         <RedirectToSignIn />
