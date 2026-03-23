@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   useForm,
   useFieldArray,
@@ -269,6 +269,84 @@ export default function CampaignForm({
   );
   const [imageSizeError, setImageSizeError] = useState<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor));
+
+  const values = watch();
+
+  const hasChanges = useMemo(() => {
+    if (!editItem) return true;
+
+    // 1. Basic Fields
+    if (values.campaign_header !== editItem.campaign_header) return true;
+    if (values.campaign_description !== editItem.campaign_description)
+      return true;
+    if (Number(values.goal_amount) !== Number(editItem.goal_amount)) return true;
+    if (values.category !== editItem.category) return true;
+
+    const oldTime = editItem.effective_end_date
+      ? new Date(editItem.effective_end_date).getTime()
+      : 0;
+    const newTime = values.effective_end_date
+      ? new Date(values.effective_end_date).getTime()
+      : 0;
+    if (Math.abs(oldTime - newTime) > 60000) return true;
+
+    // 2. Informations
+    const infoMap = new Map();
+    if (editItem.informations) {
+      editItem.informations.forEach((i) => infoMap.set(i.id, i));
+    }
+    const { informationManifest } = buildManifestAndFilesForInformation(
+      values.informations,
+      infoMap,
+    );
+    if (
+      informationManifest.some((i) => i.isEdited || !i.id) ||
+      informationManifest.length !== (editItem.informations?.length || 0)
+    ) {
+      return true;
+    }
+
+    // 3. Rewards
+    const rewardMap = new Map();
+    if (editItem.rewards) {
+      editItem.rewards.forEach((r) => rewardMap.set(r.id, r));
+    }
+    const { rewardManifest } = buildManifestAndFilesForReward(
+      values.rewards,
+      rewardMap,
+    );
+    if (
+      rewardManifest.some((r) => r.isEdited || !r.id) ||
+      rewardManifest.length !== (editItem.rewards?.length || 0)
+    ) {
+      return true;
+    }
+
+    // 4. Media
+    if (campaignMedia.some((m) => !!m.file)) return true;
+    if (campaignVideo?.file) return true;
+
+    const allMedia = Array.isArray(editItem.media) ? editItem.media : [];
+    const originalImageItems = allMedia.filter(
+      (m) => !(m.media_type || "").startsWith("video/"),
+    );
+
+    const currentExistingMedia = campaignMedia.filter((m) => !m.file);
+    if (currentExistingMedia.length !== originalImageItems.length) return true;
+
+    for (let i = 0; i < currentExistingMedia.length; i++) {
+      const m = currentExistingMedia[i];
+      const orig = originalImageItems.find((om: any) => om.id === m.id);
+      if (!orig || orig.display_order !== m.display_order) return true;
+    }
+
+    const originalVideo = allMedia.find((m) =>
+      (m.media_type || "").startsWith("video/"),
+    );
+    if (!!originalVideo !== !!campaignVideo) return true;
+
+    return false;
+  }, [values, editItem, campaignMedia, campaignVideo]);
 
   const isSuspended = !!(editItem?.state === "suspend");
   const isSuccess = !!(editItem?.state === "success");
@@ -618,7 +696,10 @@ export default function CampaignForm({
     setRewardPreviews(rewardMap);
   }, [editItem, setValue, replaceInformation, replaceRewards]);
 
-  const buildManifestAndFilesForInformation = (items: FormInformation[]) => {
+  function buildManifestAndFilesForInformation(
+    items: FormInformation[],
+    originalMap?: Map<string, any>,
+  ) {
     const informationManifest: InformationManifestItem[] = [];
     const informationFiles: File[] = [];
 
@@ -631,21 +712,34 @@ export default function CampaignForm({
       if (c.information_description)
         item.information_description = c.information_description;
 
+      let isEdited = false;
       if (c.file) {
-        item.isEdited = true;
+        isEdited = true;
         informationFiles.push(c.file);
-      } else {
-        item.isEdited = false;
       }
+
+      if (c.id && originalMap && originalMap.has(c.id)) {
+        const orig = originalMap.get(c.id);
+        if (
+          orig.information_header !== c.information_header ||
+          orig.information_description !== c.information_description
+        ) {
+          isEdited = true;
+        }
+      } else if (!c.id) {
+        isEdited = true;
+      }
+
+      item.isEdited = isEdited;
       informationManifest.push(item);
     }
     return { informationManifest, informationFiles };
-  };
+  }
 
-  const buildManifestAndFilesForReward = (
+  function buildManifestAndFilesForReward(
     items: FormReward[],
     originalMap?: Map<string, any>,
-  ) => {
+  ) {
     const rewardManifest: RewardManifestItem[] = [];
     const rewardFiles: File[] = [];
 
@@ -691,7 +785,7 @@ export default function CampaignForm({
       rewardManifest.push(item);
     }
     return { rewardManifest, rewardFiles };
-  };
+  }
 
   const handleFormSubmit: SubmitHandler<FormValues> = async (values) => {
     let hasError = false;
@@ -859,57 +953,60 @@ export default function CampaignForm({
     let rewardsChanged = false;
 
     // Only check for sensitive changes if the campaign is already PUBLISHED
-    if (isEdit && editItem && isLive && editItem.supporter && editItem.supporter > 0) {
-      // Check Category
+    if (
+      isEdit &&
+      editItem &&
+      isLive &&
+      editItem.supporter &&
+      editItem.supporter > 0
+    ) {
+      // 1. Category & Goal
       if (values.category !== editItem.category) {
-        hasSensitiveChanges = true;
         sensitiveFieldsChanged.category = values.category;
       }
-
-      // Check Goal Amount
       if (Number(values.goal_amount) !== Number(editItem.goal_amount)) {
-        hasSensitiveChanges = true;
         sensitiveFieldsChanged.goal_amount = Number(values.goal_amount);
       }
 
-      // Check Effective End Date
-      // Compare ISO strings or timestamps
-      const oldEnd = editItem.effective_end_date
-        ? toIso(toLocalInputValue(editItem.effective_end_date) || "")
-        : null;
-      const newEnd = values.effective_end_date
-        ? toIso(values.effective_end_date)
-        : null;
-
-      if (oldEnd !== newEnd) {
-        hasSensitiveChanges = true;
-        sensitiveFieldsChanged.effective_end_date = newEnd || undefined;
+      // 2. Stable Date Comparison (Ignore precision/timezone noise)
+      const oldTime = editItem.effective_end_date
+        ? new Date(editItem.effective_end_date).getTime()
+        : 0;
+      const newTime = values.effective_end_date
+        ? new Date(values.effective_end_date).getTime()
+        : 0;
+      // Ignore differences < 1 minute (likely rounding errors)
+      if (Math.abs(oldTime - newTime) > 60000) {
+        sensitiveFieldsChanged.effective_end_date =
+          values.effective_end_date || undefined;
       }
 
-      // Check Rewards
-      const originalRewards = editItem.rewards || [];
-      const currentRewards = values.rewards;
-
-      const origStr = JSON.stringify(
-        originalRewards.map((r) => ({
-          h: r.reward_header,
-          d: r.reward_description,
-          a: r.reward_amount,
-          b: r.backup_amount,
-        })),
-      );
-      const currStr = JSON.stringify(
-        currentRewards.map((r) => ({
-          h: r.reward_header,
-          d: r.reward_description,
-          a: r.reward_amount,
-          b: r.backup_amount,
-        })),
+      // 3. Rewards Unified Check
+      const map = new Map();
+      if (editItem.rewards) {
+        editItem.rewards.forEach((r) => map.set(r.id, r));
+      }
+      const { rewardManifest } = buildManifestAndFilesForReward(
+        values.rewards,
+        map,
       );
 
-      if (origStr !== currStr) {
-        hasSensitiveChanges = true;
+      const actualRewardsChanged =
+        rewardManifest.some((r) => r.isEdited || !r.id) ||
+        rewardManifest.length !== (editItem.rewards?.length || 0);
+
+      if (actualRewardsChanged) {
         rewardsChanged = true;
+        // proposed object will be populated below
+      }
+
+      if (
+        sensitiveFieldsChanged.category ||
+        sensitiveFieldsChanged.goal_amount ||
+        sensitiveFieldsChanged.effective_end_date ||
+        rewardsChanged
+      ) {
+        hasSensitiveChanges = true;
       }
     }
 
@@ -921,8 +1018,15 @@ export default function CampaignForm({
       if (sensitiveFieldsChanged.effective_end_date)
         proposed.effective_end_date = values.effective_end_date;
 
+      // Include Header/Description if modified, even if they didn't trigger the modal
+      if (values.campaign_header !== editItem?.campaign_header) {
+        proposed.campaign_header = values.campaign_header;
+      }
+      if (values.campaign_description !== editItem?.campaign_description) {
+        proposed.campaign_description = values.campaign_description;
+      }
+
       if (rewardsChanged) {
-        // Re-build with original map to ensure isEdited is set correctly
         const map = new Map();
         if (editItem?.rewards) {
           editItem.rewards.forEach((r) => map.set(r.id, r));
@@ -931,10 +1035,6 @@ export default function CampaignForm({
           values.rewards,
           map,
         );
-        // FILTER HERE: Only satisfy user request "take only isEdited = true"
-        // CHANGE: Send FULL list to handle deletions and reordering.
-        // The backend will treat this list as the "Target State".
-        // Any existing reward NOT in this list will be deleted.
         proposed.rewards_payload = rewardManifest;
 
         // Build files map for Edit Request handling
@@ -1622,7 +1722,7 @@ export default function CampaignForm({
             variant="contained"
             color="success"
             fullWidth
-            disabled={isInactive || isSubmitting}
+            disabled={isInactive || isSubmitting || (!!editItem && !hasChanges)}
           >
             {editItem ? "Update (with campaigns)" : "Create (with campaigns)"}
           </Button>
