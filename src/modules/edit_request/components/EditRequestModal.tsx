@@ -13,6 +13,7 @@ import {
 interface EditRequestModalProps {
   open: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
   campaignId: string;
   clerkId: string;
   proposedChanges?: any;
@@ -21,6 +22,7 @@ interface EditRequestModalProps {
 export default function EditRequestModal({
   open,
   onClose,
+  onSuccess,
   campaignId,
   clerkId,
   proposedChanges,
@@ -29,6 +31,29 @@ export default function EditRequestModal({
   const [expiresAt, setExpiresAt] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  if (!proposedChanges) return null;
+
+  // Check if there's actually anything to propose
+  const hasCategory = !!proposedChanges.category;
+  const hasGoal = proposedChanges.goal_amount !== undefined;
+  const hasEndDate = !!proposedChanges.effective_end_date;
+  const hasHeader = !!proposedChanges.campaign_header;
+  const hasDescription = !!proposedChanges.campaign_description;
+  const hasRewards =
+    proposedChanges.rewards_payload &&
+    proposedChanges.rewards_payload.some((r: any) => r.isEdited || !r.id);
+
+  if (
+    !hasCategory &&
+    !hasGoal &&
+    !hasEndDate &&
+    !hasHeader &&
+    !hasDescription &&
+    !hasRewards
+  ) {
+    return null;
+  }
 
   const handleSubmit = async () => {
     if (!description.trim()) return;
@@ -53,7 +78,8 @@ export default function EditRequestModal({
             const fd = new FormData();
             fd.append("file", fileObj);
             fd.append("campaign_id", campaignId);
-            fd.append("clerk_id", clerkId);
+            fd.append("ref_type", "edit_request");
+            // fd.append("clerk_id", clerkId);
 
             const res = await fetch(
               `${process.env.NEXT_PUBLIC_API_URL}/api/media/upload`,
@@ -111,6 +137,7 @@ export default function EditRequestModal({
       onClose();
       setDescription("");
       alert("Edit request submitted successfully!");
+      onSuccess?.();
     } catch (e: any) {
       setError(e.message);
     } finally {

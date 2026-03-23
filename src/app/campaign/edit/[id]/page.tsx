@@ -142,6 +142,10 @@ export default function CampaignEditPage() {
           <EditRequestModal
             open={editRequestOpen}
             onClose={() => setEditRequestOpen(false)}
+            onSuccess={() => {
+              setEditRequestOpen(false);
+              router.push(`/campaign/${id}`);
+            }}
             campaignId={id}
             clerkId={user.id}
             proposedChanges={proposedData}
