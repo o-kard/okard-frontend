@@ -14,6 +14,7 @@ import {
   Typography,
   IconButton,
   Box,
+  FormHelperText,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -229,6 +230,8 @@ export default function CampaignForm({
     register,
     handleSubmit,
     setValue,
+    setError,
+    clearErrors,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
@@ -313,6 +316,7 @@ export default function CampaignForm({
       return;
     }
 
+    clearErrors("campaign_media");
     setCampaignMedia((currentMedia) => {
       const newItems = newFiles.map((f, i) => ({
         id: `${f.name}-${i}-${crypto.randomUUID()}`,
@@ -399,6 +403,7 @@ export default function CampaignForm({
       setImageSizeError(`Information image #${idx + 1} exceeds the 5MB limit.`);
       return;
     }
+    clearErrors(`informations.${idx}.file` as const);
     setValue(`informations.${idx}.file`, f);
     if (informationPreviews[idx]) URL.revokeObjectURL(informationPreviews[idx]);
     setInformationPreviews((s) => ({
@@ -462,6 +467,7 @@ export default function CampaignForm({
       setImageSizeError(`Reward image #${idx + 1} exceeds the 5MB limit.`);
       return;
     }
+    clearErrors(`rewards.${idx}.file` as const);
     setValue(`rewards.${idx}.file`, f);
     if (rewardPreviews[idx]) URL.revokeObjectURL(rewardPreviews[idx]);
     setRewardPreviews((s) => ({
@@ -688,23 +694,57 @@ export default function CampaignForm({
   };
 
   const handleFormSubmit: SubmitHandler<FormValues> = async (values) => {
+    let hasError = false;
+    let firstErrorId = "";
+
     if (campaignMedia.length === 0) {
-      alert("Please upload at least one campaign image.");
-      return;
+      setError("campaign_media", { type: "manual", message: "Please upload at least one campaign image." });
+      hasError = true;
+      if (!firstErrorId) firstErrorId = "campaign-media-section";
     }
 
     if (!values.informations || values.informations.length === 0) {
-      alert("Please add at least one information item.");
-      return;
+      setError("informations", { type: "manual", message: "Please add at least one information item." });
+      hasError = true;
+      if (!firstErrorId) firstErrorId = "information-section-0";
     }
 
     if (!values.rewards || values.rewards.length === 0) {
-      alert("Please add at least one reward.");
+      setError("rewards", { type: "manual", message: "Please add at least one reward." });
+      hasError = true;
+      if (!firstErrorId) firstErrorId = "reward-section-0";
+    }
+
+    const isEdit = Boolean(editItem?.id);
+
+    if (!isEdit) {
+      for (let i = 0; i < values.informations.length; i++) {
+        const f = (values.informations[i] as any).file as File | undefined;
+        if (!f) {
+          setError(`informations.${i}.file` as const, { type: "manual", message: `Please upload an image for information #${i + 1}.` });
+          hasError = true;
+          if (!firstErrorId) firstErrorId = `information-section-${i}`;
+        }
+      }
+
+      for (let i = 0; i < values.rewards.length; i++) {
+        const f = (values.rewards[i] as any).file as File | undefined;
+        if (!f) {
+          setError(`rewards.${i}.file` as const, { type: "manual", message: `Please upload an image for reward #${i + 1}.` });
+          hasError = true;
+          if (!firstErrorId) firstErrorId = `reward-section-${i}`;
+        }
+      }
+    }
+
+    if (hasError) {
+      if (firstErrorId) {
+        document.getElementById(firstErrorId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return;
     }
 
     const fd = new FormData();
-    const isEdit = Boolean(editItem?.id);
     const pickedNewFiles = (watch("campaign_media") ?? []).length > 0;
 
     // --- campaign_data (normalize optional -> default) ---
@@ -737,11 +777,7 @@ export default function CampaignForm({
       const infoFiles: File[] = [];
       for (let i = 0; i < values.informations.length; i++) {
         const f = (values.informations[i] as any).file as File | undefined;
-        if (!f) {
-          alert(`Please upload an image for information #${i + 1}.`);
-          return;
-        }
-        infoFiles.push(f);
+        if (f) infoFiles.push(f);
       }
 
       fd.append("informations", JSON.stringify(createInformationList));
@@ -758,11 +794,7 @@ export default function CampaignForm({
       const rewardFiles: File[] = [];
       for (let i = 0; i < values.rewards.length; i++) {
         const f = (values.rewards[i] as any).file as File | undefined;
-        if (!f) {
-          alert(`Please upload an image for reward #${i + 1}.`);
-          return;
-        }
-        rewardFiles.push(f);
+        if (f) rewardFiles.push(f);
       }
 
       fd.append("rewards", JSON.stringify(createRewardList));
@@ -1198,7 +1230,7 @@ export default function CampaignForm({
         </Grid>
 
         {/* Image Upload (multiple, reorderable) */}
-        <Grid size={{ xs: 12 }}>
+        <Grid size={{ xs: 12 }} id="campaign-media-section">
           <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
             Images
           </Typography>
@@ -1217,6 +1249,12 @@ export default function CampaignForm({
               onChange={handleCampaignFilesChange}
             />
           </Button>
+
+          {errors.campaign_media && (
+            <FormHelperText error sx={{ mt: 1 }}>
+              {errors.campaign_media.message}
+            </FormHelperText>
+          )}
 
           {imageSizeError && (
             <Typography
@@ -1282,6 +1320,7 @@ export default function CampaignForm({
               container
               spacing={1}
               key={field.id}
+              id={`information-section-${idx}`}
               sx={{ mb: 2, p: 1, border: "1px solid #ddd", borderRadius: 1 }}
             >
               <Grid size={{ xs: 12, md: 6 }}>
@@ -1320,7 +1359,14 @@ export default function CampaignForm({
                   rows={3}
                   {...register(
                     `informations.${idx}.information_description` as const,
+                    {
+                      required: "Information description is required",
+                    }
                   )}
+                  error={!!errors.informations?.[idx]?.information_description}
+                  helperText={
+                    errors.informations?.[idx]?.information_description?.message
+                  }
                   disabled={isInactive}
                 />
               </Grid>
@@ -1338,6 +1384,11 @@ export default function CampaignForm({
                     disabled={isInactive}
                   />
                 </Button>
+                {errors.informations?.[idx]?.file && (
+                  <FormHelperText error sx={{ mt: 1 }}>
+                    {errors.informations[idx]?.file?.message}
+                  </FormHelperText>
+                )}
 
                 {informationPreviews[idx] && (
                   <Box sx={{ mt: 1 }}>
@@ -1412,6 +1463,7 @@ export default function CampaignForm({
                 container
                 spacing={1}
                 key={field.id}
+                id={`reward-section-${idx}`}
                 sx={{ mb: 2, p: 1, border: "1px solid #ddd", borderRadius: 1 }}
               >
                 <Grid size={{ xs: 12, md: 6 }}>
@@ -1444,7 +1496,15 @@ export default function CampaignForm({
                     multiline
                     rows={3}
                     disabled={isInactive || isDisabled}
-                    {...register(`rewards.${idx}.reward_description` as const)}
+                    {...register(`rewards.${idx}.reward_description` as const,
+                      {
+                        required: "Reward description is required",
+                      }
+                    )}
+                    error={!!errors.rewards?.[idx]?.reward_description}
+                    helperText={
+                      errors.rewards?.[idx]?.reward_description?.message
+                    }
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -1454,10 +1514,7 @@ export default function CampaignForm({
                     disabled={isInactive || isDisabled}
                     {...register(`rewards.${idx}.reward_amount` as const, {
                       valueAsNumber: true,
-                      min: {
-                        value: 0,
-                        message: "Reward amount must be positive",
-                      },
+                      validate: (value) => value > 0 || "Reward amount must be greater than 0",
                     })}
                     error={!!errors.rewards?.[idx]?.reward_amount}
                     helperText={errors.rewards?.[idx]?.reward_amount?.message}
@@ -1480,6 +1537,12 @@ export default function CampaignForm({
                       onChange={(e) => handleRewardFileChange(idx, e)}
                     />
                   </Button>
+
+                  {errors.rewards?.[idx]?.file && (
+                    <FormHelperText error sx={{ mt: 1 }}>
+                      {errors.rewards[idx]?.file?.message}
+                    </FormHelperText>
+                  )}
 
                   {imageSizeError && (
                     <Typography
