@@ -10,7 +10,7 @@ import {
   Divider,
 } from "@mui/material";
 import { getCampaignCommunity } from "@/modules/campaign/api/api";
-import { CampaignCommunity } from "@/modules/campaign/types/campaign";
+import { CampaignCommunity, CountrySupporterStat } from "@/modules/campaign/types/campaign";
 
 interface CommunityLeaderboardProps {
   campaignId: string;
@@ -46,7 +46,7 @@ export default function CommunityLeaderboard({
   }
 
   const totalSupporters = data?.total_supporters || 0;
-  const topCities = data?.top_cities || [];
+  const topCountries = data?.top_countries || [];
 
   return (
     <Box
@@ -112,18 +112,18 @@ export default function CommunityLeaderboard({
           align="center"
           sx={{ mb: 2 }}
         >
-          TOP CITIES
+          TOP COUNTRIES
         </Typography>
 
         <Divider sx={{ mb: 3 }} />
 
-        {topCities.length === 0 ? (
+        {topCountries.length === 0 ? (
           <Typography color="text.secondary" align="center" sx={{ py: 4 }}>
             No data available yet.
           </Typography>
         ) : (
           <Stack spacing={2.5}>
-            {topCities.map((item, index) => (
+            {topCountries.map((item: CountrySupporterStat, index: number) => (
               <Box
                 key={index}
                 sx={{
@@ -133,7 +133,7 @@ export default function CommunityLeaderboard({
                 }}
               >
                 <Typography variant="body1" fontWeight={500}>
-                  {item.city}
+                  {item.country}
                 </Typography>
                 <Typography
                   variant="body1"
