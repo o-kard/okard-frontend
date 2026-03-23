@@ -23,13 +23,20 @@ import { Campaign } from "../campaign/types/campaign";
 type Props = {
   campaignId: string;
   userId: string;
+  initialFullName?: string;
+  initialEmail?: string;
 };
 
-export default function PaymentComponent({ campaignId, userId }: Props) {
+export default function PaymentComponent({
+  campaignId,
+  userId,
+  initialFullName = "",
+  initialEmail = "",
+}: Props) {
   const router = useRouter();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState(initialFullName);
+  const [email, setEmail] = useState(initialEmail);
   const [amount, setAmount] = useState<number>(0);
   const [method, setMethod] = useState<PaymentType>("promptpay");
   const [agree, setAgree] = useState(false);
