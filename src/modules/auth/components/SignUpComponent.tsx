@@ -203,7 +203,7 @@ export default function SignUpComponent() {
                     </InputAdornment>
                   ),
                 }}
-                sx={{ mb: 3, "& .MuiOutlinedInput-root": { borderRadius: 4 } }}
+                sx={{ mb: 2, "& .MuiOutlinedInput-root": { borderRadius: 4 } }}
               />
               <TextField
                 margin="normal"
