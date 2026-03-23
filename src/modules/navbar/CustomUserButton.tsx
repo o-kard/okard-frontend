@@ -16,6 +16,9 @@ import {
 import Logout from "@mui/icons-material/Logout";
 import Settings from "@mui/icons-material/Settings";
 import Person from "@mui/icons-material/Person";
+import { useAuth } from "@clerk/nextjs";
+import { User } from "../user/types/user";
+import { getUser } from "../user/api/api";
 
 interface CustomUserButtonProps {
     size?: number;
@@ -23,11 +26,28 @@ interface CustomUserButtonProps {
 
 export default function CustomUserButton({ size = 40 }: CustomUserButtonProps) {
     const { user } = useUser();
+    const { getToken } = useAuth();
     const { signOut } = useClerk();
     const router = useRouter();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
     const pathname = usePathname();
+    const [dbUser, setDbUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        async function load() {
+            try {
+                const token = await getToken();
+                if (token) {
+                    const dbUserData = await getUser(token);
+                    setDbUser(dbUserData);
+                }
+            } catch (err) {
+                console.error("Failed to load user:", err);
+            }
+        }
+        load();
+    }, [getToken]);
 
     const handleClose = () => {
         setAnchorEl(null);
@@ -131,7 +151,7 @@ export default function CustomUserButton({ size = 40 }: CustomUserButtonProps) {
             >
                 <Box px={2} py={1}>
                     <Typography variant="subtitle1" fontWeight="bold">
-                        {user.fullName || user.username}
+                        {dbUser ? dbUser.username : user.username}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" noWrap>
                         {user.primaryEmailAddress?.emailAddress}
