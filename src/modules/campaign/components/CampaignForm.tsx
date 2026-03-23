@@ -1197,7 +1197,10 @@ export default function CampaignForm({
             {...register("effective_start_from", {
               required: "Start date is required",
             })}
-            slotProps={{ inputLabel: { shrink: true } }}
+            slotProps={{
+              inputLabel: { shrink: true },
+              htmlInput: { min: toLocalInputValue(new Date().toISOString()) },
+            }}
             error={!!errors.effective_start_from}
             helperText={errors.effective_start_from?.message}
           />
