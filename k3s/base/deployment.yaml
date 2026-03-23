@@ -17,7 +17,7 @@ spec:
       containers:
         - name: okard-frontend
           image: ghcr.io/o-kard/okard-frontend:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 3000
           envFrom:
