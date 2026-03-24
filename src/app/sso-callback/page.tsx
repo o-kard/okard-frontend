@@ -13,6 +13,8 @@ export default function SSO_Callback() {
       }}
     >
       <AuthenticateWithRedirectCallback
+        signInUrl="/sign-in"
+        signUpUrl="/sign-up"
         signInForceRedirectUrl="/user/setup"
         signUpForceRedirectUrl="/user/setup"
         continueSignUpUrl="/sign-up/continue"
