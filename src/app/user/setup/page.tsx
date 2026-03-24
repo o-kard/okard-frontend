@@ -12,7 +12,7 @@ function sanitize(rt: string | null) {
   return rt;
 }
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 // ... (imports)
 
 function UserSetupContent() {
@@ -28,6 +28,26 @@ function UserSetupContent() {
     user?.primaryEmailAddress?.emailAddress ||
     user?.emailAddresses?.[0]?.emailAddress ||
     null;
+
+  useEffect(() => {
+    if (clerk_id) {
+      const check = async () => {
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/exists/${clerk_id}?email=${encodeURIComponent(email || "")}`);
+          const data = await res.json();
+          if (data.exists || data.email_conflict) {
+            if (data.email_conflict) {
+              alert("Account already exists with this email.");
+            }
+            router.replace("/");
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      };
+      check();
+    }
+  }, [clerk_id, email, router]);
 
   const handleSubmit = async (fd: FormData) => {
     if (!user) return;
