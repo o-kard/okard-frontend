@@ -184,7 +184,15 @@ export default function EditRequestModal({
             {proposedChanges.effective_end_date && (
               <Typography variant="body2" sx={{ display: "block" }}>
                 • <strong>End Date:</strong>{" "}
-                {new Date(proposedChanges.effective_end_date).toLocaleString()}
+                {new Date(proposedChanges.effective_end_date).toLocaleString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                  timeZoneName: "short",
+                })}
               </Typography>
             )}
             {proposedChanges.rewards_payload &&
@@ -241,9 +249,15 @@ export default function EditRequestModal({
               shrink: true,
             },
             htmlInput: {
-              min: new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000)
-                .toISOString()
-                .slice(0, 16),
+              min: (() => {
+                const localNow = new Date();
+                const year = localNow.getFullYear();
+                const month = String(localNow.getMonth() + 1).padStart(2, "0");
+                const day = String(localNow.getDate()).padStart(2, "0");
+                const hours = String(localNow.getHours()).padStart(2, "0");
+                const minutes = String(localNow.getMinutes()).padStart(2, "0");
+                return `${year}-${month}-${day}T${hours}:${minutes}`;
+              })(),
             },
           }}
         />

@@ -134,14 +134,18 @@ export default function CampaignDetailPage() {
     if (!dateStr) return "-";
     let s = dateStr.trim().replace(" ", "T");
     if (!/[zZ]|[+\-]\d{2}:?\d{2}$/.test(s)) s += "Z";
-    return new Intl.DateTimeFormat(undefined, {
-      year: "numeric",
-      month: "short",
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return "-";
+
+    return new Intl.DateTimeFormat("en-GB", {
       day: "2-digit",
+      month: "short",
+      year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      hour12: false,
       timeZoneName: "short",
-    }).format(new Date(s));
+    }).format(d).replace(",", "");
   };
 
   useEffect(() => {

@@ -9,7 +9,7 @@ import {
   SignedOut,
   RedirectToSignIn,
 } from "@clerk/nextjs";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createCampaignWithInformations } from "@/modules/campaign/api/api";
 import CampaignForm, { categoryOptions } from "@/modules/campaign/components/CampaignForm";
 import { Container, Typography, Box } from "@mui/material";
@@ -24,6 +24,27 @@ export default function CampaignCreatePage() {
   const { user: clerkUser } = useUser();
   const router = useRouter();
   const { countryOptions } = useCountryOptions();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function checkStatus() {
+      try {
+        const token = await getToken();
+        if (token) {
+          const dbUser = await getUser(token);
+          if (dbUser && dbUser.status === "suspended") {
+            alert("Your account is suspended. You cannot create campaigns.");
+            router.push("/");
+          }
+        }
+      } catch (err) {
+        console.error("Failed to check user status", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    checkStatus();
+  }, [getToken, router]);
 
   const [predictResult, setPredictResult] = useState<any | null>(null);
 

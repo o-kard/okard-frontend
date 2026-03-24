@@ -115,6 +115,19 @@ export default function ProfilePanel({ campaignCount, contributionsCount }: Prof
             }}
           />
         )}
+        {profile?.status === "suspended" && (
+          <Chip
+            label="Suspended"
+            color="error"
+            variant="outlined"
+            sx={{
+              fontWeight: 700,
+              fontSize: "0.9rem",
+              px: 1,
+              borderWidth: 2,
+            }}
+          />
+        )}
       </Box>
 
       <Grid container spacing={3}>
