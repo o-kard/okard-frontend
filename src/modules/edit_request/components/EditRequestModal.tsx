@@ -56,7 +56,10 @@ export default function EditRequestModal({
   }
 
   const handleSubmit = async () => {
-    if (!description.trim()) return;
+    if (!description.trim()) {
+      setError("Please describe the changes you are proposing.");
+      return;
+    }
     setLoading(true);
     setError(null);
 
