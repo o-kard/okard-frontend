@@ -368,6 +368,9 @@ export default function UserForm({
                 fullWidth
                 size="small"
                 InputLabelProps={{ shrink: true }}
+                slotProps={{
+                  htmlInput: { max: new Date().toISOString().split("T")[0] },
+                }}
                 {...register("birth_date", {
                   validate: (value) => {
                     if (!value) return true;
