@@ -79,8 +79,11 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "kard",
+  title: "Okard",
   description: "Fund your next big idea",
+  icons: {
+    icon: "/Logo_sun_bg.svg",
+  },
 };
 
 export default function RootLayout({
