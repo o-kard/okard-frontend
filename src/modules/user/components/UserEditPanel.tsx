@@ -243,8 +243,23 @@ export default function EditPanel({
                     label="Birth date"
                     type="date"
                     fullWidth
-                    slotProps={{ inputLabel: { shrink: true } }}
-                    {...register("user.birth_date")}
+                    slotProps={{
+                      inputLabel: { shrink: true },
+                      htmlInput: { max: new Date().toISOString().split("T")[0] },
+                    }}
+                    {...register("user.birth_date", {
+                      validate: (value) => {
+                        if (!value) return true;
+                        const selected = new Date(value);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return (
+                          selected <= today || "Birth date cannot be in the future"
+                        );
+                      },
+                    })}
+                    error={!!errors.user?.birth_date}
+                    helperText={errors.user?.birth_date?.message}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>

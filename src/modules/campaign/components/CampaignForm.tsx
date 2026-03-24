@@ -294,6 +294,7 @@ export default function CampaignForm({
       return true;
     if (Number(values.goal_amount) !== Number(editItem.goal_amount)) return true;
     if (values.category !== editItem.category) return true;
+    if (values.state !== editItem.state) return true;
 
     const oldTime = editItem.effective_end_date
       ? new Date(editItem.effective_end_date).getTime()
@@ -1212,6 +1213,12 @@ export default function CampaignForm({
             defaultValue=""
             {...register("effective_start_from", {
               required: "Start date is required",
+              validate: (val) => {
+                if (isLive || !val) return true;
+                const now = new Date();
+                const sel = new Date(val);
+                return sel >= now || "Start date cannot be in the past";
+              },
             })}
             slotProps={{
               inputLabel: { shrink: true },
@@ -1241,7 +1248,15 @@ export default function CampaignForm({
                 );
               },
             })}
-            slotProps={{ inputLabel: { shrink: true } }}
+            slotProps={{
+              inputLabel: { shrink: true },
+              htmlInput: {
+                min: (() => {
+                  const startDate = watch("effective_start_from");
+                  return startDate || toLocalInputValue(new Date().toISOString());
+                })(),
+              },
+            }}
             error={!!errors.effective_end_date}
             helperText={
               errors.effective_end_date?.message ||
