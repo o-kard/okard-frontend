@@ -123,6 +123,7 @@ export default function CreatorRegisterForm({
     { platform: "instagram", url: "" },
   ]);
   const [fileUploads, setFileUploads] = useState<CreatorFormFiles>({});
+  const [idCardError, setIdCardError] = useState(false);
   const [socialLinkError, setSocialLinkError] = useState(false);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
@@ -201,6 +202,9 @@ export default function CreatorRegisterForm({
   };
 
   const handleFileChange = (field: keyof CreatorFormFiles, file: File | null) => {
+    if (field === "id_card" && file) {
+      setIdCardError(false);
+    }
     setFileUploads((prev) => ({ ...prev, [field]: file }));
   };
 
@@ -229,6 +233,12 @@ export default function CreatorRegisterForm({
       // Validate at least one social link
       if (filteredLinks.length === 0) {
         setSocialLinkError(true);
+        setSubmitting(false);
+        return;
+      }
+
+      if (!fileUploads.id_card) {
+        setIdCardError(true);
         setSubmitting(false);
         return;
       }
@@ -967,6 +977,7 @@ export default function CreatorRegisterForm({
                         variant={fileUploads.id_card ? "contained" : "outlined"}
                         component="label"
                         size="small"
+                        color={idCardError ? "error" : "primary"}
                         sx={{
                           justifyContent: 'flex-start',
                           borderRadius: 1.5,
@@ -979,7 +990,7 @@ export default function CreatorRegisterForm({
                           }),
                         }}
                       >
-                        {fileUploads.id_card ? `ID Card: ${fileUploads.id_card.name}` : 'Upload ID Card'}
+                        {fileUploads.id_card ? `ID Card: ${fileUploads.id_card.name}` : 'Upload ID Card *'}
                         <input
                           type="file"
                           accept="image/*,application/pdf"
@@ -987,6 +998,11 @@ export default function CreatorRegisterForm({
                           onChange={e => handleFileChange('id_card', e.target.files?.[0] || null)}
                         />
                       </Button>
+                      {idCardError && (
+                        <FormHelperText error sx={{ mt: 0.5 }}>
+                          ID Card is required for verification.
+                        </FormHelperText>
+                      )}
                       <Button
                         variant={fileUploads.house_registration ? "contained" : "outlined"}
                         component="label"
