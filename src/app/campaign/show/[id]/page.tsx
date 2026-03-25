@@ -589,7 +589,7 @@ export default function CampaignDetailPage() {
                         component="img"
                         src={resolveMediaUrl(campaign.user.media.path)}
                         alt={campaign.user.username}
-                        sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        sx={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }}
                       />
                     ) : (
                       <PersonIcon sx={{ color: "#ff4081" }} />
