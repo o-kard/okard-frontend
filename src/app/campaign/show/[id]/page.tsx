@@ -578,8 +578,9 @@ export default function CampaignDetailPage() {
                       height: 36,
                       borderRadius: "50%",
                       bgcolor: "#FFE6F2",
-                      display: "grid",
-                      placeItems: "center",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                       overflow: "hidden",
                       transition: "all 0.2s ease"
                     }}
