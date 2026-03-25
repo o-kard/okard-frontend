@@ -578,8 +578,9 @@ export default function CampaignDetailPage() {
                       height: 36,
                       borderRadius: "50%",
                       bgcolor: "#FFE6F2",
-                      display: "grid",
-                      placeItems: "center",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                       overflow: "hidden",
                       transition: "all 0.2s ease"
                     }}
@@ -589,7 +590,7 @@ export default function CampaignDetailPage() {
                         component="img"
                         src={resolveMediaUrl(campaign.user.media.path)}
                         alt={campaign.user.username}
-                        sx={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }}
+                        sx={{ width: "100%", height: "100%", objectFit: "cover" }}
                       />
                     ) : (
                       <PersonIcon sx={{ color: "#ff4081" }} />
