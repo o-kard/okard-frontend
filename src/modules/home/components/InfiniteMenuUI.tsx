@@ -124,7 +124,7 @@ const InfiniteMenuUI: FC<Props> = ({
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              {activeItem?.effective_start_from && new Date((activeItem.effective_start_from as string).replace(" ", "T")) > new Date() && (
+              {/* {activeItem?.effective_start_from && new Date((activeItem.effective_start_from as string).replace(" ", "T")) > new Date() && (
                 <Chip
                   label="Upcoming"
                   size="small"
@@ -136,7 +136,7 @@ const InfiniteMenuUI: FC<Props> = ({
                     height: 24,
                   }}
                 />
-              )}
+              )} */}
               <Typography
                 sx={{
                 mb: 1,
