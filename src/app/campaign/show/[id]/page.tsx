@@ -169,14 +169,10 @@ export default function CampaignDetailPage() {
         setIsBookmarked(data.is_bookmarked || false);
 
         setLoadingRecommendations(true);
-        fetchRecommendedCampaigns(id, 4)
-          .then(async (recData) => {
+        fetchRecommendedCampaigns(id, 4, token || undefined)
+          .then((recData) => {
             if (recData && recData.recommendations) {
-              const campaignsData = await Promise.all(
-                recData.recommendations.map((rec: any) =>
-                  fetchCampaignById(rec.campaign_id, token || undefined),
-                ),
-              );
+              const campaignsData = recData.recommendations.map((rec: any) => rec.campaign);
               setRecommendedCampaigns(campaignsData.filter(Boolean));
             }
           })
