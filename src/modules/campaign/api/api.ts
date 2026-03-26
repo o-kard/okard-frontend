@@ -242,12 +242,19 @@ export async function fetchBookmarks(token: string | null): Promise<Campaign[]> 
 export async function fetchRecommendedCampaigns(
   campaignId: string,
   limit: number = 4,
+  token?: string,
 ): Promise<{
   source_campaign_id: string;
-  recommendations: { campaign_id: string; score: number }[];
+  recommendations: { campaign_id: string; score: number; campaign: Campaign }[];
 }> {
+  const headers: HeadersInit = {};
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
   return request<{
     source_campaign_id: string;
-    recommendations: { campaign_id: string; score: number }[];
-  }>(`/api/campaign_recommend/${campaignId}/recommend?limit=${limit}`);
+    recommendations: { campaign_id: string; score: number; campaign: Campaign }[];
+  }>(`/api/campaign_recommend/${campaignId}/recommend?limit=${limit}`, {
+    headers,
+  });
 }
