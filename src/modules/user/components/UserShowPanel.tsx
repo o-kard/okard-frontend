@@ -11,6 +11,7 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  CircularProgress,
 } from "@mui/material";
 import Link from "next/link";
 import Grid from "@mui/material/Grid";
@@ -61,12 +62,14 @@ export default function ProfilePanel({ campaignCount, contributionsCount }: Prof
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
   const [profile, setProfile] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!isLoaded || !user) return;
 
     let abort = false;
     (async () => {
+      setIsLoading(true);
       try {
         const token = await getToken();
         if (!token) throw new Error("No token available");
@@ -80,12 +83,25 @@ export default function ProfilePanel({ campaignCount, contributionsCount }: Prof
       } catch (err) {
         console.error("Failed to fetch user with token:", err);
         if (!abort) setProfile(null);
+      } finally {
+        if (!abort) setIsLoading(false);
       }
     })();
     return () => {
       abort = true;
     };
   }, [isLoaded, user]);
+
+  if (isLoading || !isLoaded) {
+    return (
+      <Paper sx={{ p: 6, borderRadius: 3, display: "flex", justifyContent: "center", alignItems: "center", minHeight: 400 }}>
+        <Stack alignItems="center" spacing={2}>
+          <CircularProgress size={40} />
+          <Typography color="text.secondary" fontWeight={500}>Loading profile...</Typography>
+        </Stack>
+      </Paper>
+    );
+  }
 
 
   const isCreator = profile?.role === 'creator';
