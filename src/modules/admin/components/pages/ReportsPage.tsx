@@ -129,18 +129,22 @@ export default function ReportsPage() {
 
   const loadReports = async () => {
     try {
-      const [reps, users, campaigns] = await Promise.all([
+      const [reps, users, campaignResponse] = await Promise.all([
         getReports(),
         listUsers(),
         fetchCampaigns(),
       ]);
+
+      const campaigns = campaignResponse.items;
 
       const reportsData = reps.map((report) => {
         const user = users.find((u) => u.id === report.reporter_id);
         const campaign = campaigns.find((c) => c.id === report.campaign_id);
         return {
           id: report.id,
-          project: campaign ? campaign.campaign_header : "Unknown Campaign (or Global)",
+          project: campaign
+            ? campaign.campaign_header
+            : "Unknown Campaign (or Global)",
           reporter: user ? user.username : "Unknown User",
           reason:
             report.type + (report.description ? `: ${report.description}` : ""),
@@ -397,8 +401,12 @@ export default function ReportsPage() {
                       </Typography>
                     </Stack>
                   </TableCell>
-                  <TableCell align="center" sx={{ color: "#666666" }}>{r.reporter}</TableCell>
-                  <TableCell align="center" sx={{ color: "#666666" }}>{r.reason}</TableCell>
+                  <TableCell align="center" sx={{ color: "#666666" }}>
+                    {r.reporter}
+                  </TableCell>
+                  <TableCell align="center" sx={{ color: "#666666" }}>
+                    {r.reason}
+                  </TableCell>
                   <TableCell align="center">
                     <Chip
                       label={r.status}

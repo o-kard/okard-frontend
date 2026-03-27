@@ -137,13 +137,13 @@ export default function CampaignsPage() {
   useEffect(() => {
     async function loadCampaigns() {
       try {
-        const campaigns = await fetchCampaigns(
+        const response = await fetchCampaigns(
           undefined,
           undefined,
           undefined,
           "admin_all",
         );
-        const campaignsData = campaigns.map((campaign) => {
+        const campaignsData = response.items.map((campaign) => {
           const goal = campaign.goal_amount || 0;
           const raised = campaign.current_amount || 0;
           const progress =

@@ -3,7 +3,6 @@ import { LikeResp, Campaign, CampaignComment, CampaignCommunity } from "../types
 
 const API_PATH = "/api/campaign";
 const API_PATH_COMMENT = "/api/comment";
-const API_URL = "http://localhost:8000/api/campaign";
 
 export const fetchCampaigns = async (
   category?: string,
@@ -14,7 +13,12 @@ export const fetchCampaigns = async (
   limit?: number,
   offset?: number,
   includeClosed?: boolean,
-): Promise<Campaign[]> => {
+): Promise<{
+  items: Campaign[];
+  total: number;
+  page: number;
+  limit: number;
+}> => {
   const params = new URLSearchParams();
   if (category) params.append("category", category);
   if (searchQuery) params.append("q", searchQuery);
@@ -26,7 +30,12 @@ export const fetchCampaigns = async (
   if (includeClosed !== undefined) params.append("include_closed", includeClosed.toString());
 
   const qs = params.toString();
-  return request<Campaign[]>(`${API_PATH}?${qs}`);
+  return request<{
+    items: Campaign[];
+    total: number;
+    page: number;
+    limit: number;
+  }>(`${API_PATH}?${qs}`);
 };
 
 // export async function createCampaignWithImages(
