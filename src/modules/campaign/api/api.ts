@@ -30,12 +30,18 @@ export const fetchCampaigns = async (
   if (includeClosed !== undefined) params.append("include_closed", includeClosed.toString());
 
   const qs = params.toString();
-  return request<{
-    items: Campaign[];
-    total: number;
-    page: number;
-    limit: number;
-  }>(`${API_PATH}?${qs}`);
+  const res = await request<any>(`${API_PATH}?${qs}`);
+
+  if (Array.isArray(res)) {
+    return {
+      items: res,
+      total: res.length,
+      page: 1,
+      limit: res.length,
+    };
+  }
+
+  return res;
 };
 
 // export async function createCampaignWithImages(
