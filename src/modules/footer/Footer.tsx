@@ -52,7 +52,13 @@ export default function Footer() {
             alignItems: 'center',
             justifyContent: 'center'
           }}>
-            <img src="Logo_sun.svg" alt="Logo" />
+            <Image 
+              src="/Logo_sun.svg" 
+              alt="Logo" 
+              width={120} 
+              height={120}
+              style={{ width: '100%', height: 'auto' }}
+            />
           </Box>
           {/* Logo Text */}
           <Typography
