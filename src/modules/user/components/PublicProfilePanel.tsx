@@ -427,7 +427,7 @@ export default function PublicProfilePanel({
                       borderRadius: 3,
                       bgcolor: "rgb(250, 250, 250)",
                       minHeight: 100,
-                      borderStyle: "dashed",
+                      borderStyle: "solid",
                     }}
                   >
                     <Typography
@@ -569,7 +569,9 @@ export default function PublicProfilePanel({
 
               <Box sx={{ flex: 1, overflowY: "auto", pr: 1 }}>
                 {campaignsLoading ? (
-                  <CircularProgress />
+                  <Box display="flex" justifyContent="center" py={4}>
+                    <CircularProgress />
+                  </Box>
                 ) : filteredCampaigns.length > 0 ? (
                   <CampaignList campaigns={filteredCampaigns} />
                 ) : (
@@ -629,7 +631,9 @@ export default function PublicProfilePanel({
 
               <Box sx={{ flex: 1, overflowY: "auto", pr: 1 }}>
                 {contributionsLoading ? (
-                  <CircularProgress />
+                  <Box display="flex" justifyContent="center" py={4}>
+                    <CircularProgress />
+                  </Box>
                 ) : filteredContributions.length > 0 ? (
                   <ContributorList contributions={filteredContributions} />
                 ) : (

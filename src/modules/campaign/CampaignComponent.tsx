@@ -14,6 +14,7 @@ import {
   TextField,
   InputAdornment,
   CircularProgress,
+  Pagination,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -21,7 +22,12 @@ import ExploreHeader from "./components/ExploreHeader";
 import { useMediaQuery } from "@mui/material";
 import CampaignList from "./components/CampaignList";
 import { Campaign } from "./types/campaign";
-import { fetchCampaigns, deleteCampaign, getForYouCampaigns } from "./api/api";
+import {
+  fetchCampaigns,
+  deleteCampaign,
+  getForYouCampaigns,
+  fetchCampaignsPagination,
+} from "./api/api";
 import SideFilters from "./components/SideFilters";
 
 type Timing = "all" | "draft" | "published" | "archived";
@@ -33,8 +39,9 @@ export default function CampaignComponent() {
   const { getToken } = useAuth();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [offset, setOffset] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalResult, setTotalResult] = useState(0);
   const [loading, setLoading] = useState(false);
   const LIMIT = 12;
 
@@ -94,17 +101,24 @@ export default function CampaignComponent() {
     }
   }, [searchParams]);
 
-  // Reset pagination when filters change
   useEffect(() => {
-    setOffset(0);
-    setHasMore(true);
-  }, [category, searchQuery, sort, timing, includeClosed]);
+    setPage(1);
+  }, [
+    viewMode,
+    user,
+    category,
+    searchQuery,
+    sort,
+    timing,
+    includeClosed,
+  ]);
 
   useEffect(() => {
     // If user is not passing query params, maybe we don't load?
     // Actually we always load.
 
     const load = async () => {
+      setLoading(true);
       try {
         if (viewMode === "recommended" && user?.id) {
           const token = await getToken();
@@ -180,23 +194,20 @@ export default function CampaignComponent() {
           // Pass filters to backend
           const stateParam = timing === "all" ? "all" : timing;
 
-          const data = await fetchCampaigns(
+          const data = await fetchCampaignsPagination(
             category === "all" ? undefined : category,
             searchQuery || undefined,
             sort,
             stateParam,
             user?.id,
+            page,
             LIMIT,
-            offset,
             includeClosed,
           );
 
-          if (offset === 0) {
-            setCampaigns(data);
-          } else {
-            setCampaigns((prev) => [...prev, ...data]);
-          }
-          setHasMore(data.length === LIMIT);
+          setCampaigns(data.items);
+          setTotalPages(data.pages);
+          setTotalResult(data.total);
         }
       } catch (err) {
         console.error(err);
@@ -206,7 +217,16 @@ export default function CampaignComponent() {
     };
 
     load();
-  }, [viewMode, user, category, searchQuery, sort, timing, includeClosed, offset]);
+  }, [
+    viewMode,
+    user,
+    category,
+    searchQuery,
+    sort,
+    timing,
+    includeClosed,
+    page,
+  ]);
 
   const router = useRouter();
 
@@ -230,11 +250,30 @@ export default function CampaignComponent() {
 
   const handleDelete = async (id: string) => {
     if (!user) return;
-    const ok = await deleteCampaign(id, user.id);
-    if (ok)
-      setCampaigns(
-        await fetchCampaigns(undefined, undefined, undefined, undefined, user.id),
-      );
+    try {
+      const ok = await deleteCampaign(id, user.id);
+      if (ok) {
+        setLoading(true);
+        const stateParam = timing === "all" ? "all" : timing;
+        const data = await fetchCampaignsPagination(
+          category === "all" ? undefined : category,
+          searchQuery || undefined,
+          sort,
+          stateParam,
+          user?.id,
+          page,
+          LIMIT,
+          includeClosed,
+        );
+        setCampaigns(data.items);
+        setTotalPages(data.pages);
+        setTotalResult(data.total);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -281,7 +320,9 @@ export default function CampaignComponent() {
                 onClear={handleClearAll}
                 searchQuery={searchQuery}
                 onSearchChange={(v) => {
-                  const newParams = new URLSearchParams(searchParams.toString());
+                  const newParams = new URLSearchParams(
+                    searchParams.toString(),
+                  );
                   if (v) newParams.set("query", v);
                   else newParams.delete("query");
                   router.push(`/campaign?${newParams.toString()}`);
@@ -302,13 +343,14 @@ export default function CampaignComponent() {
             >
               <Box display="flex" alignItems="center" gap={2}>
                 <Typography variant="body2" color="text.secondary">
-                  Found : {campaigns.length} Campaigns
+                  Found : {totalResult} Campaigns
                 </Typography>
                 {category !== "all" &&
                   (() => {
                     const categoryConfig =
-                      CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS] ??
-                      CATEGORY_COLORS.all;
+                      CATEGORY_COLORS[
+                        category as keyof typeof CATEGORY_COLORS
+                      ] ?? CATEGORY_COLORS.all;
                     const CategoryIcon = categoryConfig?.icon;
                     return (
                       <Chip
@@ -339,7 +381,9 @@ export default function CampaignComponent() {
                   value={searchQuery}
                   onChange={(e) => {
                     const v = e.target.value;
-                    const newParams = new URLSearchParams(searchParams.toString());
+                    const newParams = new URLSearchParams(
+                      searchParams.toString(),
+                    );
                     if (v) newParams.set("query", v);
                     else newParams.delete("query");
                     router.push(`/campaign?${newParams.toString()}`);
@@ -368,37 +412,52 @@ export default function CampaignComponent() {
               )}
             </Box>
 
-            <CampaignList
-              campaigns={filtered}
-              onEdit={() => {}}
-              onDelete={handleDelete}
-            />
+            {loading ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  minHeight: "40vh",
+                }}
+              >
+                <CircularProgress />
+              </Box>
+            ) : (
+              <CampaignList
+                campaigns={filtered}
+                onEdit={() => {}}
+                onDelete={handleDelete}
+              />
+            )}
 
-            {hasMore && (
-              <Box display="flex" justifyContent="center" mt={6}>
-                <Button
-                  variant="outlined"
+            {totalPages > 1 && (
+              <Box display="flex" justifyContent="center" mt={4}>
+                <Pagination
+                  count={totalPages}
+                  page={page}
+                  onChange={(event, value) => {
+                    setPage(value);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  color="primary"
+                  shape="circular"
                   size="large"
-                  disabled={loading}
-                  onClick={() => setOffset((prev) => prev + LIMIT)}
                   sx={{
-                    borderRadius: "12px",
-                    fontWeight: 700,
-                    px: 4,
-                    borderColor: "black",
-                    color: "black",
-                    "&:hover": {
-                      borderColor: "#12C998",
-                      bgcolor: "rgba(18, 201, 152, 0.04)",
+                    "& .MuiPaginationItem-root": {
+                      fontWeight: 600,
+                      color: "#888",
+                      "&.Mui-selected": {
+                        bgcolor: "rgba(0, 0, 0, 0.12)",
+                        color: "#333",
+                        backdropFilter: "blur(4px)",
+                        "&:hover": {
+                          bgcolor: "rgba(0, 0, 0, 0.20)",
+                        },
+                      },
                     },
                   }}
-                >
-                  {loading ? (
-                    <CircularProgress size={24} color="inherit" />
-                  ) : (
-                    "LOAD MORE"
-                  )}
-                </Button>
+                />
               </Box>
             )}
           </Grid>
@@ -441,7 +500,9 @@ export default function CampaignComponent() {
                 }}
                 searchQuery={searchQuery}
                 onSearchChange={(v) => {
-                  const newParams = new URLSearchParams(searchParams.toString());
+                  const newParams = new URLSearchParams(
+                    searchParams.toString(),
+                  );
                   if (v) newParams.set("query", v);
                   else newParams.delete("query");
                   router.push(`/campaign?${newParams.toString()}`);

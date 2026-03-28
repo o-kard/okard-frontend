@@ -146,8 +146,7 @@ export default function CampaignsPage() {
         const campaignsData = campaigns.map((campaign) => {
           const goal = campaign.goal_amount || 0;
           const raised = campaign.current_amount || 0;
-          const progress =
-            goal > 0 ? Math.round((raised / goal) * 100) : 0;
+          const progress = goal > 0 ? Math.round((raised / goal) * 100) : 0;
           return {
             id: campaign.id,
             name: campaign.campaign_header,
@@ -167,7 +166,6 @@ export default function CampaignsPage() {
     }
     loadCampaigns();
   }, []);
-
 
   const filtered = campaigns.filter(
     (p) =>
@@ -588,50 +586,53 @@ export default function CampaignsPage() {
             </Stack>
           )}
         </TableContainer>
-        <Dialog 
-          open={confirmOpen} 
+        <Dialog
+          open={confirmOpen}
           onClose={() => setConfirmOpen(false)}
           PaperProps={{
             style: {
-              borderRadius: '1rem',
-              padding: '0.5rem'
-            }
+              borderRadius: "1rem",
+              padding: "0.5rem",
+            },
           }}
         >
           {(() => {
             const selectedCampaign = campaigns.find((c) => c.id === selectedId);
             const isCurrentlySuspended = selectedCampaign?.status === "suspend";
-            
+
             return (
               <>
                 <DialogTitle sx={{ fontWeight: 700 }}>
-                  {isCurrentlySuspended ? "Confirm Activation" : "Confirm Suspension"}
+                  {isCurrentlySuspended
+                    ? "Confirm Activation"
+                    : "Confirm Suspension"}
                 </DialogTitle>
                 <DialogContent>
                   <Typography variant="body1" sx={{ color: "#444" }}>
-                    {isCurrentlySuspended 
+                    {isCurrentlySuspended
                       ? `Are you sure you want to reactivate "${selectedCampaign?.name}"? It will be visible again.`
-                      : `Are you sure you want to suspend "${selectedCampaign?.name}"? It will be hidden from the explore page and users will not be able to contribute.`
-                    }
+                      : `Are you sure you want to suspend "${selectedCampaign?.name}"? It will be hidden from the explore page and users will not be able to contribute.`}
                   </Typography>
                 </DialogContent>
                 <DialogActions sx={{ px: 3, pb: 2 }}>
-                  <Button 
-                    onClick={() => setConfirmOpen(false)} 
-                    sx={{ color: '#666', fontWeight: 600 }}
+                  <Button
+                    onClick={() => setConfirmOpen(false)}
+                    sx={{ color: "#666", fontWeight: 600 }}
                   >
                     Cancel
                   </Button>
                   <Button
-                    onClick={() => changeCampaignStatus(selectedCampaign?.status || "")}
+                    onClick={() =>
+                      changeCampaignStatus(selectedCampaign?.status || "")
+                    }
                     variant="contained"
                     color={isCurrentlySuspended ? "success" : "warning"}
-                    sx={{ 
-                      borderRadius: '0.5rem',
+                    sx={{
+                      borderRadius: "0.5rem",
                       px: 3,
                       fontWeight: 700,
-                      boxShadow: 'none',
-                      '&:hover': { boxShadow: 'none' }
+                      boxShadow: "none",
+                      "&:hover": { boxShadow: "none" },
                     }}
                   >
                     {isCurrentlySuspended ? "ACTIVATE" : "SUSPEND"}

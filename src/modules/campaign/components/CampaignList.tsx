@@ -96,7 +96,17 @@ function CampaignCard({
       }}
     >
       {/* IMAGE AREA */}
-      <Box sx={{ position: "relative", height: 300, bgcolor: "grey.200" }}>
+      <Box
+        component={Link}
+        href={`/campaign/show/${campaign.id}`}
+        sx={{
+          position: "relative",
+          display: "block",
+          height: 300,
+          bgcolor: "grey.200",
+          textDecoration: "none",
+        }}
+      >
         {img && (
           <Box
             component="img"
@@ -142,9 +152,9 @@ function CampaignCard({
               position: "absolute",
               top: 12,
               right: 12,
-              zIndex: 2,
+              zIndex: 2, 
               bgcolor: "rgba(255, 255, 255, 0.8)",
-              opacity: isBookmarked ? 1 : 0, // Show if bookmarked, or if hovered via parent CSS
+              opacity: isBookmarked ? 1 : 0, 
               transition: "opacity 0.2s ease, background-color 0.2s ease",
               "&:hover": {
                 bgcolor: "white",
@@ -246,8 +256,6 @@ function CampaignCard({
           }}
         >
           <Button
-            component={Link}
-            href={`/campaign/show/${campaign.id}`}
             size="small"
             variant="contained"
             sx={{
@@ -255,6 +263,7 @@ function CampaignCard({
               borderRadius: 2,
               bgcolor: "common.white",
               color: "text.primary",
+              pointerEvents: "none", // Button is visual only as parent is the link
               "&:hover": { bgcolor: "grey.100" },
             }}
           >

@@ -1,5 +1,11 @@
 import { request } from "@/api/api";
-import { LikeResp, Campaign, CampaignComment, CampaignCommunity } from "../types/campaign";
+import {
+  LikeResp,
+  Campaign,
+  CampaignComment,
+  CampaignCommunity,
+  CampaignPagination,
+} from "../types/campaign";
 
 const API_PATH = "/api/campaign";
 const API_PATH_COMMENT = "/api/comment";
@@ -23,10 +29,36 @@ export const fetchCampaigns = async (
   if (clerkId) params.append("clerk_id", clerkId);
   if (limit !== undefined) params.append("limit", limit.toString());
   if (offset !== undefined) params.append("offset", offset.toString());
-  if (includeClosed !== undefined) params.append("include_closed", includeClosed.toString());
+  if (includeClosed !== undefined)
+    params.append("include_closed", includeClosed.toString());
 
   const qs = params.toString();
   return request<Campaign[]>(`${API_PATH}?${qs}`);
+};
+
+export const fetchCampaignsPagination = async (
+  category?: string,
+  searchQuery?: string,
+  sort?: string,
+  state?: string,
+  clerkId?: string,
+  page: number = 1,
+  size: number = 12,
+  includeClosed?: boolean,
+): Promise<CampaignPagination> => {
+  const params = new URLSearchParams();
+  if (category) params.append("category", category);
+  if (searchQuery) params.append("q", searchQuery);
+  if (sort) params.append("sort", sort);
+  if (state) params.append("state", state);
+  if (clerkId) params.append("clerk_id", clerkId);
+  params.append("page", page.toString());
+  params.append("size", size.toString());
+  if (includeClosed !== undefined)
+    params.append("include_closed", includeClosed.toString());
+
+  const qs = params.toString();
+  return request<CampaignPagination>(`${API_PATH}/pagination?${qs}`);
 };
 
 // export async function createCampaignWithImages(
@@ -46,7 +78,10 @@ export const fetchCampaigns = async (
 //   return true;
 // }
 
-export async function createCampaignWithInformations(fd: FormData, clerkId: string) {
+export async function createCampaignWithInformations(
+  fd: FormData,
+  clerkId: string,
+) {
   return request(`${API_PATH}/with-informations?clerk_id=${clerkId}`, {
     method: "POST",
     body: fd,
@@ -106,7 +141,10 @@ export async function createComment(fd: FormData, clerkId: string) {
   );
 }
 
-export async function fetchCommentsByCampaignId(campaignId: string, clerk_id: string | null) {
+export async function fetchCommentsByCampaignId(
+  campaignId: string,
+  clerk_id: string | null,
+) {
   return request<CampaignComment[]>(
     `${API_PATH_COMMENT}/campaign/${campaignId}?clerk_id=${encodeURIComponent(
       clerk_id || "",
@@ -209,11 +247,15 @@ export async function fetchCampaignById(
   });
 }
 
-export async function fetchCampaignsByUserId(userId: string): Promise<Campaign[]> {
+export async function fetchCampaignsByUserId(
+  userId: string,
+): Promise<Campaign[]> {
   return request<Campaign[]>(`${API_PATH}/campaign-by-user/${userId}`);
 }
 
-export async function getCampaignCommunity(campaignId: string): Promise<CampaignCommunity> {
+export async function getCampaignCommunity(
+  campaignId: string,
+): Promise<CampaignCommunity> {
   return request<CampaignCommunity>(`${API_PATH}/${campaignId}/community`);
 }
 
@@ -230,7 +272,9 @@ export async function toggleBookmark(
   });
 }
 
-export async function fetchBookmarks(token: string | null): Promise<Campaign[]> {
+export async function fetchBookmarks(
+  token: string | null,
+): Promise<Campaign[]> {
   return request<Campaign[]>(`/api/bookmarks/`, {
     method: "GET",
     headers: {
@@ -253,7 +297,11 @@ export async function fetchRecommendedCampaigns(
   }
   return request<{
     source_campaign_id: string;
-    recommendations: { campaign_id: string; score: number; campaign: Campaign }[];
+    recommendations: {
+      campaign_id: string;
+      score: number;
+      campaign: Campaign;
+    }[];
   }>(`/api/campaign_recommend/${campaignId}/recommend?limit=${limit}`, {
     headers,
   });
