@@ -130,13 +130,12 @@ export default function CreatorsPage() {
     async function loadCreators() {
       try {
         const users = await listUsers();
-        const response = await fetchCampaigns(
+        const campaigns = await fetchCampaigns(
           undefined,
           undefined,
           undefined,
           "admin_all",
         );
-        const campaigns = response.items;
         const creatorsData = users.map((user) => {
           const campaign_number = campaigns.filter(
             (campaign) => campaign.user?.id === user.id,
