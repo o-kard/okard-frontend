@@ -9,9 +9,12 @@ import {
   Typography,
   IconButton,
   Divider,
-  Stack
+  Stack,
+  Alert,
+  InputAdornment,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { Controller, SubmitHandler, useForm, useFieldArray } from "react-hook-form";
 import { useCountryOptions } from "@/hooks/useCountryOptions";
@@ -100,6 +103,9 @@ export default function EditPanel({
   const [submitting, setSubmitting] = useState(false);
   const [imagePreviewUrl, setPreviewUrl] = useState<string | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState("");
 
   const { countryOptions, countryLoading, countryError } = useCountryOptions();
 
@@ -151,7 +157,24 @@ export default function EditPanel({
 
   const handleFormSubmit: SubmitHandler<FormValues> = async (values) => {
     try {
+      setError("");
       setSubmitting(true);
+
+      if (values.user.new_password) {
+        if (values.user.new_password !== values.user.confirm_password) {
+          setError("Passwords do not match");
+          setSubmitting(false);
+          return;
+        }
+
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+        if (!passwordRegex.test(values.user.new_password)) {
+          setError("Password must be at least 8 characters long and contain both letters and numbers.");
+          setSubmitting(false);
+          return;
+        }
+      }
+
       const fd = new FormData();
 
       const payload = {
@@ -184,9 +207,10 @@ export default function EditPanel({
       console.log("Submitting with payload:", payload);
       await onSubmit?.(fd);
       onSuccess?.();
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+    } catch (err: any) {
+      console.error("Error submitting form:", err);
+      const msg = err.errors?.[0]?.longMessage || err.message || "An error occurred while saving your profile";
+      setError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -357,13 +381,23 @@ export default function EditPanel({
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     label="New password"
-                    type="password"
+                    type={showNewPassword ? "text" : "password"}
                     fullWidth
                     autoComplete="new-password"
                     slotProps={{ inputLabel: { shrink: true } }}
-                    {...register("user.new_password", {
-                      minLength: { value: 8, message: "At least 8 characters" },
-                    })}
+                    {...register("user.new_password")}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            edge="end"
+                          >
+                            {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
                     error={!!errors.user?.new_password}
                     helperText={errors.user?.new_password?.message || " "}
                   />
@@ -371,14 +405,23 @@ export default function EditPanel({
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     label="Confirm password"
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     fullWidth
                     autoComplete="new-password"
                     slotProps={{ inputLabel: { shrink: true } }}
-                    {...register("user.confirm_password", {
-                      validate: (v, f) =>
-                        v === f.user.new_password || "Passwords do not match",
-                    })}
+                    {...register("user.confirm_password")}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            edge="end"
+                          >
+                            {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
                     error={!!errors.user?.confirm_password}
                     helperText={errors.user?.confirm_password?.message || " "}
                   />
@@ -504,6 +547,14 @@ export default function EditPanel({
           )}
 
         </Grid>
+
+        {error && (
+          <Box sx={{ mt: 3 }}>
+            <Alert severity="error" sx={{ borderRadius: 2 }}>
+              {error}
+            </Alert>
+          </Box>
+        )}
 
         <Box mt={4} display="flex" gap={2} justifyContent="flex-end">
           <Button
