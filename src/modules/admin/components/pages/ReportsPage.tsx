@@ -137,7 +137,7 @@ export default function ReportsPage() {
 
       const reportsData = reps.map((report) => {
         const user = users.find((u) => u.id === report.reporter_id);
-        const campaign = campaigns.items.find((c) => c.id === report.campaign_id);
+        const campaign = campaigns.find((c) => c.id === report.campaign_id);
         return {
           id: report.id,
           project: campaign ? campaign.campaign_header : "Unknown Campaign (or Global)",
@@ -397,12 +397,8 @@ export default function ReportsPage() {
                       </Typography>
                     </Stack>
                   </TableCell>
-                  <TableCell align="center" sx={{ color: "#666666" }}>
-                    {r.reporter}
-                  </TableCell>
-                  <TableCell align="center" sx={{ color: "#666666" }}>
-                    {r.reason}
-                  </TableCell>
+                  <TableCell align="center" sx={{ color: "#666666" }}>{r.reporter}</TableCell>
+                  <TableCell align="center" sx={{ color: "#666666" }}>{r.reason}</TableCell>
                   <TableCell align="center">
                     <Chip
                       label={r.status}

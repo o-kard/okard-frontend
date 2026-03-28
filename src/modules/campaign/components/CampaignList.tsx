@@ -17,45 +17,14 @@ import { CATEGORY_COLORS } from "@/modules/home/utils/categoryColors";
 import { toggleBookmark } from "../api/api";
 import { useState, useEffect } from "react";
 
-import { Skeleton } from "@mui/material";
-
 type Props = {
   campaigns: Campaign[];
-  onEdit?: (campaign: Campaign) => void;
-  onDelete?: (id: string) => void;
-  loading?: boolean;
+  onEdit: (campaign: Campaign) => void;
+  onDelete: (id: string) => void;
   gridXs?: number;
   gridSm?: number;
   gridMd?: number;
 };
-
-function CampaignCardSkeleton({
-  gridXs,
-  gridSm,
-  gridMd,
-}: {
-  gridXs: number;
-  gridSm: number;
-  gridMd: number;
-}) {
-  return (
-    <Grid size={{ xs: gridXs, sm: gridSm, md: gridMd }}>
-      <Box sx={{ borderRadius: 3, overflow: "hidden", boxShadow: 2, bgcolor: "background.paper" }}>
-        <Skeleton variant="rectangular" height={300} />
-        <Box sx={{ px: 2, pt: 1.5, pb: 2 }}>
-          <Skeleton variant="text" width="80%" height={32} />
-          <Skeleton variant="text" width="40%" height={24} sx={{ mb: 1 }} />
-          <Skeleton variant="rectangular" height={6} sx={{ borderRadius: 999, mb: 1 }} />
-          <Skeleton variant="text" width="60%" height={16} sx={{ mb: 2 }} />
-          <Skeleton variant="text" width="100%" height={80} />
-          <Box sx={{ mt: 1.5, display: "flex", justifyContent: "flex-end" }}>
-            <Skeleton variant="rectangular" width={80} height={24} sx={{ borderRadius: 999 }} />
-          </Box>
-        </Box>
-      </Box>
-    </Grid>
-  );
-}
 
 // Local component to handle individual campaign state (like bookmarks) without re-rendering the whole list
 function CampaignCard({
@@ -375,18 +344,7 @@ export default function CampaignList({
   gridXs = 12,
   gridSm = 6,
   gridMd = 4,
-  loading = false,
 }: Props) {
-  if (loading) {
-    return (
-      <Grid container spacing={2}>
-        {[...Array(8)].map((_, i) => (
-          <CampaignCardSkeleton key={i} gridXs={gridXs} gridSm={gridSm} gridMd={gridMd} />
-        ))}
-      </Grid>
-    );
-  }
-
   return (
     <Grid container spacing={2}>
       {campaigns.map((campaign) => {

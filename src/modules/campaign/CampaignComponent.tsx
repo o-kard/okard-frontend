@@ -14,7 +14,6 @@ import {
   TextField,
   InputAdornment,
   CircularProgress,
-  Pagination,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -37,7 +36,6 @@ export default function CampaignComponent() {
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [totalCount, setTotalCount] = useState(0);
   const LIMIT = 12;
 
   const searchParams = useSearchParams();
@@ -177,9 +175,7 @@ export default function CampaignComponent() {
             });
           }
 
-          setTotalCount(campaigns.length);
-          const paginated = campaigns.slice(offset, offset + LIMIT);
-          setCampaigns(paginated);
+          setCampaigns(campaigns);
         } else {
           // Pass filters to backend
           const stateParam = timing === "all" ? "all" : timing;
@@ -195,9 +191,12 @@ export default function CampaignComponent() {
             includeClosed,
           );
 
-          setCampaigns(data.items);
-          setTotalCount(data.total);
-          setHasMore(data.items.length === LIMIT);
+          if (offset === 0) {
+            setCampaigns(data);
+          } else {
+            setCampaigns((prev) => [...prev, ...data]);
+          }
+          setHasMore(data.length === LIMIT);
         }
       } catch (err) {
         console.error(err);
@@ -208,10 +207,6 @@ export default function CampaignComponent() {
 
     load();
   }, [viewMode, user, category, searchQuery, sort, timing, includeClosed, offset]);
-
-  // Pagination states
-  const totalPages = Math.ceil(totalCount / LIMIT);
-  const page = Math.floor(offset / LIMIT) + 1;
 
   const router = useRouter();
 
@@ -236,9 +231,10 @@ export default function CampaignComponent() {
   const handleDelete = async (id: string) => {
     if (!user) return;
     const ok = await deleteCampaign(id, user.id);
-    if (ok) {
-       setOffset(0); // Reset to first page after delete
-    }
+    if (ok)
+      setCampaigns(
+        await fetchCampaigns(undefined, undefined, undefined, undefined, user.id),
+      );
   };
 
   return (
@@ -306,7 +302,7 @@ export default function CampaignComponent() {
             >
               <Box display="flex" alignItems="center" gap={2}>
                 <Typography variant="body2" color="text.secondary">
-                  Found : {totalCount} Campaigns
+                  Found : {campaigns.length} Campaigns
                 </Typography>
                 {category !== "all" &&
                   (() => {
@@ -376,37 +372,34 @@ export default function CampaignComponent() {
               campaigns={filtered}
               onEdit={() => {}}
               onDelete={handleDelete}
-              loading={loading}
             />
 
-            {totalPages > 1 && (
-                <Box display="flex" justifyContent="center" mt={4}>
-                    <Pagination
-                        count={totalPages}
-                        page={page}
-                        onChange={(event, value) => {
-                            setOffset((value - 1) * LIMIT);
-                            window.scrollTo({ top: 0, behavior: "smooth" });
-                        }}
-                        color="primary"
-                        shape="circular"
-                        size="large"
-                        sx={{
-                            "& .MuiPaginationItem-root": {
-                                fontWeight: 600,
-                                color: "#888",
-                                "&.Mui-selected": {
-                                    bgcolor: "rgba(0, 0, 0, 0.12)",
-                                    color: "#333",
-                                    backdropFilter: "blur(4px)",
-                                    "&:hover": {
-                                        bgcolor: "rgba(0, 0, 0, 0.20)",
-                                    },
-                                },
-                            },
-                        }}
-                    />
-                </Box>
+            {hasMore && (
+              <Box display="flex" justifyContent="center" mt={6}>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  disabled={loading}
+                  onClick={() => setOffset((prev) => prev + LIMIT)}
+                  sx={{
+                    borderRadius: "12px",
+                    fontWeight: 700,
+                    px: 4,
+                    borderColor: "black",
+                    color: "black",
+                    "&:hover": {
+                      borderColor: "#12C998",
+                      bgcolor: "rgba(18, 201, 152, 0.04)",
+                    },
+                  }}
+                >
+                  {loading ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    "LOAD MORE"
+                  )}
+                </Button>
+              </Box>
             )}
           </Grid>
         </Grid>
