@@ -125,8 +125,7 @@ export default function UserBookmarksPanel() {
               p: 4,
               textAlign: "center",
               borderRadius: 3,
-              bgcolor: "#f8f9fa",
-              border: "1px dashed #e0e0e0",
+              bgcolor: "#fff",
             }}
             elevation={0}
           >

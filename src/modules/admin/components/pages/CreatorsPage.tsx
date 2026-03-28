@@ -165,11 +165,14 @@ export default function CreatorsPage() {
       } else {
         await suspendUser(selectedId);
       }
-      
+
       setCreators((prev) =>
         prev.map((u) =>
-          u.id === selectedId 
-            ? { ...u, status: currentStatus === "suspended" ? "active" : "suspended" } 
+          u.id === selectedId
+            ? {
+                ...u,
+                status: currentStatus === "suspended" ? "active" : "suspended",
+              }
             : u,
         ),
       );
@@ -342,30 +345,30 @@ export default function CreatorsPage() {
                 >
                   Campaigns
                 </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{
-                      fontWeight: 600,
-                      color: "#666666",
-                      textTransform: "uppercase",
-                      fontSize: "0.8rem",
-                      letterSpacing: "0.05em",
-                    }}
-                  >
-                    Status
-                  </TableCell>
-                  <TableCell
-                    align="right"
-                    sx={{
-                      fontWeight: 600,
-                      color: "#666666",
-                      textTransform: "uppercase",
-                      fontSize: "0.8rem",
-                      letterSpacing: "0.05em",
-                    }}
-                  >
-                    Actions
-                  </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    fontWeight: 600,
+                    color: "#666666",
+                    textTransform: "uppercase",
+                    fontSize: "0.8rem",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  Status
+                </TableCell>
+                <TableCell
+                  align="right"
+                  sx={{
+                    fontWeight: 600,
+                    color: "#666666",
+                    textTransform: "uppercase",
+                    fontSize: "0.8rem",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  Actions
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -510,37 +513,38 @@ export default function CreatorsPage() {
           )}
         </TableContainer>
 
-        <Dialog 
-          open={confirmOpen} 
+        <Dialog
+          open={confirmOpen}
           onClose={() => setConfirmOpen(false)}
           PaperProps={{
             style: {
-              borderRadius: '1rem',
-              padding: '0.5rem'
-            }
+              borderRadius: "1rem",
+              padding: "0.5rem",
+            },
           }}
         >
           {(() => {
             const selectedUser = creators.find((u) => u.id === selectedId);
             const isCurrentlySuspended = selectedUser?.status === "suspended";
-            
+
             return (
               <>
                 <DialogTitle sx={{ fontWeight: 700 }}>
-                  {isCurrentlySuspended ? "Confirm Activation" : "Confirm Suspension"}
+                  {isCurrentlySuspended
+                    ? "Confirm Activation"
+                    : "Confirm Suspension"}
                 </DialogTitle>
                 <DialogContent>
                   <Typography variant="body1" sx={{ color: "#444" }}>
-                    {isCurrentlySuspended 
+                    {isCurrentlySuspended
                       ? `Are you sure you want to reactivate "${selectedUser?.username}"? They will be able to manage their campaigns again.`
-                      : `Are you sure you want to suspend "${selectedUser?.username}"? This will also suspend all their active campaigns.`
-                    }
+                      : `Are you sure you want to suspend "${selectedUser?.username}"? This will also suspend all their active campaigns.`}
                   </Typography>
                 </DialogContent>
                 <DialogActions sx={{ px: 3, pb: 2 }}>
-                  <Button 
-                    onClick={() => setConfirmOpen(false)} 
-                    sx={{ color: '#666', fontWeight: 600 }}
+                  <Button
+                    onClick={() => setConfirmOpen(false)}
+                    sx={{ color: "#666", fontWeight: 600 }}
                   >
                     Cancel
                   </Button>
@@ -548,12 +552,12 @@ export default function CreatorsPage() {
                     onClick={() => changeUserStatus(selectedUser?.status || "")}
                     variant="contained"
                     color={isCurrentlySuspended ? "success" : "warning"}
-                    sx={{ 
-                      borderRadius: '0.5rem',
+                    sx={{
+                      borderRadius: "0.5rem",
                       px: 3,
                       fontWeight: 700,
-                      boxShadow: 'none',
-                      '&:hover': { boxShadow: 'none' }
+                      boxShadow: "none",
+                      "&:hover": { boxShadow: "none" },
                     }}
                   >
                     {isCurrentlySuspended ? "ACTIVATE" : "SUSPEND"}

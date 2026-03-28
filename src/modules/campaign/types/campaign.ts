@@ -152,3 +152,11 @@ export type CampaignSummary = {
   is_bookmarked?: boolean;
   ai_label?: AIPrediction | null;
 };
+
+export type CampaignPagination = {
+  items: Campaign[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
+};

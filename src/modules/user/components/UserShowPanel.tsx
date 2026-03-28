@@ -97,7 +97,7 @@ export default function ProfilePanel({ campaignCount, contributionsCount }: Prof
       <Paper sx={{ p: 6, borderRadius: 3, display: "flex", justifyContent: "center", alignItems: "center", minHeight: 400 }}>
         <Stack alignItems="center" spacing={2}>
           <CircularProgress size={40} />
-          <Typography color="text.secondary" fontWeight={500}>Loading profile...</Typography>
+          <Typography color="text.secondary" fontWeight={500}>Loading Profile</Typography>
         </Stack>
       </Paper>
     );
@@ -271,7 +271,7 @@ export default function ProfilePanel({ campaignCount, contributionsCount }: Prof
               borderRadius: 3,
               bgcolor: "rgb(250, 250, 250)",
               minHeight: 100,
-              borderStyle: "dashed",
+              borderStyle: "solid",
             }}
           >
             <Typography
