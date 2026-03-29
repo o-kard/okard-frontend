@@ -46,7 +46,7 @@ export default function CreatorRegisterPage() {
         const data = JSON.parse(String(rawData));
         const userData = data.user;
         const newUsername = userData.username ? String(userData.username).trim() : null;
-        
+
         const initialUsername = initialUsernameRef.current;
         if (user && newUsername && initialUsername !== undefined) {
           if (newUsername !== initialUsername) {
@@ -138,16 +138,14 @@ export default function CreatorRegisterPage() {
   return (
     <>
       <SignedIn>
-        <Box sx={{ p: { xs: 1, md: 4 }, maxWidth: 800, mx: "auto" }}>
-          <CreatorForm
-            onSubmit={handleSubmit}
-            onSuccess={handleSuccess}
-            initial={profile}
-            usernameError={usernameError}
-            // isUserHaveImage={user?.hasImage}
-            imageUrl={user?.hasImage ? user?.imageUrl : null}
-          />
-        </Box>
+        <CreatorForm
+          onSubmit={handleSubmit}
+          onSuccess={handleSuccess}
+          initial={profile}
+          usernameError={usernameError}
+          // isUserHaveImage={user?.hasImage}
+          imageUrl={user?.hasImage ? user?.imageUrl : null}
+        />
       </SignedIn>
       <SignedOut>
         <RedirectToSignIn />
