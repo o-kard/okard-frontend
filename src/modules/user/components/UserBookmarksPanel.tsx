@@ -73,7 +73,7 @@ export default function UserBookmarksPanel() {
         p: 3,
         borderRadius: 3,
         bgcolor: "#fff",
-        height: "60vh",
+        height: "623px",
         display: "flex",
         flexDirection: "column",
       }}
