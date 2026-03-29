@@ -86,7 +86,7 @@ export default function BookmarkCard({
               top: 8,
               right: 8,
               bgcolor: "rgba(255, 204, 0, 0.1)",
-              color: "rgba(255, 204, 0, 1)",
+              color: "rgba(18, 201, 152, 1)",
               boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
               "&:hover": { bgcolor: "rgba(255, 204, 0, 0.2)" },
             }}

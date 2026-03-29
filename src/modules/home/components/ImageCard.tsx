@@ -3,9 +3,13 @@ import { Campaign, CampaignSummary } from "@/modules/campaign/types/campaign";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import IconButton from "@mui/material/IconButton";
-import { useState } from "react";
+import { toggleBookmark } from "@/modules/campaign/api/api";
+import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import Link from "next/dist/client/link";
 import { resolveMediaUrl } from "@/utils/mediaUrl";
+import { dispatchBookmarkToggled, subscribeToBookmarkToggled } from "@/utils/events";
 
 type ResponsiveNumber =
   | number
@@ -18,9 +22,28 @@ type ImageCardProps = {
 };
 
 export default function ImageCard({ campaign, big = false }: ImageCardProps) {
-  const [bookmarked, setBookmarked] = useState(false);
+  const { getToken, isSignedIn } = useAuth();
+  const [bookmarked, setBookmarked] = useState(campaign.is_bookmarked ?? false);
+  const router = useRouter();
+
+  useEffect(() => {
+    setBookmarked(campaign.is_bookmarked ?? false);
+  }, [campaign.is_bookmarked]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToBookmarkToggled((payload) => {
+      if (payload.campaignId === campaign.id) {
+        setBookmarked(payload.isBookmarked);
+      }
+    });
+    return unsubscribe;
+  }, [campaign.id]);
+
   return (
-    <Link href={`/campaign/show/${campaign.id}`} style={{ textDecoration: "none" }}>
+    <Link
+      href={`/campaign/show/${campaign.id}`}
+      style={{ textDecoration: "none" }}
+    >
       <Box
         className="campaign-card"
         sx={{
@@ -68,49 +91,63 @@ export default function ImageCard({ campaign, big = false }: ImageCardProps) {
           }}
         />
         {/* Bookmark button */}
-        <Box
-          className="favorite"
-          sx={{
-            position: "absolute",
-            top: 12,
-            right: 12,
-            zIndex: 3,
-
-            opacity: 0,
-            transform: "scale(0.9)",
-            transition: "all 0.25s ease",
-          }}
-        >
-          <IconButton
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setBookmarked((prev) => !prev);
-            }}
+        {isSignedIn && (
+          <Box
+            className="favorite"
             sx={{
-              width: 44,
-              height: 44,
-              borderRadius: "50%",
+              position: "absolute",
+              top: 12,
+              right: 12,
+              zIndex: 3,
 
-              background: "rgba(255,255,255,0.65)",
-              backdropFilter: "blur(8px)",
-              WebkitBackdropFilter: "blur(8px)",
-
-              boxShadow: "0 6px 20px rgba(0,0,0,0.25)",
-
-              "&:hover": {
-                background: "rgba(255,255,255,0.85)",
-              },
+              opacity: 0,
+              transform: "scale(0.9)",
+              transition: "all 0.25s ease",
             }}
           >
-            {bookmarked ? (
-              <BookmarkIcon sx={{ color: "rgba(255, 204, 0, 1)" }} />
-            ) : (
-              <BookmarkBorderIcon sx={{ color: "#333" }} />
-            )}
-          </IconButton>
-        </Box>
+            <IconButton
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                try {
+                  const token = await getToken();
+                  if (!token) {
+                    router.push("/sign-in");
+                    return;
+                  }
+                  const res = await toggleBookmark(campaign.id, token);
+                  setBookmarked(res.bookmarked);
+                  dispatchBookmarkToggled(campaign.id, res.bookmarked);
+                } catch (err) {
+                  console.error("Failed to toggle bookmark", err);
+                }
+              }}
+              sx={{
+                width: 44,
+                height: 44,
+                borderRadius: "50%",
+
+                background: "rgba(255,255,255,0.65)",
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
+
+                boxShadow: "0 6px 20px rgba(0,0,0,0.25)",
+
+                "&:hover": {
+                  background: "rgba(255,255,255,0.85)",
+                },
+              }}
+            >
+              {bookmarked ? (
+                <BookmarkIcon sx={{ color: "rgba(18, 201, 152,1)" }} />
+              ) : (
+                <BookmarkBorderIcon sx={{ color: "#333" }} />
+              )}
+            </IconButton>
+          </Box>
+        )}ดรป
         {/* Text */}
         <Box
           sx={{

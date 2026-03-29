@@ -33,6 +33,9 @@ function CampaignCard({
   raised,
   percent,
   isOngoing,
+  isUpcoming,
+  isExpired,
+  isSuspended,
   img,
 }: {
   campaign: Campaign;
@@ -40,10 +43,15 @@ function CampaignCard({
   raised: number;
   percent: number;
   isOngoing: boolean;
+  isUpcoming: boolean;
+  isExpired: boolean;
+  isSuspended: boolean;
   img?: string;
 }) {
-  const { getToken } = useAuth();
-  const [isBookmarked, setIsBookmarked] = useState(campaign.is_bookmarked || false);
+  const { getToken, isSignedIn } = useAuth();
+  const [isBookmarked, setIsBookmarked] = useState(
+    campaign.is_bookmarked || false,
+  );
   const [isHoveringBookmark, setIsHoveringBookmark] = useState(false);
 
   useEffect(() => {
@@ -88,7 +96,17 @@ function CampaignCard({
       }}
     >
       {/* IMAGE AREA */}
-      <Box sx={{ position: "relative", height: 300, bgcolor: "grey.200" }}>
+      <Box
+        component={Link}
+        href={`/campaign/show/${campaign.id}`}
+        sx={{
+          position: "relative",
+          display: "block",
+          height: 300,
+          bgcolor: "grey.200",
+          textDecoration: "none",
+        }}
+      >
         {img && (
           <Box
             component="img"
@@ -124,36 +142,38 @@ function CampaignCard({
         />
 
         {/* Bookmark Icon */}
-        <IconButton
-          className="bookmarkBtn"
-          onClick={handleBookmarkClick}
-          onMouseEnter={() => setIsHoveringBookmark(true)}
-          onMouseLeave={() => setIsHoveringBookmark(false)}
-          sx={{
-            position: "absolute",
-            top: 12,
-            right: 12,
-            zIndex: 2,
-            bgcolor: "rgba(255, 255, 255, 0.8)",
-            opacity: isBookmarked ? 1 : 0, // Show if bookmarked, or if hovered via parent CSS
-            transition: "opacity 0.2s ease, background-color 0.2s ease",
-            "&:hover": {
-              bgcolor: "white",
-            },
-          }}
-          size="small"
-        >
-          {isBookmarked ? (
-            <BookmarkIcon color="primary" fontSize="small" />
-          ) : isHoveringBookmark ? (
-            <BookmarkIcon sx={{ color: "text.secondary" }} fontSize="small" />
-          ) : (
-            <BookmarkBorderIcon
-              sx={{ color: "text.secondary" }}
-              fontSize="small"
-            />
-          )}
-        </IconButton>
+        {isSignedIn && (
+          <IconButton
+            className="bookmarkBtn"
+            onClick={handleBookmarkClick}
+            onMouseEnter={() => setIsHoveringBookmark(true)}
+            onMouseLeave={() => setIsHoveringBookmark(false)}
+            sx={{
+              position: "absolute",
+              top: 12,
+              right: 12,
+              zIndex: 2, 
+              bgcolor: "rgba(255, 255, 255, 0.8)",
+              opacity: isBookmarked ? 1 : 0, 
+              transition: "opacity 0.2s ease, background-color 0.2s ease",
+              "&:hover": {
+                bgcolor: "white",
+              },
+            }}
+            size="small"
+          >
+            {isBookmarked ? (
+              <BookmarkIcon color="primary" fontSize="small" />
+            ) : isHoveringBookmark ? (
+              <BookmarkIcon sx={{ color: "text.secondary" }} fontSize="small" />
+            ) : (
+              <BookmarkBorderIcon
+                sx={{ color: "text.secondary" }}
+                fontSize="small"
+              />
+            )}
+          </IconButton>
+        )}
 
         {/* gradient overlay */}
         <Box
@@ -202,7 +222,7 @@ function CampaignCard({
           <Box sx={{ mt: 1 }}>
             <LinearProgress
               variant="determinate"
-              value={percent}
+              value={Math.min(100, percent)}
               sx={{
                 height: 6,
                 borderRadius: 999,
@@ -236,8 +256,6 @@ function CampaignCard({
           }}
         >
           <Button
-            component={Link}
-            href={`/campaign/show/${campaign.id}`}
             size="small"
             variant="contained"
             sx={{
@@ -245,6 +263,7 @@ function CampaignCard({
               borderRadius: 2,
               bgcolor: "common.white",
               color: "text.primary",
+              pointerEvents: "none", // Button is visual only as parent is the link
               "&:hover": { bgcolor: "grey.100" },
             }}
           >
@@ -274,7 +293,43 @@ function CampaignCard({
         )}
 
         <Box sx={{ mt: 1.5, display: "flex", justifyContent: "flex-end" }}>
-          {isOngoing && (
+          {isSuspended ? (
+            <Chip
+              label="SUSPENDED"
+              size="small"
+              sx={{
+                fontWeight: 700,
+                borderRadius: 999,
+                bgcolor: "error.main",
+                color: "common.white",
+                "& .MuiChip-label": { px: 1 },
+              }}
+            />
+          ) : isUpcoming ? (
+            <Chip
+              label="UPCOMING"
+              size="small"
+              sx={{
+                fontWeight: 700,
+                borderRadius: 999,
+                bgcolor: "info.main",
+                color: "common.white",
+                "& .MuiChip-label": { px: 1 },
+              }}
+            />
+          ) : isExpired ? (
+            <Chip
+              label="END"
+              size="small"
+              sx={{
+                fontWeight: 700,
+                borderRadius: 999,
+                bgcolor: "grey.500",
+                color: "common.white",
+                "& .MuiChip-label": { px: 1 },
+              }}
+            />
+          ) : isOngoing ? (
             <Chip
               label="ONGOING"
               size="small"
@@ -286,7 +341,7 @@ function CampaignCard({
                 "& .MuiChip-label": { px: 1 },
               }}
             />
-          )}
+          ) : null}
         </Box>
       </Box>
     </Box>
@@ -308,10 +363,24 @@ export default function CampaignList({
 
         const goal = Math.max(0, campaign.goal_amount || 0);
         const raised = Math.max(0, campaign.current_amount || 0);
-        const percent =
-          goal > 0 ? Math.min(100, Math.round((raised / goal) * 100)) : 0;
+        const percent = goal > 0 ? Math.round((raised / goal) * 100) : 0;
 
-        const isOngoing = campaign.state === "published";
+        const startDate = campaign.effective_start_from
+          ? new Date(campaign.effective_start_from.replace(" ", "T"))
+          : null;
+        const endDate = campaign.effective_end_date
+          ? new Date(campaign.effective_end_date.replace(" ", "T"))
+          : null;
+        const now = new Date();
+
+        const isExpired = endDate ? endDate < now : false;
+        const isUpcoming = startDate ? startDate > now : false;
+        const isSuspended = campaign.state === "suspend";
+
+        const isOngoing =
+          (campaign.state === "published" || campaign.state === "success") &&
+          !isExpired &&
+          !isUpcoming;
 
         return (
           <Grid key={campaign.id} size={{ xs: gridXs, sm: gridSm, md: gridMd }}>
@@ -321,6 +390,9 @@ export default function CampaignList({
               raised={raised}
               percent={percent}
               isOngoing={isOngoing}
+              isUpcoming={isUpcoming}
+              isExpired={isExpired}
+              isSuspended={isSuspended}
               img={img}
             />
           </Grid>

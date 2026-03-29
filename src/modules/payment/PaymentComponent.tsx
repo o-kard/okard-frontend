@@ -23,13 +23,20 @@ import { Campaign } from "../campaign/types/campaign";
 type Props = {
   campaignId: string;
   userId: string;
+  initialFullName?: string;
+  initialEmail?: string;
 };
 
-export default function PaymentComponent({ campaignId, userId }: Props) {
+export default function PaymentComponent({
+  campaignId,
+  userId,
+  initialFullName = "",
+  initialEmail = "",
+}: Props) {
   const router = useRouter();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState(initialFullName);
+  const [email, setEmail] = useState(initialEmail);
   const [amount, setAmount] = useState<number>(0);
   const [method, setMethod] = useState<PaymentType>("promptpay");
   const [agree, setAgree] = useState(false);
@@ -44,7 +51,7 @@ export default function PaymentComponent({ campaignId, userId }: Props) {
   const goal = Math.max(0, campaign?.goal_amount ?? 0);
   const current = Math.max(0, campaign?.current_amount ?? 0);
   const percent =
-    goal > 0 ? Math.min(100, Math.round((current / goal) * 100)) : 0;
+    goal > 0 ? Math.round((current / goal) * 100) : 0;
 
   const imgSrc = useMemo(
     () =>
@@ -105,7 +112,7 @@ export default function PaymentComponent({ campaignId, userId }: Props) {
               </Typography>
             </Stack>
             <LinearProgress
-              value={percent}
+              value={Math.min(100, percent)}
               variant="determinate"
               sx={{ height: 10, borderRadius: 10 }}
             />
@@ -131,7 +138,13 @@ export default function PaymentComponent({ campaignId, userId }: Props) {
             onChangeTip={() => {}}
             onChangeAgree={setAgree}
             onSubmit={handleSubmit}
-            disabled={!agree || total <= 0 || !fullName || !email}
+            disabled={
+              !agree ||
+              total <= 0 ||
+              !fullName ||
+              !email ||
+              !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+            }
           />
         </Grid>
       </Grid>

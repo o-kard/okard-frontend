@@ -65,6 +65,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
   const { user } = useUser();
   const { getToken } = useAuth();
   const [userRole, setUserRole] = useState<string>("");
+  const [userStatus, setUserStatus] = useState<string>("");
 
   useEffect(() => {
     async function fetchRole() {
@@ -73,15 +74,17 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
           const token = await getToken();
           if (token) {
             const dbUser = await getUser(token);
-            if (dbUser && dbUser.role) {
-              setUserRole(dbUser.role);
+            if (dbUser) {
+              if (dbUser.role) setUserRole(dbUser.role);
+              if (dbUser.status) setUserStatus(dbUser.status);
             }
           }
         } catch (err) {
-          console.error("Failed to fetch user role:", err);
+          console.error("Failed to fetch user role/status:", err);
         }
       } else {
         setUserRole("");
+        setUserStatus("");
       }
     }
     fetchRole();
@@ -135,8 +138,15 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
   useEffect(() => {
     async function load() {
       try {
-        const data = await getAllCampaigns();
-        setPopularCampaigns(data.slice(0, 2));
+        const data: Campaign[] = await getAllCampaigns();
+        console.log(data);
+        const ongoing = data.filter((c) => {
+          const isExpired = c.effective_end_date
+            ? new Date(c.effective_end_date.replace(" ", "T")) < new Date()
+            : false;
+          return c.state === "published" || (c.state === "success" && !isExpired);
+        });
+        setPopularCampaigns(ongoing.slice(0, 2));
       } catch (err) {
         console.error("Failed to load campaigns:", err);
       }
@@ -263,6 +273,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
             component={NextLink}
             href="/campaign/create"
             variant="contained"
+            disabled={userStatus === "suspended"}
             onClick={() => setMobileOpen(false)}
             startIcon={<CampaignIcon />}
             sx={{
@@ -631,6 +642,7 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
                     href="/campaign/create"
                     variant="contained"
                     size="small"
+                    disabled={userStatus === "suspended"}
                     startIcon={
                       <AddIcon
                         sx={{

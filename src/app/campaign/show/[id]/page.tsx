@@ -49,6 +49,8 @@ import BookmarkIcon from "@mui/icons-material/Bookmark";
 import { predictionLabel } from "@/utils/label";
 import CommunityLeaderboard from "@/modules/campaign/components/CommunityLeaderboard";
 import { resolveMediaUrl } from "@/utils/mediaUrl";
+import LoadingScreen from "@/components/common/LoadingScreen";
+import { notFound } from "next/navigation";
 
 export default function CampaignDetailPage() {
   const params = useParams();
@@ -132,55 +134,60 @@ export default function CampaignDetailPage() {
     if (!dateStr) return "-";
     let s = dateStr.trim().replace(" ", "T");
     if (!/[zZ]|[+\-]\d{2}:?\d{2}$/.test(s)) s += "Z";
-    return new Intl.DateTimeFormat(undefined, {
-      year: "numeric",
-      month: "short",
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return "-";
+
+    return new Intl.DateTimeFormat("en-GB", {
       day: "2-digit",
+      month: "short",
+      year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      hour12: false,
       timeZoneName: "short",
-    }).format(new Date(s));
+    }).format(d).replace(",", "");
   };
 
   useEffect(() => {
     if (!id || !isLoaded) return;
 
-    // ✅ Prevent duplicate fetches
-    if (hasFetchedCampaign.current) return;
-    hasFetchedCampaign.current = true;
+    async function fetchCampaign() {
+      if (!id || !isLoaded) return;
+      if (hasFetchedCampaign.current) return;
+      hasFetchedCampaign.current = true;
 
-    const clerkId = user?.id;
+      try {
+        const token = await getToken();
+        const data = await fetchCampaignById(id, token || undefined);
+        
+        if (!data) {
+          notFound();
+          return;
+        }
 
-    const url = clerkId
-      ? `${process.env.NEXT_PUBLIC_API_URL}/api/campaign/${id}?clerk_id=${clerkId}`
-      : `${process.env.NEXT_PUBLIC_API_URL}/api/campaign/${id}`;
-
-    fetch(url)
-      .then((r) => r.json())
-      .then((data) => {
         setCampaign(data);
         setIsBookmarked(data.is_bookmarked || false);
 
-        // Fetch recommendations after getting the campaign
         setLoadingRecommendations(true);
-        fetchRecommendedCampaigns(id, 4)
-          .then(async (recData) => {
+        fetchRecommendedCampaigns(id, 3, token || undefined)
+          .then((recData) => {
             if (recData && recData.recommendations) {
-              // Fetch full campaign details for each recommendation
-              const campaignsData = await Promise.all(
-                recData.recommendations.map((rec: any) =>
-                  fetchCampaignById(rec.campaign_id),
-                ),
-              );
-              // Filter out any failed fetches (nulls)
+              const campaignsData = recData.recommendations.map((rec: any) => rec.campaign);
               setRecommendedCampaigns(campaignsData.filter(Boolean));
             }
           })
           .catch((err) => console.error("Failed to fetch recommendations", err))
           .finally(() => setLoadingRecommendations(false));
-      })
-      .catch(console.error);
-  }, [id, user?.id]);
+      } catch (err: any) {
+        console.error("Failed to fetch campaign:", err);
+        if (err.message?.includes("404") || err.message?.includes("Not found")) {
+          notFound();
+        }
+      }
+    }
+
+    fetchCampaign();
+  }, [id, user?.id, isLoaded, getToken]);
 
   const handleBookmarkClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -207,7 +214,7 @@ export default function CampaignDetailPage() {
   const goal = Math.max(0, campaign?.goal_amount ?? 0);
   const current = Math.max(0, campaign?.current_amount ?? 0);
   const percent =
-    goal > 0 ? Math.min(100, Math.round((current / goal) * 100)) : 0;
+    goal > 0 ? Math.round((current / goal) * 100) : 0;
 
   const daysLeft = useMemo(() => {
     if (!campaign?.effective_end_date) return undefined;
@@ -216,12 +223,14 @@ export default function CampaignDetailPage() {
     return isFinite(diff) ? diff : undefined;
   }, [campaign?.effective_end_date]);
 
+  const isUpcoming = useMemo(() => {
+    if (!campaign?.effective_start_from) return false;
+    const start = new Date(campaign.effective_start_from.replace(" ", "T"));
+    return start > new Date();
+  }, [campaign?.effective_start_from]);
+
   if (!campaign) {
-    return (
-      <Container maxWidth={false}>
-        <Box sx={{ py: 8 }}>Loading...</Box>
-      </Container>
-    );
+    return <LoadingScreen message="Loading..." />;
   }
 
   const categoryConfig = CATEGORY_COLORS[campaign.category as keyof typeof CATEGORY_COLORS];
@@ -468,7 +477,6 @@ export default function CampaignDetailPage() {
                           component="span"
                           sx={{
                             fontSize: 20,
-                            color: "text.secondary",
                             fontWeight: 600,
                           }}
                         >
@@ -495,7 +503,7 @@ export default function CampaignDetailPage() {
 
                   <LinearProgress
                     variant="determinate"
-                    value={percent}
+                    value={Math.min(100, percent)}
                     sx={{
                       height: 12,
                       borderRadius: 6,
@@ -542,42 +550,57 @@ export default function CampaignDetailPage() {
               </Typography>
 
               {/* author */}
-              <Stack
-                direction="row"
-                alignItems="center"
-                spacing={1.5}
-                sx={{ mb: 1.5 }}
+              <Link 
+                href={`/user/${campaign.user_id}`} 
+                style={{ textDecoration: "none", color: "inherit" }}
               >
-                <Box
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: "50%",
-                    bgcolor: "#FFE6F2",
-                    display: "grid",
-                    placeItems: "center",
-                    overflow: "hidden",
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  spacing={1.5}
+                  sx={{ 
+                    mb: 1.5,
+                    cursor: "pointer",
+                    "&:hover": {
+                      "& .MuiTypography-root": { color: "primary.main" },
+                      "& .author-avatar": { boxShadow: "0 0 0 2px #18C59B" }
+                    }
                   }}
                 >
-                  {campaign.user?.media?.path ? (
-                    <Box
-                      component="img"
-                      src={resolveMediaUrl(campaign.user.media.path)}
-                      alt={campaign.user.username}
-                      sx={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    />
-                  ) : (
-                    <PersonIcon sx={{ color: "#ff4081" }} />
-                  )}
-                </Box>
-                <Typography fontWeight={700}>
-                  {[campaign.user?.first_name, campaign.user?.surname]
-                    .filter(Boolean)
-                    .join(" ") ||
-                    campaign.user?.username ||
-                    "Unknown creator"}
-                </Typography>
-              </Stack>
+                  <Box
+                    className="author-avatar"
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: "50%",
+                      bgcolor: "#FFE6F2",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                      transition: "all 0.2s ease"
+                    }}
+                  >
+                    {campaign.user?.media?.path ? (
+                      <Box
+                        component="img"
+                        src={resolveMediaUrl(campaign.user.media.path)}
+                        alt={campaign.user.username}
+                        sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    ) : (
+                      <PersonIcon sx={{ color: "#ff4081" }} />
+                    )}
+                  </Box>
+                  <Typography fontWeight={700} sx={{ transition: "all 0.2s ease" }}>
+                    {[campaign.user?.first_name, campaign.user?.surname]
+                      .filter(Boolean)
+                      .join(" ") ||
+                      campaign.user?.username ||
+                      "Unknown creator"}
+                  </Typography>
+                </Stack>
+              </Link>
 
               <Typography color="text.secondary" sx={{ mb: 2 }}>
                 {campaign.campaign_description}
@@ -660,26 +683,28 @@ export default function CampaignDetailPage() {
                 alignItems="center"
                 sx={{ mb: 2.5, flexWrap: "wrap" }}
               >
-                <Button
-                  variant="outlined"
-                  onClick={handleBookmarkClick}
-                  startIcon={
-                    isBookmarked ? <BookmarkIcon /> : <BookmarkIconMini />
-                  }
-                  sx={{
-                    borderRadius: 2,
-                    textTransform: "none",
-                    fontWeight: 700,
-                    borderColor: "divider",
-                    color: isBookmarked ? "primary.main" : "text.primary",
-                    "&:hover": {
-                      borderColor: "text.primary",
-                      bgcolor: "transparent",
-                    },
-                  }}
-                >
-                  {isBookmarked ? "Saved" : "Save"}
-                </Button>
+                {user && (
+                  <Button
+                    variant="outlined"
+                    onClick={handleBookmarkClick}
+                    startIcon={
+                      isBookmarked ? <BookmarkIcon /> : <BookmarkIconMini />
+                    }
+                    sx={{
+                      borderRadius: 2,
+                      textTransform: "none",
+                      fontWeight: 700,
+                      borderColor: "divider",
+                      color: isBookmarked ? "primary.main" : "text.primary",
+                      "&:hover": {
+                        borderColor: "text.primary",
+                        bgcolor: "transparent",
+                      },
+                    }}
+                  >
+                    {isBookmarked ? "Saved" : "Save"}
+                  </Button>
+                )}
                 <IconButton
                   sx={{
                     color: "#1877F2",
@@ -776,17 +801,26 @@ export default function CampaignDetailPage() {
                 fullWidth
                 disabled={
                   campaign.state === "suspend" ||
-                  (daysLeft !== undefined && daysLeft < 0)
+                  campaign.state === "draft" ||
+                  campaign.state === "fail" ||
+                  (daysLeft !== undefined && daysLeft < 0) ||
+                  isUpcoming
                 }
                 sx={{
                   bgcolor:
                     campaign.state === "suspend" ||
-                    (daysLeft !== undefined && daysLeft < 0)
+                    campaign.state === "draft" ||
+                    campaign.state === "fail" ||
+                    (daysLeft !== undefined && daysLeft < 0) ||
+                    isUpcoming
                       ? "grey.400"
                       : "#18C59B",
                   background:
                     campaign.state === "suspend" ||
-                    (daysLeft !== undefined && daysLeft < 0)
+                    campaign.state === "draft" ||
+                    campaign.state === "fail" ||
+                    (daysLeft !== undefined && daysLeft < 0) ||
+                    isUpcoming
                       ? "grey.400"
                       : "linear-gradient(45deg, #18C59B 30%, #12a884 90%)",
                   color: "white",
@@ -795,19 +829,28 @@ export default function CampaignDetailPage() {
                   height: 60,
                   fontSize: 18,
                   letterSpacing: "0.02em",
-                  textTransform: "none",
+                  textTransform: "uppercase",
                   boxShadow:
-                    daysLeft !== undefined && daysLeft < 0
+                    campaign.state === "draft" ||
+                    campaign.state === "fail" ||
+                    (daysLeft !== undefined && daysLeft < 0) ||
+                    isUpcoming
                       ? "none"
                       : "0 8px 24px rgba(24, 197, 155, 0.35)",
                   transition: "all 0.3s ease",
                   "&:hover": {
                     boxShadow:
-                      daysLeft !== undefined && daysLeft < 0
+                      campaign.state === "draft" ||
+                      campaign.state === "fail" ||
+                      (daysLeft !== undefined && daysLeft < 0) ||
+                      isUpcoming
                         ? "none"
                         : "0 12px 28px rgba(24, 197, 155, 0.5)",
                     transform:
-                      daysLeft !== undefined && daysLeft < 0
+                      campaign.state === "draft" ||
+                      campaign.state === "fail" ||
+                      (daysLeft !== undefined && daysLeft < 0) ||
+                      isUpcoming
                         ? "none"
                         : "translateY(-2px)",
                   },
@@ -815,10 +858,18 @@ export default function CampaignDetailPage() {
                 onClick={() => router.push(`/payment/${id}`)}
               >
                 {campaign.state === "suspend"
-                  ? "Campaign Suspended"
-                  : daysLeft !== undefined && daysLeft < 0
-                    ? "Campaign Ended"
-                    : "Contribute this Campaign"}
+                  ? "Suspended"
+                  : campaign.state === "draft"
+                    ? "Draft"
+                    : campaign.state === "fail"
+                      ? "Failed"
+                      : daysLeft !== undefined && daysLeft < 0
+                        ? campaign.state === "success"
+                          ? "Successful"
+                          : "Ended"
+                        : isUpcoming
+                          ? "Upcoming"
+                          : "Contribute this Campaign"}
               </Button>
             </Grid>
           </Grid>
@@ -833,8 +884,8 @@ export default function CampaignDetailPage() {
               isOwner={appUser === campaign.user_id}
               sections={[
                 {
-                  key: "campaign",
-                  label: "Campaign",
+                  key: "informations",
+                  label: "Informations",
                   content: (
                     <Grid container spacing={4}>
                       <Grid size={{ xs: 12, md: 8 }}>
@@ -889,6 +940,11 @@ export default function CampaignDetailPage() {
                               <Button
                                 variant="contained"
                                 startIcon={<AddIcon />}
+                                disabled={
+                                  campaign.state === "suspend" ||
+                                  campaign.state === "fail" ||
+                                  (daysLeft !== undefined && daysLeft < 0)
+                                }
                                 onClick={() => {
                                   setEditProgressItem(null);
                                   setOpenProgressForm(true);
@@ -908,6 +964,11 @@ export default function CampaignDetailPage() {
                                     bgcolor: "#12a884",
                                     boxShadow:
                                       "0 6px 20px 0 rgba(24, 197, 155, 0.23)",
+                                  },
+                                  "&.Mui-disabled": {
+                                    bgcolor: "grey.400",
+                                    color: "white",
+                                    boxShadow: "none",
                                   },
                                 }}
                               >

@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { Campaign } from "@/modules/campaign/types/campaign";
 import CampaignForm from "@/modules/campaign/components/CampaignForm";
-import { updateCampaignWithInformations } from "@/modules/campaign/api/api";
+import { updateCampaignWithInformations, fetchCampaignById } from "@/modules/campaign/api/api";
 import { Container, Typography, Box } from "@mui/material";
 import { getUser } from "@/modules/user/api/api";
 import { User } from "@/modules/user/types/user";
@@ -32,28 +32,25 @@ export default function CampaignEditPage() {
   const { getToken } = useAuth();
 
   useEffect(() => {
-    if (!id) return;
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaign/${id}`)
-      .then((res) => res.json())
-      .then((data) => setCampaign(data));
-  }, [id]);
+    const fetchData = async () => {
+      if (!id || !isLoaded) return;
+      
+      try {
+        const token = await getToken();
+        const data = await fetchCampaignById(id as string, token || undefined);
+        setCampaign(data);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (user) {
-        try {
-          const token = await getToken();
-          if (token) {
-            const u = await getUser(token);
-            setCurrentUserProfile(u);
-          }
-        } catch (e) {
-          console.error("Failed to fetch user profile:", e);
+        if (token) {
+          const u = await getUser(token);
+          setCurrentUserProfile(u);
         }
+      } catch (err) {
+        console.error("Failed to fetch campaign or user:", err);
       }
     };
-    fetchUser();
-  }, [user, getToken]);
+    
+    fetchData();
+  }, [id, isLoaded, getToken]);
 
   useEffect(() => {
     if (isLoaded && !user) {
@@ -145,6 +142,10 @@ export default function CampaignEditPage() {
           <EditRequestModal
             open={editRequestOpen}
             onClose={() => setEditRequestOpen(false)}
+            onSuccess={() => {
+              setEditRequestOpen(false);
+              router.push(`/campaign/${id}`);
+            }}
             campaignId={id}
             clerkId={user.id}
             proposedChanges={proposedData}

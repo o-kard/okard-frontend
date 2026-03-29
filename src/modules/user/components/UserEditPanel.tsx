@@ -9,13 +9,24 @@ import {
   Typography,
   IconButton,
   Divider,
-  Stack
+  Stack,
+  Alert,
+  InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress,
+  TextField as MuiTextField,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { Controller, SubmitHandler, useForm, useFieldArray } from "react-hook-form";
 import { useCountryOptions } from "@/hooks/useCountryOptions";
+import { useAddEmailAddress } from "@/hooks/useAddEmailAddress";
 import { SectionCard } from "@/components/ui/SectionCard";
+import { validateUsername } from "@/utils/validation";
 import { Trash2, Plus, User as UserIcon, Calendar, Globe, Mail, Phone, MapPin, Link2 } from "lucide-react";
 import { SocialLink } from "@/modules/creator/types/creator";
 import { socialPlatforms } from "@/utils/constants";
@@ -50,6 +61,7 @@ type Props = {
   onSubmit?: (fd: FormData) => Promise<void> | void;
   onSuccess?: () => void;
   onCancel?: () => void;
+  usernameError?: string | null;
 };
 
 // Edit Profile (updates Clerk + backend)
@@ -58,7 +70,9 @@ export default function EditPanel({
   onSubmit,
   onSuccess,
   onCancel,
+  usernameError,
 }: Props) {
+  const { user } = useUser();
   const {
     control,
     register,
@@ -100,6 +114,15 @@ export default function EditPanel({
   const [submitting, setSubmitting] = useState(false);
   const [imagePreviewUrl, setPreviewUrl] = useState<string | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState("");
+
+  const [verificationOpen, setVerificationOpen] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [pendingValues, setPendingValues] = useState<FormValues | null>(null);
+
+  const { prepareEmail, verifyEmail, cancelPendingEmail, submitting: emailSubmitting, error: emailError } = useAddEmailAddress();
 
   const { countryOptions, countryLoading, countryError } = useCountryOptions();
 
@@ -151,7 +174,41 @@ export default function EditPanel({
 
   const handleFormSubmit: SubmitHandler<FormValues> = async (values) => {
     try {
+      setError("");
       setSubmitting(true);
+
+      if (values.user.new_password) {
+        if (values.user.new_password !== values.user.confirm_password) {
+          setError("Passwords do not match");
+          setSubmitting(false);
+          return;
+        }
+
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+        if (!passwordRegex.test(values.user.new_password)) {
+          setError("Password must be at least 8 characters long and contain both letters and numbers.");
+          setSubmitting(false);
+          return;
+        }
+      }
+
+      // Email Verification Check
+      const desiredEmail = (values.user.email ?? "").trim();
+
+      // Use the 'user' from useUser() called in the component scope
+      if (desiredEmail && user && user.primaryEmailAddress?.emailAddress !== desiredEmail) {
+        const prepared = await prepareEmail(desiredEmail);
+        if (prepared) {
+          setPendingValues(values);
+          setVerificationOpen(true);
+          setSubmitting(false);
+          return; // Pause submission, wait for Dialog
+        } else {
+          setSubmitting(false);
+          return; // Hook set the error state
+        }
+      }
+
       const fd = new FormData();
 
       const payload = {
@@ -184,12 +241,30 @@ export default function EditPanel({
       console.log("Submitting with payload:", payload);
       await onSubmit?.(fd);
       onSuccess?.();
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+    } catch (err: any) {
+      console.error("Error submitting form:", err);
+      const msg = err.errors?.[0]?.longMessage || err.message || "An error occurred while saving your profile";
+      setError(msg);
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleVerifyCode = async () => {
+    const success = await verifyEmail(verificationCode);
+    if (success) {
+      setVerificationOpen(false);
+      setVerificationCode("");
+      if (pendingValues) {
+        handleFormSubmit(pendingValues);
+      }
+    }
+  };
+
+  const handleCancelVerification = async () => {
+    await cancelPendingEmail();
+    setVerificationOpen(false);
+    setVerificationCode("");
   };
 
   const hasEmail = !!initial?.email;
@@ -208,10 +283,14 @@ export default function EditPanel({
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12 }}>
                   <TextField
-                    label="Username (Clerk)"
                     fullWidth
-                    slotProps={{ inputLabel: { shrink: true } }}
-                    {...register("user.username", { required: true })}
+                    label="Username"
+                    {...register("user.username", {
+                      required: "Username is required",
+                      validate: (v) => validateUsername(v) || true,
+                    })}
+                    error={!!errors.user?.username}
+                    helperText={errors.user?.username?.message}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -243,8 +322,23 @@ export default function EditPanel({
                     label="Birth date"
                     type="date"
                     fullWidth
-                    slotProps={{ inputLabel: { shrink: true } }}
-                    {...register("user.birth_date")}
+                    slotProps={{
+                      inputLabel: { shrink: true },
+                      htmlInput: { max: new Date().toISOString().split("T")[0] },
+                    }}
+                    {...register("user.birth_date", {
+                      validate: (value) => {
+                        if (!value) return true;
+                        const selected = new Date(value);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return (
+                          selected <= today || "Birth date cannot be in the future"
+                        );
+                      },
+                    })}
+                    error={!!errors.user?.birth_date}
+                    helperText={errors.user?.birth_date?.message}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -342,13 +436,23 @@ export default function EditPanel({
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     label="New password"
-                    type="password"
+                    type={showNewPassword ? "text" : "password"}
                     fullWidth
                     autoComplete="new-password"
                     slotProps={{ inputLabel: { shrink: true } }}
-                    {...register("user.new_password", {
-                      minLength: { value: 8, message: "At least 8 characters" },
-                    })}
+                    {...register("user.new_password")}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            edge="end"
+                          >
+                            {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
                     error={!!errors.user?.new_password}
                     helperText={errors.user?.new_password?.message || " "}
                   />
@@ -356,14 +460,23 @@ export default function EditPanel({
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     label="Confirm password"
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     fullWidth
                     autoComplete="new-password"
                     slotProps={{ inputLabel: { shrink: true } }}
-                    {...register("user.confirm_password", {
-                      validate: (v, f) =>
-                        v === f.user.new_password || "Passwords do not match",
-                    })}
+                    {...register("user.confirm_password")}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            edge="end"
+                          >
+                            {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
                     error={!!errors.user?.confirm_password}
                     helperText={errors.user?.confirm_password?.message || " "}
                   />
@@ -490,6 +603,14 @@ export default function EditPanel({
 
         </Grid>
 
+        {(error || usernameError) && (
+          <Box sx={{ mt: 3 }}>
+            <Alert severity="error" sx={{ borderRadius: 2 }}>
+              {usernameError || error}
+            </Alert>
+          </Box>
+        )}
+
         <Box mt={4} display="flex" gap={2} justifyContent="flex-end">
           <Button
             type="button"
@@ -505,6 +626,41 @@ export default function EditPanel({
           </Button>
         </Box>
       </form>
+
+      {/* Verification Dialog */}
+      <Dialog open={verificationOpen} onClose={handleCancelVerification} maxWidth="xs" fullWidth sx={{ borderRadius: 2 }}>
+        <DialogTitle sx={{ fontWeight: 700 }}>Verify Email</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
+            Enter the 6-digit code sent to <strong>{watch("user.email")}</strong>
+          </Typography>
+          <MuiTextField
+            fullWidth
+            variant="outlined"
+            size="small"
+            value={verificationCode}
+            onChange={(e) => setVerificationCode(e.target.value)}
+            placeholder="123456"
+            slotProps={{ htmlInput: { maxLength: 6, style: { textAlign: 'center', letterSpacing: '0.5rem', fontWeight: 700, fontSize: '1.2rem' } } }}
+          />
+          {emailError && (
+            <Alert severity="error" sx={{ mt: 2, borderRadius: 1.5 }}>
+              {emailError}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2, pt: 0 }}>
+          <Button onClick={handleCancelVerification} color="inherit">Cancel</Button>
+          <Button
+            onClick={handleVerifyCode}
+            variant="contained"
+            disabled={emailSubmitting || verificationCode.length < 6}
+            sx={{ bgcolor: "#0f172a", color: "#fff", "&:hover": { bgcolor: "#1e293b" } }}
+          >
+            {emailSubmitting ? <CircularProgress size={20} color="inherit" /> : "Verify & Submit"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

@@ -23,7 +23,7 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
     body,
     headers,
     signal,
-    timeout = 10_000,
+    timeout = 30_000,
     credentials,
   } = opts;
 
@@ -32,7 +32,7 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
     : `${API_BASE_URL}${path.startsWith("/") ? "" : "/"}${path}`;
 
   const ac = new AbortController();
-  const timer = setTimeout(() => ac.abort(), timeout);
+  const timer = setTimeout(() => ac.abort("timeout"), timeout);
 
   const isForm = typeof FormData !== "undefined" && body instanceof FormData;
   const finalHeaders = {

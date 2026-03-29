@@ -5,12 +5,13 @@ import CreatorForm from "@/modules/creator/components/CreatorForm";
 import { RedirectToSignIn, SignedIn, SignedOut, useAuth } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRequireUserInDb } from "@/hooks/useRequireUserDb";
 import { getUser } from "@/modules/user/api/api";
 import { User } from "@/modules/user/types/user";
 import { useUpdateUsername } from "@/hooks/useUpdateUsername";
 import { useAddEmailAddress } from "@/hooks/useAddEmailAddress";
+import { Alert, Box } from "@mui/material";
 
 export default function CreatorRegisterPage() {
   const router = useRouter();
@@ -18,8 +19,15 @@ export default function CreatorRegisterPage() {
   const haveUserDb = useRequireUserInDb();
   const { getToken } = useAuth();
   const { user, isLoaded } = useUser();
-  const { updateUsername } = useUpdateUsername();
-  const { addEmail } = useAddEmailAddress();
+  const { updateUsername, error: usernameError } = useUpdateUsername();
+  const { cancelPendingEmail } = useAddEmailAddress();
+  const initialUsernameRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (isLoaded && user && !initialUsernameRef.current) {
+      initialUsernameRef.current = user.username;
+    }
+  }, [isLoaded, user]);
 
   const [profile, setProfile] = useState<User | null | undefined>(undefined);
 
@@ -38,27 +46,18 @@ export default function CreatorRegisterPage() {
         const data = JSON.parse(String(rawData));
         const userData = data.user;
         const newUsername = userData.username ? String(userData.username).trim() : null;
-        const currentUsername = user?.username;
-
-        if (newUsername && currentUsername && newUsername !== currentUsername) {
-          console.log(`Username changed from ${currentUsername} to ${newUsername}. Updating...`);
-          const updatedUser = await updateUsername(newUsername);
-
-          if (!updatedUser) {
-            console.error("Failed to update username. Aborting creator registration.");
-            throw new Error("Failed to update username");
-          }
-        }
-        const desiredEmail = (userData?.email ?? "").trim();
-        if (desiredEmail && !user?.primaryEmailAddress) {
-          const okE = await addEmail(desiredEmail);
-          if (!okE) {
-            console.error("Failed to add/verify email. Aborting creator registration.");
-            throw new Error("Failed to add/verify email");
+        
+        const initialUsername = initialUsernameRef.current;
+        if (user && newUsername && initialUsername !== undefined) {
+          if (newUsername !== initialUsername) {
+            const updated = await updateUsername(newUsername);
+            if (!updated) {
+              throw new Error(usernameError || "Failed to update username");
+            }
+            initialUsernameRef.current = newUsername;
           }
         }
       } catch (e) {
-        console.error("Error parsing data or updating username/email:", e);
         if (
           (e as Error).message === "Failed to update username" ||
           (e as Error).message === "Failed to add/verify email"
@@ -139,13 +138,16 @@ export default function CreatorRegisterPage() {
   return (
     <>
       <SignedIn>
-        <CreatorForm
-          onSubmit={handleSubmit}
-          onSuccess={handleSuccess}
-          initial={profile}
-          // isUserHaveImage={user?.hasImage}
-          imageUrl={user?.hasImage ? user?.imageUrl : null}
-        />
+        <Box sx={{ p: { xs: 1, md: 4 }, maxWidth: 800, mx: "auto" }}>
+          <CreatorForm
+            onSubmit={handleSubmit}
+            onSuccess={handleSuccess}
+            initial={profile}
+            usernameError={usernameError}
+            // isUserHaveImage={user?.hasImage}
+            imageUrl={user?.hasImage ? user?.imageUrl : null}
+          />
+        </Box>
       </SignedIn>
       <SignedOut>
         <RedirectToSignIn />

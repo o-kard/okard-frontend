@@ -30,7 +30,7 @@ import { getPendingCreators, verifyCreator } from "@/modules/creator/api/api";
 import { listUsers } from "@/modules/user/api/api";
 
 const statusColors: Record<string, string> = {
-  pending: "#ffd600",
+  pending: "#ff8000",
   verified: "#12C998",
   rejected: "#ff5252",
 };
@@ -326,6 +326,7 @@ export default function RequestsPage() {
                   Email
                 </TableCell>
                 <TableCell
+                  align="center"
                   sx={{
                     fontWeight: 600,
                     color: "#666666",
@@ -337,6 +338,7 @@ export default function RequestsPage() {
                   Submitted
                 </TableCell>
                 <TableCell
+                  align="center"
                   sx={{
                     fontWeight: 600,
                     color: "#666666",
@@ -406,8 +408,8 @@ export default function RequestsPage() {
                     </Stack>
                   </TableCell>
                   <TableCell sx={{ color: "#666666" }}>{r.email}</TableCell>
-                  <TableCell sx={{ color: "#666666" }}>{r.submitted}</TableCell>
-                  <TableCell>
+                  <TableCell align="center" sx={{ color: "#666666" }}>{r.submitted}</TableCell>
+                  <TableCell align="center">
                     <Chip
                       label={r.status}
                       sx={{
@@ -418,6 +420,7 @@ export default function RequestsPage() {
                         px: 1,
                         borderRadius: 1.5,
                         border: `1px solid ${statusColors[r.status]}50`,
+                        textTransform: "capitalize",
                       }}
                       size="small"
                     />

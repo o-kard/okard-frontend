@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   useForm,
   useFieldArray,
@@ -14,6 +14,7 @@ import {
   Typography,
   IconButton,
   Box,
+  FormHelperText,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -184,9 +185,13 @@ export const categoryOptions = [
 const toLocalInputValue = (iso?: string | null): string => {
   if (!iso) return "";
   const d = new Date(iso);
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 16);
+  if (isNaN(d.getTime())) return "";
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
 const toIso = (local: string): string | null =>
@@ -216,6 +221,18 @@ const toAbsolute = (p?: string) => {
   return `${base}${rel}`;
 };
 
+const getLocalTz = () => {
+  try {
+    return (
+      new Intl.DateTimeFormat(undefined, { timeZoneName: "short" })
+        .formatToParts(new Date())
+        .find((p) => p.type === "timeZoneName")?.value || ""
+    );
+  } catch (e) {
+    return "";
+  }
+};
+
 export default function CampaignForm({
   editItem,
   onSubmit,
@@ -229,6 +246,8 @@ export default function CampaignForm({
     register,
     handleSubmit,
     setValue,
+    setError,
+    clearErrors,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
@@ -267,9 +286,97 @@ export default function CampaignForm({
   const [imageSizeError, setImageSizeError] = useState<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor));
 
-  const isSuspended = editItem?.state === "suspend";
+  const values = watch();
+
+  const hasChanges = useMemo(() => {
+    if (!editItem) return true;
+
+    // 1. Basic Fields
+    if (values.campaign_header !== editItem.campaign_header) return true;
+    if (values.campaign_description !== editItem.campaign_description)
+      return true;
+    if (Number(values.goal_amount) !== Number(editItem.goal_amount)) return true;
+    if (values.category !== editItem.category) return true;
+    if (values.state !== editItem.state) return true;
+
+    const oldTime = editItem.effective_end_date
+      ? new Date(editItem.effective_end_date).getTime()
+      : 0;
+    const newTime = values.effective_end_date
+      ? new Date(values.effective_end_date).getTime()
+      : 0;
+    if (Math.abs(oldTime - newTime) > 60000) return true;
+
+    // 2. Informations
+    const infoMap = new Map();
+    if (editItem.informations) {
+      editItem.informations.forEach((i) => infoMap.set(i.id, i));
+    }
+    const { informationManifest } = buildManifestAndFilesForInformation(
+      values.informations,
+      infoMap,
+    );
+    if (
+      informationManifest.some((i) => i.isEdited || !i.id) ||
+      informationManifest.length !== (editItem.informations?.length || 0)
+    ) {
+      return true;
+    }
+
+    // 3. Rewards
+    const rewardMap = new Map();
+    if (editItem.rewards) {
+      editItem.rewards.forEach((r) => rewardMap.set(r.id, r));
+    }
+    const { rewardManifest } = buildManifestAndFilesForReward(
+      values.rewards,
+      rewardMap,
+    );
+    if (
+      rewardManifest.some((r) => r.isEdited || !r.id) ||
+      rewardManifest.length !== (editItem.rewards?.length || 0)
+    ) {
+      return true;
+    }
+
+    // 4. Media
+    if (campaignMedia.some((m) => !!m.file)) return true;
+    if (campaignVideo?.file) return true;
+
+    const allMedia = Array.isArray(editItem.media) ? editItem.media : [];
+    const originalImageItems = allMedia.filter(
+      (m) => !(m.media_type || "").startsWith("video/"),
+    );
+
+    const currentExistingMedia = campaignMedia.filter((m) => !m.file);
+    if (currentExistingMedia.length !== originalImageItems.length) return true;
+
+    for (let i = 0; i < currentExistingMedia.length; i++) {
+      const m = currentExistingMedia[i];
+      const orig = originalImageItems.find((om: any) => om.id === m.id);
+      if (!orig || orig.display_order !== m.display_order) return true;
+    }
+
+    const originalVideo = allMedia.find((m) =>
+      (m.media_type || "").startsWith("video/"),
+    );
+    if (!!originalVideo !== !!campaignVideo) return true;
+
+    return false;
+  }, [values, editItem, campaignMedia, campaignVideo]);
+
+  const isSuspended = !!(editItem?.state === "suspend");
+  const isSuccess = !!(editItem?.state === "success");
+  const isFailed = !!(editItem?.state === "fail");
+  const isExpired = !!(
+    editItem?.effective_end_date &&
+    new Date(editItem.effective_end_date) < new Date()
+  );
+  const isLive = isSuccess || !!(editItem?.state === "published");
+  const isInactive = isSuspended || isFailed || (isSuccess && isExpired);
 
   const onDragEnd = (e: any) => {
+    if (isInactive) return;
     const { active, over } = e;
     if (!over || active.id === over.id) return;
     const oldIndex = campaignMedia.findIndex((x) => x.id === active.id);
@@ -304,6 +411,7 @@ export default function CampaignForm({
       return;
     }
 
+    clearErrors("campaign_media");
     setCampaignMedia((currentMedia) => {
       const newItems = newFiles.map((f, i) => ({
         id: `${f.name}-${i}-${crypto.randomUUID()}`,
@@ -319,6 +427,7 @@ export default function CampaignForm({
       );
       return combinedMedia;
     });
+    e.target.value = "";
   };
 
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -338,6 +447,7 @@ export default function CampaignForm({
       preview: URL.createObjectURL(file),
       display_order: 0,
     });
+    e.target.value = "";
   };
 
   const handleRemoveVideo = () => {
@@ -388,12 +498,31 @@ export default function CampaignForm({
       setImageSizeError(`Information image #${idx + 1} exceeds the 5MB limit.`);
       return;
     }
+    clearErrors(`informations.${idx}.file` as const);
     setValue(`informations.${idx}.file`, f);
     if (informationPreviews[idx]) URL.revokeObjectURL(informationPreviews[idx]);
     setInformationPreviews((s) => ({
       ...s,
       [idx]: f ? URL.createObjectURL(f) : "",
     }));
+    e.target.value = "";
+  };
+
+  const handleRemoveInformation = (idx: number) => {
+    if (informationPreviews[idx]) URL.revokeObjectURL(informationPreviews[idx]);
+    setInformationPreviews((s) => {
+      const n = { ...s };
+      delete n[idx];
+      const maxIdx = Math.max(-1, ...Object.keys(n).map(Number));
+      for (let i = idx + 1; i <= maxIdx; i++) {
+        if (n[i] !== undefined) {
+          n[i - 1] = n[i];
+          delete n[i];
+        }
+      }
+      return n;
+    });
+    removeInformation(idx);
   };
 
   const handleClearInformationImage = (idx: number) => {
@@ -406,6 +535,23 @@ export default function CampaignForm({
     setValue(`informations.${idx}.file`, null);
   };
 
+  const handleRemoveReward = (idx: number) => {
+    if (rewardPreviews[idx]) URL.revokeObjectURL(rewardPreviews[idx]);
+    setRewardPreviews((s) => {
+      const n = { ...s };
+      delete n[idx];
+      const maxIdx = Math.max(-1, ...Object.keys(n).map(Number));
+      for (let i = idx + 1; i <= maxIdx; i++) {
+        if (n[i] !== undefined) {
+          n[i - 1] = n[i];
+          delete n[i];
+        }
+      }
+      return n;
+    });
+    removeReward(idx);
+  };
+
   const handleRewardFileChange = (
     idx: number,
     e: React.ChangeEvent<HTMLInputElement>,
@@ -416,12 +562,14 @@ export default function CampaignForm({
       setImageSizeError(`Reward image #${idx + 1} exceeds the 5MB limit.`);
       return;
     }
+    clearErrors(`rewards.${idx}.file` as const);
     setValue(`rewards.${idx}.file`, f);
     if (rewardPreviews[idx]) URL.revokeObjectURL(rewardPreviews[idx]);
     setRewardPreviews((s) => ({
       ...s,
       [idx]: f ? URL.createObjectURL(f) : "",
     }));
+    e.target.value = "";
   };
 
   const handleClearRewardImage = (idx: number) => {
@@ -565,7 +713,10 @@ export default function CampaignForm({
     setRewardPreviews(rewardMap);
   }, [editItem, setValue, replaceInformation, replaceRewards]);
 
-  const buildManifestAndFilesForInformation = (items: FormInformation[]) => {
+  function buildManifestAndFilesForInformation(
+    items: FormInformation[],
+    originalMap?: Map<string, any>,
+  ) {
     const informationManifest: InformationManifestItem[] = [];
     const informationFiles: File[] = [];
 
@@ -578,21 +729,34 @@ export default function CampaignForm({
       if (c.information_description)
         item.information_description = c.information_description;
 
+      let isEdited = false;
       if (c.file) {
-        item.isEdited = true;
+        isEdited = true;
         informationFiles.push(c.file);
-      } else {
-        item.isEdited = false;
       }
+
+      if (c.id && originalMap && originalMap.has(c.id)) {
+        const orig = originalMap.get(c.id);
+        if (
+          orig.information_header !== c.information_header ||
+          orig.information_description !== c.information_description
+        ) {
+          isEdited = true;
+        }
+      } else if (!c.id) {
+        isEdited = true;
+      }
+
+      item.isEdited = isEdited;
       informationManifest.push(item);
     }
     return { informationManifest, informationFiles };
-  };
+  }
 
-  const buildManifestAndFilesForReward = (
+  function buildManifestAndFilesForReward(
     items: FormReward[],
     originalMap?: Map<string, any>,
-  ) => {
+  ) {
     const rewardManifest: RewardManifestItem[] = [];
     const rewardFiles: File[] = [];
 
@@ -638,21 +802,60 @@ export default function CampaignForm({
       rewardManifest.push(item);
     }
     return { rewardManifest, rewardFiles };
-  };
+  }
 
   const handleFormSubmit: SubmitHandler<FormValues> = async (values) => {
+    let hasError = false;
+    let firstErrorId = "";
+
+    if (campaignMedia.length === 0) {
+      setError("campaign_media", { type: "manual", message: "Please upload at least one campaign image." });
+      hasError = true;
+      if (!firstErrorId) firstErrorId = "campaign-media-section";
+    }
+
     if (!values.informations || values.informations.length === 0) {
-      alert("Please add at least one information item.");
-      return;
+      setError("informations", { type: "manual", message: "Please add at least one information item." });
+      hasError = true;
+      if (!firstErrorId) firstErrorId = "information-section-0";
     }
 
     if (!values.rewards || values.rewards.length === 0) {
-      alert("Please add at least one reward.");
+      setError("rewards", { type: "manual", message: "Please add at least one reward." });
+      hasError = true;
+      if (!firstErrorId) firstErrorId = "reward-section-0";
+    }
+
+    const isEdit = Boolean(editItem?.id);
+
+    if (!isEdit) {
+      for (let i = 0; i < values.informations.length; i++) {
+        const f = (values.informations[i] as any).file as File | undefined;
+        if (!f) {
+          setError(`informations.${i}.file` as const, { type: "manual", message: `Please upload an image for information #${i + 1}.` });
+          hasError = true;
+          if (!firstErrorId) firstErrorId = `information-section-${i}`;
+        }
+      }
+
+      for (let i = 0; i < values.rewards.length; i++) {
+        const f = (values.rewards[i] as any).file as File | undefined;
+        if (!f) {
+          setError(`rewards.${i}.file` as const, { type: "manual", message: `Please upload an image for reward #${i + 1}.` });
+          hasError = true;
+          if (!firstErrorId) firstErrorId = `reward-section-${i}`;
+        }
+      }
+    }
+
+    if (hasError) {
+      if (firstErrorId) {
+        document.getElementById(firstErrorId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return;
     }
 
     const fd = new FormData();
-    const isEdit = Boolean(editItem?.id);
     const pickedNewFiles = (watch("campaign_media") ?? []).length > 0;
 
     // --- campaign_data (normalize optional -> default) ---
@@ -685,11 +888,7 @@ export default function CampaignForm({
       const infoFiles: File[] = [];
       for (let i = 0; i < values.informations.length; i++) {
         const f = (values.informations[i] as any).file as File | undefined;
-        if (!f) {
-          alert(`Please upload an image for information #${i + 1}.`);
-          return;
-        }
-        infoFiles.push(f);
+        if (f) infoFiles.push(f);
       }
 
       fd.append("informations", JSON.stringify(createInformationList));
@@ -706,11 +905,7 @@ export default function CampaignForm({
       const rewardFiles: File[] = [];
       for (let i = 0; i < values.rewards.length; i++) {
         const f = (values.rewards[i] as any).file as File | undefined;
-        if (!f) {
-          alert(`Please upload an image for reward #${i + 1}.`);
-          return;
-        }
-        rewardFiles.push(f);
+        if (f) rewardFiles.push(f);
       }
 
       fd.append("rewards", JSON.stringify(createRewardList));
@@ -775,57 +970,60 @@ export default function CampaignForm({
     let rewardsChanged = false;
 
     // Only check for sensitive changes if the campaign is already PUBLISHED
-    if (isEdit && editItem && editItem.state === "published") {
-      // Check Category
+    if (
+      isEdit &&
+      editItem &&
+      isLive &&
+      editItem.supporter &&
+      editItem.supporter > 0
+    ) {
+      // 1. Category & Goal
       if (values.category !== editItem.category) {
-        hasSensitiveChanges = true;
         sensitiveFieldsChanged.category = values.category;
       }
-
-      // Check Goal Amount
       if (Number(values.goal_amount) !== Number(editItem.goal_amount)) {
-        hasSensitiveChanges = true;
         sensitiveFieldsChanged.goal_amount = Number(values.goal_amount);
       }
 
-      // Check Effective End Date
-      // Compare ISO strings or timestamps
-      const oldEnd = editItem.effective_end_date
-        ? toIso(toLocalInputValue(editItem.effective_end_date) || "")
-        : null;
-      const newEnd = values.effective_end_date
-        ? toIso(values.effective_end_date)
-        : null;
-
-      if (oldEnd !== newEnd) {
-        hasSensitiveChanges = true;
-        sensitiveFieldsChanged.effective_end_date = newEnd || undefined;
+      // 2. Stable Date Comparison (Ignore precision/timezone noise)
+      const oldTime = editItem.effective_end_date
+        ? new Date(editItem.effective_end_date).getTime()
+        : 0;
+      const newTime = values.effective_end_date
+        ? new Date(values.effective_end_date).getTime()
+        : 0;
+      // Ignore differences < 1 minute (likely rounding errors)
+      if (Math.abs(oldTime - newTime) > 60000) {
+        sensitiveFieldsChanged.effective_end_date =
+          values.effective_end_date || undefined;
       }
 
-      // Check Rewards
-      const originalRewards = editItem.rewards || [];
-      const currentRewards = values.rewards;
-
-      const origStr = JSON.stringify(
-        originalRewards.map((r) => ({
-          h: r.reward_header,
-          d: r.reward_description,
-          a: r.reward_amount,
-          b: r.backup_amount,
-        })),
-      );
-      const currStr = JSON.stringify(
-        currentRewards.map((r) => ({
-          h: r.reward_header,
-          d: r.reward_description,
-          a: r.reward_amount,
-          b: r.backup_amount,
-        })),
+      // 3. Rewards Unified Check
+      const map = new Map();
+      if (editItem.rewards) {
+        editItem.rewards.forEach((r) => map.set(r.id, r));
+      }
+      const { rewardManifest } = buildManifestAndFilesForReward(
+        values.rewards,
+        map,
       );
 
-      if (origStr !== currStr) {
-        hasSensitiveChanges = true;
+      const actualRewardsChanged =
+        rewardManifest.some((r) => r.isEdited || !r.id) ||
+        rewardManifest.length !== (editItem.rewards?.length || 0);
+
+      if (actualRewardsChanged) {
         rewardsChanged = true;
+        // proposed object will be populated below
+      }
+
+      if (
+        sensitiveFieldsChanged.category ||
+        sensitiveFieldsChanged.goal_amount ||
+        sensitiveFieldsChanged.effective_end_date ||
+        rewardsChanged
+      ) {
+        hasSensitiveChanges = true;
       }
     }
 
@@ -837,8 +1035,15 @@ export default function CampaignForm({
       if (sensitiveFieldsChanged.effective_end_date)
         proposed.effective_end_date = values.effective_end_date;
 
+      // Include Header/Description if modified, even if they didn't trigger the modal
+      if (values.campaign_header !== editItem?.campaign_header) {
+        proposed.campaign_header = values.campaign_header;
+      }
+      if (values.campaign_description !== editItem?.campaign_description) {
+        proposed.campaign_description = values.campaign_description;
+      }
+
       if (rewardsChanged) {
-        // Re-build with original map to ensure isEdited is set correctly
         const map = new Map();
         if (editItem?.rewards) {
           editItem.rewards.forEach((r) => map.set(r.id, r));
@@ -847,10 +1052,6 @@ export default function CampaignForm({
           values.rewards,
           map,
         );
-        // FILTER HERE: Only satisfy user request "take only isEdited = true"
-        // CHANGE: Send FULL list to handle deletions and reordering.
-        // The backend will treat this list as the "Target State".
-        // Any existing reward NOT in this list will be deleted.
         proposed.rewards_payload = rewardManifest;
 
         // Build files map for Edit Request handling
@@ -918,7 +1119,7 @@ export default function CampaignForm({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)}>
-      {isSuspended && (
+      {isInactive && (
         <Box
           sx={{
             bgcolor: "error.light",
@@ -930,7 +1131,11 @@ export default function CampaignForm({
             fontWeight: 700,
           }}
         >
-          This post is suspended. Editing is disabled.
+          {isSuspended
+            ? "This post is suspended. Editing is disabled."
+            : isSuccess
+              ? "This campaign is successful. Editing is disabled."
+              : "This campaign has failed. Editing is disabled."}
         </Box>
       )}
       <Grid container spacing={2}>
@@ -942,20 +1147,20 @@ export default function CampaignForm({
             fullWidth
             error={!!errors.campaign_header}
             helperText={errors.campaign_header?.message}
-            disabled={isSuspended}
+            disabled={isInactive}
           />
         </Grid>
 
         <Grid size={{ xs: 12 }}>
           <TextField
-            label="Goal Amount"
+            label="Goal Amount (USD)"
             fullWidth
             type="number"
-            disabled={isSuspended}
+            disabled={isInactive}
             error={!!errors.goal_amount}
             helperText={
               errors.goal_amount?.message ||
-              (editItem && editItem.state === "published"
+              (editItem && isLive
                 ? "Changing this will trigger an Edit Request"
                 : "")
             }
@@ -976,7 +1181,11 @@ export default function CampaignForm({
               select
               label="State"
               fullWidth
-              disabled={isSuspended || !!(editItem?.state === "published")}
+              disabled={
+                isInactive ||
+                isSuccess ||
+                isLive
+              }
               value={field.value ?? ""}
               onChange={field.onChange}
               slotProps={{
@@ -985,6 +1194,15 @@ export default function CampaignForm({
             >
               <MenuItem value="draft">Draft</MenuItem>
               <MenuItem value="published">Published</MenuItem>
+              {editItem?.state === "success" && (
+                <MenuItem value="success">Success</MenuItem>
+              )}
+              {editItem?.state === "fail" && (
+                <MenuItem value="fail">Failed</MenuItem>
+              )}
+              {editItem?.state === "suspend" && (
+                <MenuItem value="suspend">Suspended</MenuItem>
+              )}
             </TextField>
           )}
         />
@@ -997,11 +1215,11 @@ export default function CampaignForm({
               select
               label="Category"
               fullWidth
-              disabled={isSuspended}
+              disabled={isInactive}
               value={field.value ?? ""}
               onChange={field.onChange}
               helperText={
-                editItem && editItem.state === "published"
+                editItem && isLive
                   ? "Changing this will trigger an Edit Request"
                   : ""
               }
@@ -1023,14 +1241,25 @@ export default function CampaignForm({
             label="Start"
             type="datetime-local"
             fullWidth
-            disabled={isSuspended || !!(editItem?.state === "published")}
+            disabled={isInactive || isLive}
             defaultValue=""
             {...register("effective_start_from", {
               required: "Start date is required",
+              validate: (val) => {
+                if (isLive || !val) return true;
+                const now = new Date();
+                const sel = new Date(val);
+                return sel >= now || "Start date cannot be in the past";
+              },
             })}
-            slotProps={{ inputLabel: { shrink: true } }}
+            slotProps={{
+              inputLabel: { shrink: true },
+              htmlInput: { min: toLocalInputValue(new Date().toISOString()) },
+            }}
             error={!!errors.effective_start_from}
-            helperText={errors.effective_start_from?.message}
+            helperText={
+              errors.effective_start_from?.message || `Local time (${getLocalTz()})`
+            }
           />
         </Grid>
 
@@ -1039,7 +1268,7 @@ export default function CampaignForm({
             label="End"
             type="datetime-local"
             fullWidth
-            disabled={isSuspended}
+            disabled={isInactive}
             {...register("effective_end_date", {
               required: "End date is required",
               validate: (value) => {
@@ -1051,13 +1280,21 @@ export default function CampaignForm({
                 );
               },
             })}
-            slotProps={{ inputLabel: { shrink: true } }}
+            slotProps={{
+              inputLabel: { shrink: true },
+              htmlInput: {
+                min: (() => {
+                  const startDate = watch("effective_start_from");
+                  return startDate || toLocalInputValue(new Date().toISOString());
+                })(),
+              },
+            }}
             error={!!errors.effective_end_date}
             helperText={
               errors.effective_end_date?.message ||
-              (editItem && editItem.state === "published"
-                ? "Changing this will trigger an Edit Request"
-                : "")
+              (editItem && isLive
+                ? `Changing this will trigger an Edit Request (${getLocalTz()})`
+                : `Local time (${getLocalTz()})`)
             }
           />
         </Grid>
@@ -1068,7 +1305,7 @@ export default function CampaignForm({
             multiline
             rows={4}
             fullWidth
-            disabled={isSuspended}
+            disabled={isInactive}
             {...register("campaign_description", {
               required: "Description is required",
             })}
@@ -1115,7 +1352,7 @@ export default function CampaignForm({
               variant="outlined"
               component="label"
               fullWidth
-              disabled={isSuspended}
+              disabled={isInactive}
             >
               Upload Video
               <input
@@ -1129,7 +1366,7 @@ export default function CampaignForm({
         </Grid>
 
         {/* Image Upload (multiple, reorderable) */}
-        <Grid size={{ xs: 12 }}>
+        <Grid size={{ xs: 12 }} id="campaign-media-section">
           <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
             Images
           </Typography>
@@ -1137,7 +1374,7 @@ export default function CampaignForm({
             variant="outlined"
             component="label"
             fullWidth
-            disabled={isSuspended}
+            disabled={isInactive}
           >
             Upload Images
             <input
@@ -1148,6 +1385,12 @@ export default function CampaignForm({
               onChange={handleCampaignFilesChange}
             />
           </Button>
+
+          {errors.campaign_media && (
+            <FormHelperText error sx={{ mt: 1 }}>
+              {errors.campaign_media.message}
+            </FormHelperText>
+          )}
 
           {imageSizeError && (
             <Typography
@@ -1193,7 +1436,7 @@ export default function CampaignForm({
                 size="small"
                 variant="text"
                 color="error"
-                disabled={isSuspended}
+                disabled={isInactive}
                 onClick={() => handleClearCampaignMedia()}
               >
                 Clear all media
@@ -1213,6 +1456,7 @@ export default function CampaignForm({
               container
               spacing={1}
               key={field.id}
+              id={`information-section-${idx}`}
               sx={{ mb: 2, p: 1, border: "1px solid #ddd", borderRadius: 1 }}
             >
               <Grid size={{ xs: 12, md: 6 }}>
@@ -1229,7 +1473,7 @@ export default function CampaignForm({
                   helperText={
                     errors.informations?.[idx]?.information_header?.message
                   }
-                  disabled={isSuspended}
+                  disabled={isInactive}
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
@@ -1240,7 +1484,7 @@ export default function CampaignForm({
                   {...register(`informations.${idx}.display_order` as const, {
                     valueAsNumber: true,
                   })}
-                  disabled={isSuspended}
+                  disabled={isInactive}
                 />
               </Grid>
               <Grid size={{ xs: 12 }}>
@@ -1251,8 +1495,15 @@ export default function CampaignForm({
                   rows={3}
                   {...register(
                     `informations.${idx}.information_description` as const,
+                    {
+                      required: "Information description is required",
+                    }
                   )}
-                  disabled={isSuspended}
+                  error={!!errors.informations?.[idx]?.information_description}
+                  helperText={
+                    errors.informations?.[idx]?.information_description?.message
+                  }
+                  disabled={isInactive}
                 />
               </Grid>
 
@@ -1266,9 +1517,14 @@ export default function CampaignForm({
                     hidden
                     accept="image/*"
                     onChange={(e) => handleInformationFileChange(idx, e)}
-                    disabled={isSuspended}
+                    disabled={isInactive}
                   />
                 </Button>
+                {errors.informations?.[idx]?.file && (
+                  <FormHelperText error sx={{ mt: 1 }}>
+                    {errors.informations[idx]?.file?.message}
+                  </FormHelperText>
+                )}
 
                 {informationPreviews[idx] && (
                   <Box sx={{ mt: 1 }}>
@@ -1289,7 +1545,7 @@ export default function CampaignForm({
                         variant="text"
                         color="error"
                         onClick={() => handleClearInformationImage(idx)}
-                        disabled={isSuspended}
+                        disabled={isInactive}
                       >
                         Clear image
                       </Button>
@@ -1299,15 +1555,13 @@ export default function CampaignForm({
               </Grid>
 
               <Grid size={{ xs: 12 }}>
-                {!editItem && (
-                  <IconButton
-                    color="error"
-                    onClick={() => removeInformation(idx)}
-                    disabled={isSuspended}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                )}
+                <IconButton
+                  color="error"
+                  onClick={() => handleRemoveInformation(idx)}
+                  disabled={isInactive}
+                >
+                  <DeleteIcon />
+                </IconButton>
               </Grid>
             </Grid>
           ))}
@@ -1315,6 +1569,7 @@ export default function CampaignForm({
           <Button
             startIcon={<AddIcon />}
             variant="outlined"
+            disabled={isInactive}
             onClick={() =>
               appendInformation({
                 display_order: informationFields.length + 1,
@@ -1332,25 +1587,24 @@ export default function CampaignForm({
           </Typography>
           {rewardFields.map((field, idx) => {
             // Check if this reward has backers (backup_amount > 0) AND post is published
-            const isPublished = editItem?.state === "published";
+            const isPublishedOrSuccess = isLive;
             const hasBackers = Number(field.backup_amount) > 0;
-            const isDisabled = isPublished && hasBackers;
-            console.log("isDisabled", isDisabled);
-            console.log("hasBackers", hasBackers);
-            console.log("isPublished", isPublished);
+            const isDisabled = isPublishedOrSuccess && hasBackers;
+
 
             return (
               <Grid
                 container
                 spacing={1}
                 key={field.id}
+                id={`reward-section-${idx}`}
                 sx={{ mb: 2, p: 1, border: "1px solid #ddd", borderRadius: 1 }}
               >
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     label="Reward Header"
                     fullWidth
-                    disabled={isSuspended || isDisabled}
+                    disabled={isInactive || isDisabled}
                     {...register(`rewards.${idx}.reward_header` as const, {
                       required: "Reward header is required",
                     })}
@@ -1363,7 +1617,7 @@ export default function CampaignForm({
                     label="Order"
                     type="number"
                     fullWidth
-                    disabled={isSuspended}
+                    disabled={isInactive}
                     {...register(`rewards.${idx}.display_order` as const, {
                       valueAsNumber: true,
                     })}
@@ -1375,21 +1629,26 @@ export default function CampaignForm({
                     fullWidth
                     multiline
                     rows={3}
-                    disabled={isSuspended || isDisabled}
-                    {...register(`rewards.${idx}.reward_description` as const)}
+                    disabled={isInactive || isDisabled}
+                    {...register(`rewards.${idx}.reward_description` as const,
+                      {
+                        required: "Reward description is required",
+                      }
+                    )}
+                    error={!!errors.rewards?.[idx]?.reward_description}
+                    helperText={
+                      errors.rewards?.[idx]?.reward_description?.message
+                    }
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <TextField
-                    label="Reward Amount"
+                    label="Reward Amount (USD)"
                     fullWidth
-                    disabled={isSuspended || isDisabled}
+                    disabled={isInactive || isDisabled}
                     {...register(`rewards.${idx}.reward_amount` as const, {
                       valueAsNumber: true,
-                      min: {
-                        value: 0,
-                        message: "Reward amount must be positive",
-                      },
+                      validate: (value) => value > 0 || "Reward amount must be greater than 0",
                     })}
                     error={!!errors.rewards?.[idx]?.reward_amount}
                     helperText={errors.rewards?.[idx]?.reward_amount?.message}
@@ -1400,7 +1659,7 @@ export default function CampaignForm({
                     variant="outlined"
                     component="label"
                     fullWidth
-                    disabled={isSuspended || isDisabled}
+                    disabled={isInactive || isDisabled}
                   >
                     {watch(`rewards.${idx}.file`)
                       ? "Change Image (optional for update)"
@@ -1412,6 +1671,12 @@ export default function CampaignForm({
                       onChange={(e) => handleRewardFileChange(idx, e)}
                     />
                   </Button>
+
+                  {errors.rewards?.[idx]?.file && (
+                    <FormHelperText error sx={{ mt: 1 }}>
+                      {errors.rewards[idx]?.file?.message}
+                    </FormHelperText>
+                  )}
 
                   {imageSizeError && (
                     <Typography
@@ -1442,7 +1707,7 @@ export default function CampaignForm({
                           size="small"
                           variant="text"
                           color="error"
-                          disabled={isSuspended || isDisabled}
+                          disabled={isInactive || isDisabled}
                           onClick={() => handleClearRewardImage(idx)}
                         >
                           Clear image
@@ -1454,8 +1719,8 @@ export default function CampaignForm({
                 <Grid size={{ xs: 12 }}>
                   <IconButton
                     color="error"
-                    onClick={() => removeReward(idx)}
-                    disabled={isSuspended || isDisabled}
+                    onClick={() => handleRemoveReward(idx)}
+                    disabled={isInactive || isDisabled}
                   >
                     <DeleteIcon />
                   </IconButton>
@@ -1471,7 +1736,7 @@ export default function CampaignForm({
           <Button
             startIcon={<AddIcon />}
             variant="outlined"
-            disabled={isSuspended}
+            disabled={isInactive}
             onClick={() =>
               appendReward({
                 display_order: rewardFields.length + 1,
@@ -1491,7 +1756,7 @@ export default function CampaignForm({
             variant="contained"
             color="success"
             fullWidth
-            disabled={isSuspended || isSubmitting}
+            disabled={isInactive || isSubmitting || (!!editItem && !hasChanges)}
           >
             {editItem ? "Update (with campaigns)" : "Create (with campaigns)"}
           </Button>
@@ -1499,7 +1764,7 @@ export default function CampaignForm({
             variant="outlined"
             color="primary"
             type="button"
-            disabled={isSuspended}
+            disabled={isInactive}
             onClick={onPredictClick}
           >
             Predict

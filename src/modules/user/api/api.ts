@@ -55,3 +55,9 @@ export async function suspendUser(userId: string) {
     method: "PUT",
   });
 }
+
+export async function activateUser(userId: string) {
+  return request(`${API_URL}/${userId}/activate`, {
+    method: "PUT",
+  });
+}

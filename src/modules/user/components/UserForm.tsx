@@ -11,7 +11,10 @@ import {
   Select,
   FormControl,
   InputLabel,
+  InputAdornment,
+  Alert,
 } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { Camera, User, Phone, MapPin, X, Lock } from "lucide-react";
 import { useCountryOptions } from "@/hooks/useCountryOptions";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -30,6 +33,7 @@ type FormValues = {
   birth_date: string | null;
   user_image: File | null;
   password?: string | null;
+  confirm_password?: string | null;
   remove_image?: boolean;
 };
 
@@ -56,7 +60,12 @@ export default function UserForm({
   isUserHavePassword,
   imageUrl,
 }: Props) {
-  const { register, handleSubmit, setValue } = useForm<FormValues>({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<FormValues>({
     defaultValues: {
       clerk_id: "",
       email: null,
@@ -77,6 +86,9 @@ export default function UserForm({
 
   const [submitting, setSubmitting] = useState(false);
   const [imagePreviewUrl, setPreviewUrl] = useState<string | null>(imageUrl || null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const initImage = async () => {
@@ -107,7 +119,24 @@ export default function UserForm({
 
   const handleFormSubmit: SubmitHandler<FormValues> = async (values) => {
     try {
+      setError("");
       setSubmitting(true);
+
+      if (values.password) {
+        if (values.password !== values.confirm_password) {
+          setError("Passwords do not match");
+          setSubmitting(false);
+          return;
+        }
+
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+        if (!passwordRegex.test(values.password)) {
+          setError("Password must be at least 8 characters long and contain both letters and numbers.");
+          setSubmitting(false);
+          return;
+        }
+      }
+
       const fd = new FormData();
 
       const payload = {
@@ -135,9 +164,10 @@ export default function UserForm({
 
       await onSubmit?.(fd);
       onSuccess?.();
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+    } catch (err: any) {
+      console.error("Error submitting form:", err);
+      const msg = err.errors?.[0]?.longMessage || err.message || "An error occurred while saving your profile";
+      setError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -340,7 +370,19 @@ export default function UserForm({
                 fullWidth
                 required
                 size="small"
-                {...register("tel", { required: true })}
+                {...register("tel", {
+                  required: "Phone number is required",
+                  minLength: {
+                    value: 9,
+                    message: "Phone number must be at least 9 characters",
+                  },
+                  pattern: {
+                    value: /^[0-9+() -]+$/,
+                    message: "Invalid phone number format",
+                  },
+                })}
+                error={!!errors.tel}
+                helperText={errors.tel?.message}
                 sx={{ bgcolor: "white" }}
               />
             </Grid>
@@ -351,7 +393,20 @@ export default function UserForm({
                 fullWidth
                 size="small"
                 InputLabelProps={{ shrink: true }}
-                {...register("birth_date")}
+                slotProps={{
+                  htmlInput: { max: new Date().toISOString().split("T")[0] },
+                }}
+                {...register("birth_date", {
+                  validate: (value) => {
+                    if (!value) return true;
+                    const selected = new Date(value);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return selected <= today || "Birth date cannot be in the future";
+                  },
+                })}
+                error={!!errors.birth_date}
+                helperText={errors.birth_date?.message}
                 sx={{ bgcolor: "white" }}
               />
             </Grid>
@@ -448,22 +503,61 @@ export default function UserForm({
               <Grid size={{ xs: 12 }}>
                 <TextField
                   label="Set Password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   fullWidth
                   size="small"
                   placeholder="Create a password for your account"
-                  {...register("password", {
-                    minLength: {
-                      value: 8,
-                      message: "Password must be at least 8 characters",
-                    },
-                  })}
-                  sx={{ bgcolor: "white" }}
+                  {...register("password")}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  error={!!errors.password}
                   helperText="You currently use social login. Set a password to enable email/password login."
+                  sx={{ bgcolor: "white" }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  label="Confirm Password"
+                  type={showConfirmPassword ? "text" : "password"}
+                  fullWidth
+                  required={!!register("password")}
+                  size="small"
+                  placeholder="Repeat your password"
+                  {...register("confirm_password")}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          edge="end"
+                        >
+                          {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  error={!!errors.confirm_password}
+                  helperText={errors.confirm_password?.message}
+                  sx={{ bgcolor: "white" }}
                 />
               </Grid>
             </Grid>
           </Box>
+        )}
+        {error && (
+          <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>
+            {error}
+          </Alert>
         )}
 
         {/* Submit Button */}

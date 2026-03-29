@@ -35,6 +35,8 @@ import {
   IconButton,
   CircularProgress,
   Stack,
+  Chip,
+  Alert,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
@@ -51,7 +53,7 @@ import ContributionsPanel from "@/modules/user/components/UserContributionsPanel
 import CampaignsPanel from "@/modules/user/components/UserCampaignsPanel";
 import UserBookmarksPanel from "@/modules/user/components/UserBookmarksPanel";
 import { getUser, updateUser } from "@/modules/user/api/api";
-import { fetchCampaigns } from "@/modules/campaign/api/api";
+import { fetchCampaigns, fetchCampaignById, fetchCampaignsByUserId } from "@/modules/campaign/api/api";
 import { Campaign } from "@/modules/campaign/types/campaign";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { updateCreator } from "@/modules/creator/api/api";
@@ -61,7 +63,6 @@ import { useAddEmailAddress } from "@/hooks/useAddEmailAddress";
 import { validatePwdPair } from "@/utils/validation";
 import { getContributeByUserId } from "@/modules/contributor/api/api";
 import { ContributorWithCampaign } from "@/modules/contributor/types";
-import { fetchCampaignById } from "@/modules/campaign/api/api";
 
 // Optional: gate page behind DB user check
 // import { useRequireUserInDb } from "@/hooks/useRequireUserInDb";
@@ -118,7 +119,7 @@ function UserContent() {
   const [contributions, setContributions] = useState<ContributorWithCampaign[]>([]);
   const [contributionsLoading, setContributionsLoading] = useState(true);
 
-  const { updateUsername } = useUpdateUsername();
+  const { updateUsername, error: usernameError, setError: setUsernameError } = useUpdateUsername();
   const { addEmail, cancelPendingEmail } = useAddEmailAddress();
 
   // Password management
@@ -177,45 +178,44 @@ function UserContent() {
         if (r) {
           console.log("Fetched user profile:", r);
           if (!abort) setProfile(r);
-        }
-
-        // Fetch campaigns
-        if (user?.id) {
-          const userCampaigns = await fetchCampaigns(
-            undefined,
-            undefined,
-            "newest",
-            "all",
-            user.id,
-          );
-          if (!abort) {
-            setCampaigns(userCampaigns || []);
-            setCampaignsLoading(false);
+          
+          // Fetch campaigns only if creator
+          if (r.role === "creator") {
+            const userCampaigns = await fetchCampaignsByUserId(r.id);
+            if (!abort) {
+              setCampaigns(userCampaigns || []);
+              setCampaignsLoading(false);
+            }
+          } else {
+            if (!abort) setCampaignsLoading(false);
           }
-        }
 
-        // Fetch contributions
-        if (profile?.id || r?.id) {
-          const userId_ = profile?.id || r?.id;
-          const userContribs = await getContributeByUserId(userId_);
+          // Fetch contributions
+          const userContribs = await getContributeByUserId(r.id);
           if (!abort) {
             setContributions(userContribs || []);
             setContributionsLoading(false);
           }
-        } else {
-          if (!abort) setContributionsLoading(false);
         }
-
-        // router.replace("/");
       } catch (err) {
         console.error("Failed to fetch user or campaigns:", err);
-        if (!abort) setCampaignsLoading(false);
+        if (!abort) {
+          setCampaignsLoading(false);
+          setContributionsLoading(false);
+        }
       }
     })();
     return () => {
       abort = true;
     };
   }, [isLoaded, user, haveUserDb]);
+
+  // Tab guard: if user is not a creator, they shouldn't be in the campaigns tab
+  useEffect(() => {
+    if (profile && profile.role !== "creator" && tab === "campaigns") {
+      router.replace(buildTabHref("profile"));
+    }
+  }, [profile, tab, router]);
 
   useEffect(() => {
     if (tab === "edit") {
@@ -231,89 +231,85 @@ function UserContent() {
     const raw = fd.get("data");
     const data = raw ? JSON.parse(String(raw)) : {};
     const newUsername = data?.user?.username as string | undefined;
+    const currentUsername = user?.username;
 
     const newPw = String(fd.get("password_new") ?? "");
-    const confirmPw = String(fd.get("password_confirm") ?? "");
-    const pwErr = validatePwdPair(newPw, confirmPw);
 
     // Get token early for APIs
     const token = await getToken();
 
     // const imageFile = pendingAvatar?.file ?? null;
-    try {
-      // Username
-      if (newUsername && newUsername !== user?.username) {
-        const okU = await updateUsername(newUsername);
-        if (!okU) return; // ถ้า username ไม่ผ่าน validation หรืออัพเดตไม่สำเร็จ ให้หยุด
-      }
-
-      if (pwErr) {
-        alert(pwErr);
-        return;
-      }
-
-      // Password
-      if (newPw) {
-        try {
-          await changePassword({ newPassword: newPw });
-          await user.reload();
-        } catch (e: any) {
-          if (isClerkAPIResponseError(e)) {
-            const msg = e.errors
-              ?.map((er: any) => er.longMessage || er.message)
-              .join("\n");
-            alert(msg ?? "Password update failed");
-            return; // ❗ ถ้าเปลี่ยน password ไม่สำเร็จ -> หยุดเลย ไม่อัปเดต DB
-          }
-          console.error(e);
-          alert("Password update failed");
-          return;
+    if (newUsername && currentUsername) {
+      console.log(`UserPage: Checking username change: Current='${currentUsername}', New='${newUsername}'`);
+      if (newUsername !== currentUsername) {
+        console.log(`UserPage: Username changed. Updating...`);
+        const updatedUser = await updateUsername(newUsername);
+        if (!updatedUser) {
+          console.error("UserPage: Failed to update username. Error:", usernameError);
+          // Throwing allows UserEditPanel to catch and show its own Alert
+          throw new Error(usernameError || "Failed to update username");
         }
+      } else {
+        console.log("UserPage: No username change detected.");
       }
+    }
 
-      // อย่าส่ง password ไป backend
-      fd.delete("password_new");
-      fd.delete("password_confirm");
-
-      // Email (add-only — only runs if user has no email yet and typed one)
-      const desiredEmail = (data?.user?.email ?? "").trim();
-      if (desiredEmail && !user.primaryEmailAddress) {
-        const okE = await addEmail(desiredEmail);
-        if (!okE) return;
-      }
-
-      if (pendingAvatar?.file) {
-        fd.append("media", pendingAvatar.file);
-      }
-      if (pendingAvatar?.clear) {
-        const raw = fd.get("data");
-        const data = raw ? JSON.parse(String(raw)) : {};
-        data.user.remove_image = true;
-        fd.set("data", JSON.stringify(data));
-      }
-
-      // User DB
-      const ok = await updateUser(fd, token); // Note: updateUser might need token fix if it fails, but leaving as is for now
-      console.log("Submitting updated profile data:", data, fd);
-
-      if (ok) {
-        // Consider success if at least one worked? simplified for now
-        if (pendingAvatar?.file)
-          await user.setProfileImage({ file: pendingAvatar.file });
-        if (pendingAvatar?.clear) await user.setProfileImage({ file: null });
+    // Password
+    if (newPw) {
+      try {
+        await changePassword({ newPassword: newPw });
         await user.reload();
-
-        // Refresh profile
-        if (token) {
-          const refreshed = await getUser(token);
-          setProfile(refreshed);
+      } catch (e: any) {
+        console.error(e);
+        if (isClerkAPIResponseError(e)) {
+          const msg = e.errors
+            ?.map((er: any) => er.longMessage || er.message)
+            .join("\n");
+          throw new Error(msg ?? "Password update failed");
         }
-
-        router.replace(buildTabHref("profile"));
+        throw new Error("Password update failed");
       }
-    } catch (e) {
-      console.error(e);
-      alert("Failed to update profile");
+    }
+
+    // อย่าส่ง password ไป backend
+    fd.delete("password_new");
+    fd.delete("password_confirm");
+
+    // Email (add-only — only runs if user has no email yet and typed one)
+    const desiredEmail = (data?.user?.email ?? "").trim();
+    if (desiredEmail && !user.primaryEmailAddress) {
+      const okE = await addEmail(desiredEmail);
+      if (!okE) return;
+    }
+
+    if (pendingAvatar?.file) {
+      fd.append("media", pendingAvatar.file);
+    }
+    if (pendingAvatar?.clear) {
+      const raw = fd.get("data");
+      const data = raw ? JSON.parse(String(raw)) : {};
+      data.user.remove_image = true;
+      fd.set("data", JSON.stringify(data));
+    }
+
+    // User DB
+    const ok = await updateUser(fd, token); // Note: updateUser might need token fix if it fails, but leaving as is for now
+    console.log("Submitting updated profile data:", data, fd);
+
+    if (ok) {
+      // Consider success if at least one worked? simplified for now
+      if (pendingAvatar?.file)
+        await user.setProfileImage({ file: pendingAvatar.file });
+      if (pendingAvatar?.clear) await user.setProfileImage({ file: null });
+      await user.reload();
+
+      // Refresh profile
+      if (token) {
+        const refreshed = await getUser(token);
+        setProfile(refreshed);
+      }
+
+      router.replace(buildTabHref("profile"));
     }
   };
 
@@ -464,6 +460,14 @@ function UserContent() {
                       >
                         {user?.primaryEmailAddress?.emailAddress ?? ""}
                       </Typography>
+                      {profile?.status === "suspended" && (
+                        <Chip
+                          label="Suspended"
+                          size="small"
+                          color="error"
+                          sx={{ mt: 1.5, fontWeight: 700, borderRadius: 1.5 }}
+                        />
+                      )}
                     </MuiBox>
                   </MuiBox>
                 )}
@@ -489,12 +493,14 @@ function UserContent() {
                     label="Contributions"
                     active={isActiveTab(tab, "contributions")}
                   />
-                  <NavItem
-                    href={buildTabHref("campaigns")}
-                    icon={<DashboardCustomizeIcon />}
-                    label="My Campaigns"
-                    active={isActiveTab(tab, "campaigns")}
-                  />
+                  {profile?.role === "creator" && (
+                    <NavItem
+                      href={buildTabHref("campaigns")}
+                      icon={<DashboardCustomizeIcon />}
+                      label="My Campaigns"
+                      active={isActiveTab(tab, "campaigns")}
+                    />
+                  )}
                   <NavItem
                     href={buildTabHref("bookmarks")}
                     icon={<BookmarkIcon />}
@@ -525,8 +531,10 @@ function UserContent() {
                 <EditPanel
                   onSubmit={handleEditSubmit}
                   initial={profile}
+                  usernameError={usernameError}
                   onCancel={async () => {
                     await cancelPendingEmail();
+                    setUsernameError(null);
                     router.replace(buildTabHref("profile"));
                   }}
                 />

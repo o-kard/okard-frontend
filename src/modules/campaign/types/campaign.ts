@@ -33,14 +33,15 @@ export interface AIPrediction {
   stretch_label: string | null;
 }
 
-export interface CitySupporterStat {
-  city: string;
+export interface CountrySupporterStat {
+  country: string;
   supporter: number;
+  total_amount: number;
 }
 
 export interface CampaignCommunity {
   total_supporters: number;
-  top_cities: CitySupporterStat[];
+  top_countries: CountrySupporterStat[];
 }
 
 export type Campaign = {
@@ -136,6 +137,8 @@ export type CampaignSummary = {
   supporters: number;
   progress: number;
   suupporter: number | null;
+  effective_start_from?: string | null;
+  effective_end_date?: string | null;
   state: CampaignStateType;
   created_at?: string;
   updated_at?: string;
@@ -149,4 +152,12 @@ export type CampaignSummary = {
   };
   is_bookmarked?: boolean;
   ai_label?: AIPrediction | null;
+};
+
+export type CampaignPagination = {
+  items: Campaign[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
 };

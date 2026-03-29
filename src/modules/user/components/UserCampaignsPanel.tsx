@@ -37,7 +37,7 @@ export default function CampaignsPanel({ campaigns, loading }: CampaignsPanelPro
 
 
   return (
-    <Paper sx={{ p: 3, borderRadius: 3, bgcolor: "#fff", height: "60vh", display: "flex", flexDirection: "column" }}>
+    <Paper sx={{ p: 3, borderRadius: 3, bgcolor: "#fff", height: "623px", display: "flex", flexDirection: "column" }}>
       <Box
         display="flex"
         flexDirection={{ xs: "column", sm: "row" }}
@@ -76,7 +76,7 @@ export default function CampaignsPanel({ campaigns, loading }: CampaignsPanelPro
         ) : filteredCampaigns.length > 0 ? (
           <CampaignList campaigns={filteredCampaigns} showEditButton={true} />
         ) : (
-          <Paper sx={{ p: 4, textAlign: "center", borderRadius: 3, bgcolor: "#f8f9fa", border: "1px dashed #e0e0e0" }} elevation={0}>
+          <Paper sx={{ p: 4, textAlign: "center", borderRadius: 3, bgcolor: "#fff", boxShadow: "none" }} elevation={0}>
             <Typography color="text.secondary">No campaigns found.</Typography>
           </Paper>
         )}

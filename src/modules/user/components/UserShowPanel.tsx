@@ -11,6 +11,7 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  CircularProgress,
 } from "@mui/material";
 import Link from "next/link";
 import Grid from "@mui/material/Grid";
@@ -33,7 +34,8 @@ import {
   Globe,
   ExternalLink,
 } from "lucide-react";
-import { SocialLink } from "@/modules/creator/types/creator";
+import { SocialLink, VerificationStatus } from "@/modules/creator/types/creator";
+import { User } from "@/modules/user/types/user";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { InfoItem } from "@/components/ui/InfoItem";
 
@@ -59,13 +61,15 @@ interface ProfilePanelProps {
 export default function ProfilePanel({ campaignCount, contributionsCount }: ProfilePanelProps) {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
-  const [profile, setProfile] = useState<any | null>(null);
+  const [profile, setProfile] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!isLoaded || !user) return;
 
     let abort = false;
     (async () => {
+      setIsLoading(true);
       try {
         const token = await getToken();
         if (!token) throw new Error("No token available");
@@ -79,6 +83,8 @@ export default function ProfilePanel({ campaignCount, contributionsCount }: Prof
       } catch (err) {
         console.error("Failed to fetch user with token:", err);
         if (!abort) setProfile(null);
+      } finally {
+        if (!abort) setIsLoading(false);
       }
     })();
     return () => {
@@ -86,9 +92,22 @@ export default function ProfilePanel({ campaignCount, contributionsCount }: Prof
     };
   }, [isLoaded, user]);
 
+  if (isLoading || !isLoaded) {
+    return (
+      <Paper sx={{ p: 6, borderRadius: 3, display: "flex", justifyContent: "center", alignItems: "center", minHeight: 400 }}>
+        <Stack alignItems="center" spacing={2}>
+          <CircularProgress size={40} />
+          <Typography color="text.secondary" fontWeight={500}>Loading Profile</Typography>
+        </Stack>
+      </Paper>
+    );
+  }
+
 
   const isCreator = profile?.role === 'creator';
+  const isAdmin = profile?.role === 'admin';
   const creatorData = profile?.creator;
+  const pendingCreator = creatorData?.verification_status === VerificationStatus.pending;
 
   return (
     <Paper sx={{ p: 3, borderRadius: 3 }}>
@@ -109,6 +128,19 @@ export default function ProfilePanel({ campaignCount, contributionsCount }: Prof
               "& .MuiChip-icon": {
                 color: "white",
               },
+            }}
+          />
+        )}
+        {profile?.status === "suspended" && (
+          <Chip
+            label="Suspended"
+            color="error"
+            variant="outlined"
+            sx={{
+              fontWeight: 700,
+              fontSize: "0.9rem",
+              px: 1,
+              borderWidth: 2,
             }}
           />
         )}
@@ -239,7 +271,7 @@ export default function ProfilePanel({ campaignCount, contributionsCount }: Prof
               borderRadius: 3,
               bgcolor: "rgb(250, 250, 250)",
               minHeight: 100,
-              borderStyle: "dashed",
+              borderStyle: "solid",
             }}
           >
             <Typography
@@ -302,7 +334,7 @@ export default function ProfilePanel({ campaignCount, contributionsCount }: Prof
                   <CampaignIcon sx={{ color: "#fff" }} />
                 </Box>
                 <Typography variant="h4" fontWeight={700}>
-                  {campaignCount ?? profile?.campaignCount ?? 0}
+                  {campaignCount ?? creatorData?.campaign_number ?? 0}
                 </Typography>
               </Stack>
               <Typography color="text.secondary">My Campaign(s)</Typography>
@@ -311,7 +343,7 @@ export default function ProfilePanel({ campaignCount, contributionsCount }: Prof
         )}
       </Grid>
 
-      {!isCreator && (
+      {!isCreator && !pendingCreator && !isAdmin && (
         <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 4 }}>
           <Link href="/creator/register" style={{ textDecoration: "none" }}>
             <Button
@@ -337,6 +369,29 @@ export default function ProfilePanel({ campaignCount, contributionsCount }: Prof
               Become A Creator
             </Button>
           </Link>
+        </Box>
+      )}
+
+      {pendingCreator && (
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 4 }}>
+          <Button
+            variant="contained"
+            disabled
+            sx={{
+              fontWeight: 700,
+              textTransform: "none",
+              fontSize: "1rem",
+              px: 4,
+              py: 1.2,
+              borderRadius: 2,
+              "&.Mui-disabled": {
+                background: "rgba(0, 0, 0, 0.08)",
+                color: "rgba(0, 0, 0, 0.38)",
+              }
+            }}
+          >
+            Status: Pending Approval
+          </Button>
         </Box>
       )}
     </Paper>

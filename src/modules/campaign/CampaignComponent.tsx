@@ -11,13 +11,23 @@ import {
   Typography,
   Drawer,
   Chip,
+  TextField,
+  InputAdornment,
+  CircularProgress,
+  Pagination,
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 import MenuIcon from "@mui/icons-material/Menu";
 import ExploreHeader from "./components/ExploreHeader";
 import { useMediaQuery } from "@mui/material";
 import CampaignList from "./components/CampaignList";
 import { Campaign } from "./types/campaign";
-import { fetchCampaigns, deleteCampaign, getForYouCampaigns } from "./api/api";
+import {
+  fetchCampaigns,
+  deleteCampaign,
+  getForYouCampaigns,
+  fetchCampaignsPagination,
+} from "./api/api";
 import SideFilters from "./components/SideFilters";
 
 type Timing = "all" | "draft" | "published" | "archived";
@@ -29,6 +39,11 @@ export default function CampaignComponent() {
   const { getToken } = useAuth();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalResult, setTotalResult] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const LIMIT = 12;
 
   const searchParams = useSearchParams();
   const initialCategory = (searchParams.get("category") || "all").toLowerCase();
@@ -87,10 +102,23 @@ export default function CampaignComponent() {
   }, [searchParams]);
 
   useEffect(() => {
+    setPage(1);
+  }, [
+    viewMode,
+    user,
+    category,
+    searchQuery,
+    sort,
+    timing,
+    includeClosed,
+  ]);
+
+  useEffect(() => {
     // If user is not passing query params, maybe we don't load?
     // Actually we always load.
 
     const load = async () => {
+      setLoading(true);
       try {
         if (viewMode === "recommended" && user?.id) {
           const token = await getToken();
@@ -139,39 +167,66 @@ export default function CampaignComponent() {
 
           // Common filtering
           if (!includeClosed) {
-            campaigns = campaigns.filter((p) =>
-              ["published", "success"].includes(p.state),
-            );
+            campaigns = campaigns.filter((p) => {
+              const isExpired = p.effective_end_date
+                ? new Date(p.effective_end_date.replace(" ", "T")) < new Date()
+                : false;
+              return (
+                p.state === "published" || (p.state === "success" && !isExpired)
+              );
+            });
           }
           if (timing === "draft")
             campaigns = campaigns.filter((p) => p.state === "draft");
-          else if (timing === "published")
-            campaigns = campaigns.filter((p) => p.state === "published");
+          else if (timing === "published") {
+            campaigns = campaigns.filter((p) => {
+              const isExpired = p.effective_end_date
+                ? new Date(p.effective_end_date.replace(" ", "T")) < new Date()
+                : false;
+              return (
+                p.state === "published" || (p.state === "success" && !isExpired)
+              );
+            });
+          }
 
           setCampaigns(campaigns);
         } else {
           // Pass filters to backend
-          // Map timing to state (timing can be draft, published, all)
           const stateParam = timing === "all" ? "all" : timing;
 
-          const data = await fetchCampaigns(
+          const data = await fetchCampaignsPagination(
             category === "all" ? undefined : category,
             searchQuery || undefined,
             sort,
             stateParam,
             user?.id,
+            page,
+            LIMIT,
+            includeClosed,
           );
 
-          // Backend now handles filtering, so we just set the data
-          setCampaigns(data);
+          setCampaigns(data.items);
+          setTotalPages(data.pages);
+          setTotalResult(data.total);
         }
       } catch (err) {
         console.error(err);
+      } finally {
+        setLoading(false);
       }
     };
 
     load();
-  }, [viewMode, user, category, searchQuery, sort, timing, includeClosed]);
+  }, [
+    viewMode,
+    user,
+    category,
+    searchQuery,
+    sort,
+    timing,
+    includeClosed,
+    page,
+  ]);
 
   const router = useRouter();
 
@@ -195,11 +250,30 @@ export default function CampaignComponent() {
 
   const handleDelete = async (id: string) => {
     if (!user) return;
-    const ok = await deleteCampaign(id, user.id);
-    if (ok)
-      setCampaigns(
-        await fetchCampaigns(undefined, undefined, undefined, undefined, user.id),
-      );
+    try {
+      const ok = await deleteCampaign(id, user.id);
+      if (ok) {
+        setLoading(true);
+        const stateParam = timing === "all" ? "all" : timing;
+        const data = await fetchCampaignsPagination(
+          category === "all" ? undefined : category,
+          searchQuery || undefined,
+          sort,
+          stateParam,
+          user?.id,
+          page,
+          LIMIT,
+          includeClosed,
+        );
+        setCampaigns(data.items);
+        setTotalPages(data.pages);
+        setTotalResult(data.total);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -234,7 +308,9 @@ export default function CampaignComponent() {
                 selectedCategory={category}
                 onSelectCategory={setCategory}
                 timing={timing}
-                onTimingChange={setTiming}
+                onTimingChange={(v) => {
+                  setTiming(v as any);
+                }}
                 includeClosed={includeClosed}
                 onToggleClosed={setIncludeClosed}
                 onViewModeChange={setViewMode}
@@ -242,54 +318,148 @@ export default function CampaignComponent() {
                 sort={sort}
                 onSortChange={setSort}
                 onClear={handleClearAll}
+                searchQuery={searchQuery}
+                onSearchChange={(v) => {
+                  const newParams = new URLSearchParams(
+                    searchParams.toString(),
+                  );
+                  if (v) newParams.set("query", v);
+                  else newParams.delete("query");
+                  router.push(`/campaign?${newParams.toString()}`);
+                }}
               />
             </Grid>
           )}
 
           <Grid size={{ xs: 12, md: isMdUp ? 9 : 12 }} sx={{ pt: 2 }}>
-            <Box display="flex" alignItems="center" gap={2} mb={2}>
-              <Typography variant="body2" color="text.secondary">
-                Found : {filtered.length} Campaigns
-              </Typography>
-              {category !== "all" &&
-                (() => {
-                  const categoryConfig =
-                    CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS] ??
-                    CATEGORY_COLORS.all;
-                  const CategoryIcon = categoryConfig?.icon;
-                  return (
-                    <Chip
-                      icon={CategoryIcon ? <CategoryIcon /> : undefined}
-                      label={categoryConfig?.label ?? category}
-                      onDelete={() => setCategory("all")}
-                      size="small"
-                      sx={{
-                        fontWeight: 700,
-                        textTransform: "capitalize",
-                        bgcolor: categoryConfig?.color ?? "primary.main",
-                        color: "white",
-                        "& .MuiChip-icon": {
+            {/* Search and Found Count Header */}
+            <Box
+              display="flex"
+              flexDirection={{ xs: "column", sm: "row" }}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="space-between"
+              gap={2}
+              mb={3}
+            >
+              <Box display="flex" alignItems="center" gap={2}>
+                <Typography variant="body2" color="text.secondary">
+                  Found : {totalResult} Campaigns
+                </Typography>
+                {category !== "all" &&
+                  (() => {
+                    const categoryConfig =
+                      CATEGORY_COLORS[
+                        category as keyof typeof CATEGORY_COLORS
+                      ] ?? CATEGORY_COLORS.all;
+                    const CategoryIcon = categoryConfig?.icon;
+                    return (
+                      <Chip
+                        icon={CategoryIcon ? <CategoryIcon /> : undefined}
+                        label={categoryConfig?.label ?? category}
+                        onDelete={() => setCategory("all")}
+                        size="small"
+                        sx={{
+                          fontWeight: 700,
+                          textTransform: "capitalize",
+                          bgcolor: categoryConfig?.color ?? "primary.main",
                           color: "white",
-                        },
-                      }}
-                    />
-                  );
-                })()}
-              {searchQuery && (
-                <Chip
-                  label={`Search: ${searchQuery}`}
-                  onDelete={handleClearSearch}
-                  color="primary"
-                  variant="outlined"
+                          "& .MuiChip-icon": {
+                            color: "white",
+                          },
+                        }}
+                      />
+                    );
+                  })()}
+              </Box>
+
+              {!isMdUp && (
+                <TextField
+                  fullWidth
                   size="small"
+                  placeholder="Search campaigns..."
+                  variant="outlined"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    const newParams = new URLSearchParams(
+                      searchParams.toString(),
+                    );
+                    if (v) newParams.set("query", v);
+                    else newParams.delete("query");
+                    router.push(`/campaign?${newParams.toString()}`);
+                  }}
+                  sx={{
+                    bgcolor: "rgba(255,255,255,0.5)",
+                    borderRadius: 4,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 4,
+                      fontSize: "0.9rem",
+                      height: "36px",
+                      paddingRight: "2px",
+                    },
+                    "& .MuiOutlinedInput-input": {
+                      padding: "2px 2px",
+                    },
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon color="action" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               )}
             </Box>
-            <CampaignList
-              campaigns={filtered}
-              onEdit={() => {}}
-              onDelete={handleDelete}
-            />
+
+            {loading ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  minHeight: "40vh",
+                }}
+              >
+                <CircularProgress />
+              </Box>
+            ) : (
+              <CampaignList
+                campaigns={filtered}
+                onEdit={() => {}}
+                onDelete={handleDelete}
+              />
+            )}
+
+            {totalPages > 1 && (
+              <Box display="flex" justifyContent="center" mt={4}>
+                <Pagination
+                  count={totalPages}
+                  page={page}
+                  onChange={(event, value) => {
+                    setPage(value);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  color="primary"
+                  shape="circular"
+                  size="large"
+                  sx={{
+                    "& .MuiPaginationItem-root": {
+                      fontWeight: 600,
+                      color: "#888",
+                      "&.Mui-selected": {
+                        bgcolor: "rgba(0, 0, 0, 0.12)",
+                        color: "#333",
+                        backdropFilter: "blur(4px)",
+                        "&:hover": {
+                          bgcolor: "rgba(0, 0, 0, 0.20)",
+                        },
+                      },
+                    },
+                  }}
+                />
+              </Box>
+            )}
           </Grid>
         </Grid>
 
@@ -327,6 +497,15 @@ export default function CampaignComponent() {
                 onClear={() => {
                   handleClearAll();
                   setMobileOpen(false);
+                }}
+                searchQuery={searchQuery}
+                onSearchChange={(v) => {
+                  const newParams = new URLSearchParams(
+                    searchParams.toString(),
+                  );
+                  if (v) newParams.set("query", v);
+                  else newParams.delete("query");
+                  router.push(`/campaign?${newParams.toString()}`);
                 }}
               />
             </Box>

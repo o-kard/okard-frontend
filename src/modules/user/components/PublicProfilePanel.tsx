@@ -206,6 +206,14 @@ export default function PublicProfilePanel({
               >
                 {displayEmail}
               </Typography>
+              {profile?.status === "suspended" && (
+                <Chip
+                  label="Suspended"
+                  size="small"
+                  color="error"
+                  sx={{ mt: 1.5, fontWeight: 700, borderRadius: 1.5 }}
+                />
+              )}
             </Box>
 
             <Divider sx={{ my: 3 }} />
@@ -255,7 +263,7 @@ export default function PublicProfilePanel({
 
         {/* RIGHT CONTENT */}
         <Grid size={{ xs: 12, md: 9, lg: 9.5 }}>
-          {tab === "profile" && (
+          {(tab === "profile" || (tab === "campaigns" && !isCreator)) && (
             <Paper sx={{ p: 3, borderRadius: 3, bgcolor: "#fff" }}>
               <Box
                 sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}
@@ -277,6 +285,19 @@ export default function PublicProfilePanel({
                       "& .MuiChip-icon": {
                         color: "white",
                       },
+                    }}
+                  />
+                )}
+                {profile?.status === "suspended" && (
+                  <Chip
+                    label="Suspended"
+                    color="error"
+                    variant="outlined"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: "0.9rem",
+                      px: 1,
+                      borderWidth: 2,
                     }}
                   />
                 )}
@@ -406,7 +427,7 @@ export default function PublicProfilePanel({
                       borderRadius: 3,
                       bgcolor: "rgb(250, 250, 250)",
                       minHeight: 100,
-                      borderStyle: "dashed",
+                      borderStyle: "solid",
                     }}
                   >
                     <Typography
@@ -507,7 +528,7 @@ export default function PublicProfilePanel({
                 p: 3,
                 borderRadius: 3,
                 bgcolor: "#fff",
-                height: "60vh",
+                height: "623px",
                 display: "flex",
                 flexDirection: "column",
               }}
@@ -548,11 +569,13 @@ export default function PublicProfilePanel({
 
               <Box sx={{ flex: 1, overflowY: "auto", pr: 1 }}>
                 {campaignsLoading ? (
-                  <CircularProgress />
+                  <Box display="flex" justifyContent="center" py={4}>
+                    <CircularProgress />
+                  </Box>
                 ) : filteredCampaigns.length > 0 ? (
                   <CampaignList campaigns={filteredCampaigns} />
                 ) : (
-                  <Paper sx={{ p: 4, textAlign: "center", borderRadius: 3 }}>
+                  <Paper sx={{ p: 4, textAlign: "center", borderRadius: 3, bgcolor: "#fff", boxShadow: "none" }} elevation={0}>
                     <Typography color="text.secondary">
                       No campaigns found.
                     </Typography>
@@ -567,7 +590,7 @@ export default function PublicProfilePanel({
                 p: 3,
                 borderRadius: 3,
                 bgcolor: "#fff",
-                height: "60vh",
+                height: "623px",
                 display: "flex",
                 flexDirection: "column",
               }}
@@ -608,11 +631,13 @@ export default function PublicProfilePanel({
 
               <Box sx={{ flex: 1, overflowY: "auto", pr: 1 }}>
                 {contributionsLoading ? (
-                  <CircularProgress />
+                  <Box display="flex" justifyContent="center" py={4}>
+                    <CircularProgress />
+                  </Box>
                 ) : filteredContributions.length > 0 ? (
                   <ContributorList contributions={filteredContributions} />
                 ) : (
-                  <Paper sx={{ p: 4, textAlign: "center", borderRadius: 3 }}>
+                  <Paper sx={{ p: 4, textAlign: "center", borderRadius: 3, bgcolor: "#fff", boxShadow: "none" }} elevation={0}>
                     <Typography color="text.secondary">
                       No contributions found.
                     </Typography>

@@ -1,7 +1,7 @@
 import { Media } from "../../campaign/types/campaign";
 
 export type ReportType = "fraud" | "spam" | "inappropriate_content" | "other";
-export type ReportStatus = "pending" | "reviewed" | "dismissed";
+export type ReportStatus = "pending" | "resolved" | "dismissed";
 
 export interface Report {
   id: string;

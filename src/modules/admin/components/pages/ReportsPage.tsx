@@ -22,7 +22,19 @@ import {
   TableRow,
   TableCell,
   TableBody,
+  Badge,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  ImageList,
+  ImageListItem,
+  Tooltip,
 } from "@mui/material";
+import FilePresentIcon from "@mui/icons-material/FilePresent";
+import ImageIcon from "@mui/icons-material/Image";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 import { useEffect } from "react";
 import {
@@ -35,8 +47,8 @@ import { fetchCampaigns } from "@/modules/campaign/api/api";
 import { ReportStatus } from "@/modules/report/types/report";
 
 const statusColors: Record<string, string> = {
-  pending: "#ffd600",
-  reviewed: "#12C998",
+  pending: "#ff8000",
+  resolved: "#12C998",
 };
 
 const ActionMenu = ({
@@ -94,7 +106,7 @@ const ActionMenu = ({
           <MenuItem
             onClick={(e) => {
               handleClose(e);
-              onStatusChange(reportId, "reviewed");
+              onStatusChange(reportId, "resolved");
             }}
             sx={{
               fontSize: "0.9rem",
@@ -102,7 +114,7 @@ const ActionMenu = ({
               "&:hover": { background: "rgba(18, 201, 152, 0.08)" },
             }}
           >
-            Mark Reviewed
+            Mark Resolved
           </MenuItem>
         )}
         <MenuItem
@@ -126,6 +138,8 @@ const ActionMenu = ({
 export default function ReportsPage() {
   const [search, setSearch] = useState("");
   const [reports, setReports] = useState<any[]>([]);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<any>(null);
 
   const loadReports = async () => {
     try {
@@ -140,11 +154,14 @@ export default function ReportsPage() {
         const campaign = campaigns.find((c) => c.id === report.campaign_id);
         return {
           id: report.id,
-          project: campaign ? campaign.campaign_header : "Unknown Campaign (or Global)",
+          project: campaign
+            ? campaign.campaign_header
+            : "Unknown Campaign (or Global)",
           reporter: user ? user.username : "Unknown User",
           reason:
             report.type + (report.description ? `: ${report.description}` : ""),
           status: report.status,
+          files: report.files || [],
         };
       });
       setReports(reportsData);
@@ -304,6 +321,7 @@ export default function ReportsPage() {
                   Project
                 </TableCell>
                 <TableCell
+                  align="center"
                   sx={{
                     fontWeight: 600,
                     color: "#666666",
@@ -315,6 +333,7 @@ export default function ReportsPage() {
                   Reporter
                 </TableCell>
                 <TableCell
+                  align="center"
                   sx={{
                     fontWeight: 600,
                     color: "#666666",
@@ -326,6 +345,7 @@ export default function ReportsPage() {
                   Reason
                 </TableCell>
                 <TableCell
+                  align="center"
                   sx={{
                     fontWeight: 600,
                     color: "#666666",
@@ -335,6 +355,18 @@ export default function ReportsPage() {
                   }}
                 >
                   Status
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    fontWeight: 600,
+                    color: "#666666",
+                    textTransform: "uppercase",
+                    fontSize: "0.8rem",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  Attachments
                 </TableCell>
                 <TableCell
                   align="right"
@@ -394,9 +426,13 @@ export default function ReportsPage() {
                       </Typography>
                     </Stack>
                   </TableCell>
-                  <TableCell sx={{ color: "#666666" }}>{r.reporter}</TableCell>
-                  <TableCell sx={{ color: "#666666" }}>{r.reason}</TableCell>
-                  <TableCell>
+                  <TableCell align="center" sx={{ color: "#666666" }}>
+                    {r.reporter}
+                  </TableCell>
+                  <TableCell align="center" sx={{ color: "#666666" }}>
+                    {r.reason}
+                  </TableCell>
+                  <TableCell align="center">
                     <Chip
                       label={r.status}
                       sx={{
@@ -407,9 +443,29 @@ export default function ReportsPage() {
                         px: 1,
                         borderRadius: 1.5,
                         border: `1px solid ${statusColors[r.status]}50`,
+                        textTransform: "capitalize",
                       }}
                       size="small"
                     />
+                  </TableCell>
+                  <TableCell align="center">
+                    {r.files.length > 0 ? (
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedReport(r);
+                          setViewerOpen(true);
+                        }}
+                        sx={{ color: "#12C998" }}
+                      >
+                        <Badge badgeContent={r.files.length} color="primary">
+                          <FilePresentIcon fontSize="small" />
+                        </Badge>
+                      </IconButton>
+                    ) : (
+                      "-"
+                    )}
                   </TableCell>
                   <TableCell align="right">
                     <ActionMenu
@@ -452,6 +508,83 @@ export default function ReportsPage() {
             </Stack>
           )}
         </TableContainer>
+
+        <Dialog
+          open={viewerOpen}
+          onClose={() => setViewerOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle sx={{ fontWeight: 700 }}>
+            Attachments for {selectedReport?.project}
+          </DialogTitle>
+          <DialogContent dividers>
+            <Stack spacing={2}>
+              {selectedReport?.files.map((file: any, i: number) => {
+                const isImage = file.media_type.startsWith("image/");
+                const isPdf = file.media_type === "application/pdf";
+                const url = file.path.startsWith("http")
+                  ? file.path
+                  : `${process.env.NEXT_PUBLIC_API_URL}${file.path}`;
+
+                return (
+                  <Paper
+                    key={i}
+                    variant="outlined"
+                    sx={{ p: 2, display: "flex", alignItems: "center", gap: 2 }}
+                  >
+                    {isImage ? (
+                      <Box
+                        component="img"
+                        src={url}
+                        alt={file.orig_name}
+                        sx={{
+                          width: 80,
+                          height: 80,
+                          objectFit: "cover",
+                          borderRadius: 1,
+                        }}
+                      />
+                    ) : isPdf ? (
+                      <Avatar
+                        sx={{ bgcolor: "#ff5252", width: 48, height: 48 }}
+                        variant="rounded"
+                      >
+                        <PictureAsPdfIcon />
+                      </Avatar>
+                    ) : (
+                      <Avatar
+                        sx={{ bgcolor: "#666", width: 48, height: 48 }}
+                        variant="rounded"
+                      >
+                        <FilePresentIcon />
+                      </Avatar>
+                    )}
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        {file.orig_name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {(file.file_size / 1024).toFixed(2)} KB
+                      </Typography>
+                    </Box>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<VisibilityIcon />}
+                      onClick={() => window.open(url, "_blank")}
+                    >
+                      View
+                    </Button>
+                  </Paper>
+                );
+              })}
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setViewerOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </AdminLayout>
   );

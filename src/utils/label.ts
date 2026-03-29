@@ -1,7 +1,7 @@
 export function predictionLabel(result: string) {
-    if (result.toLowerCase() === "successed") {
-        return "SUCCESS";
-    }else {
-        return "VULNERABLE";
-    }
+  if (result.toLowerCase() === "successful") {
+    return "Tend To Success";
+  } else {
+    return "Tend To Vulnerable";
+  }
 }

@@ -23,7 +23,7 @@ import {
   TableCell,
   TableBody,
 } from "@mui/material";
-import { listUsers, deleteUser, suspendUser } from "@/modules/user/api/api";
+import { listUsers, suspendUser, activateUser } from "@/modules/user/api/api";
 import { fetchCampaigns } from "@/modules/campaign/api/api";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -33,17 +33,15 @@ import DialogActions from "@mui/material/DialogActions";
 const statusColors: Record<string, string> = {
   active: "#1de9b6",
   suspended: "#ff5252",
-  pending: "#ffd600",
+  pending: "#ff8000",
 };
 
 const ActionMenu = ({
   userId,
-  onSuspend,
-  onDelete,
+  onToggleStatus,
 }: {
   userId: string;
-  onSuspend: () => void;
-  onDelete: () => void;
+  onToggleStatus: () => void;
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -88,7 +86,7 @@ const ActionMenu = ({
         <MenuItem
           onClick={(e) => {
             handleClose(e);
-            window.open(`/explore/${userId}`, "_blank");
+            window.open(`/user/${userId}`, "_blank");
           }}
           sx={{
             fontSize: "0.9rem",
@@ -104,7 +102,7 @@ const ActionMenu = ({
         <MenuItem
           onClick={(e) => {
             handleClose(e);
-            onSuspend();
+            onToggleStatus();
           }}
           sx={{
             fontSize: "0.9rem",
@@ -115,20 +113,7 @@ const ActionMenu = ({
             },
           }}
         >
-          Suspend
-        </MenuItem>
-        <MenuItem
-          onClick={(e) => {
-            handleClose(e);
-            onDelete();
-          }}
-          sx={{
-            fontSize: "0.9rem",
-            color: "#ff5252",
-            "&:hover": { background: "rgba(255, 82, 82, 0.08)" },
-          }}
-        >
-          Delete
+          Toggle Status
         </MenuItem>
       </Menu>
     </>
@@ -145,7 +130,12 @@ export default function CreatorsPage() {
     async function loadCreators() {
       try {
         const users = await listUsers();
-        const campaigns = await fetchCampaigns();
+        const campaigns = await fetchCampaigns(
+          undefined,
+          undefined,
+          undefined,
+          "admin_all",
+        );
         const creatorsData = users.map((user) => {
           const campaign_number = campaigns.filter(
             (campaign) => campaign.user?.id === user.id,
@@ -167,16 +157,32 @@ export default function CreatorsPage() {
     loadCreators();
   }, []);
 
-  const handleDelete = async (userId: string) => {
+  async function changeUserStatus(currentStatus: string) {
+    if (!selectedId) return;
     try {
-      if (confirm("Are you sure you want to delete this creator?")) {
-        await deleteUser(userId);
-        setCreators((prev) => prev.filter((c) => c.id !== userId));
+      if (currentStatus === "suspended") {
+        await activateUser(selectedId);
+      } else {
+        await suspendUser(selectedId);
       }
-    } catch (err) {
-      console.error("Failed to delete user", err);
+
+      setCreators((prev) =>
+        prev.map((u) =>
+          u.id === selectedId
+            ? {
+                ...u,
+                status: currentStatus === "suspended" ? "active" : "suspended",
+              }
+            : u,
+        ),
+      );
+    } catch (e) {
+      console.error("Failed to change user status", e);
+    } finally {
+      setConfirmOpen(false);
+      setSelectedId(null);
     }
-  };
+  }
 
   const filtered = creators.filter(
     (c) =>
@@ -339,30 +345,30 @@ export default function CreatorsPage() {
                 >
                   Campaigns
                 </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{
-                      fontWeight: 600,
-                      color: "#666666",
-                      textTransform: "uppercase",
-                      fontSize: "0.8rem",
-                      letterSpacing: "0.05em",
-                    }}
-                  >
-                    Status
-                  </TableCell>
-                  <TableCell
-                    align="right"
-                    sx={{
-                      fontWeight: 600,
-                      color: "#666666",
-                      textTransform: "uppercase",
-                      fontSize: "0.8rem",
-                      letterSpacing: "0.05em",
-                    }}
-                  >
-                    Actions
-                  </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    fontWeight: 600,
+                    color: "#666666",
+                    textTransform: "uppercase",
+                    fontSize: "0.8rem",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  Status
+                </TableCell>
+                <TableCell
+                  align="right"
+                  sx={{
+                    fontWeight: 600,
+                    color: "#666666",
+                    textTransform: "uppercase",
+                    fontSize: "0.8rem",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  Actions
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -459,6 +465,7 @@ export default function CreatorsPage() {
                         px: 1,
                         borderRadius: 1.5,
                         border: `1px solid ${statusColors[c.status] || "#eee"}50`,
+                        textTransform: "capitalize",
                       }}
                       size="small"
                     />
@@ -466,11 +473,10 @@ export default function CreatorsPage() {
                   <TableCell align="right">
                     <ActionMenu
                       userId={c.id}
-                      onSuspend={() => {
+                      onToggleStatus={() => {
                         setSelectedId(c.id);
                         setConfirmOpen(true);
                       }}
-                      onDelete={() => handleDelete(c.id)}
                     />
                   </TableCell>
                 </TableRow>
@@ -507,37 +513,59 @@ export default function CreatorsPage() {
           )}
         </TableContainer>
 
-        <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-          <DialogTitle>Confirm Admin Action</DialogTitle>
-          <DialogContent>
-            <Typography>Do you want to suspend this user?</Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setConfirmOpen(false)} color="inherit">
-              Cancel
-            </Button>
-            <Button
-              onClick={async () => {
-                if (!selectedId) return;
-                try {
-                  await suspendUser(selectedId);
-                  setCreators((prev) =>
-                    prev.map((u) =>
-                      u.id === selectedId ? { ...u, status: "suspended" } : u,
-                    ),
-                  );
-                } catch (e) {
-                  console.error("Failed to suspend user", e);
-                } finally {
-                  setConfirmOpen(false);
-                  setSelectedId(null);
-                }
-              }}
-              color="warning"
-            >
-              Confirm
-            </Button>
-          </DialogActions>
+        <Dialog
+          open={confirmOpen}
+          onClose={() => setConfirmOpen(false)}
+          PaperProps={{
+            style: {
+              borderRadius: "1rem",
+              padding: "0.5rem",
+            },
+          }}
+        >
+          {(() => {
+            const selectedUser = creators.find((u) => u.id === selectedId);
+            const isCurrentlySuspended = selectedUser?.status === "suspended";
+
+            return (
+              <>
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                  {isCurrentlySuspended
+                    ? "Confirm Activation"
+                    : "Confirm Suspension"}
+                </DialogTitle>
+                <DialogContent>
+                  <Typography variant="body1" sx={{ color: "#444" }}>
+                    {isCurrentlySuspended
+                      ? `Are you sure you want to reactivate "${selectedUser?.username}"? They will be able to manage their campaigns again.`
+                      : `Are you sure you want to suspend "${selectedUser?.username}"? This will also suspend all their active campaigns.`}
+                  </Typography>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                  <Button
+                    onClick={() => setConfirmOpen(false)}
+                    sx={{ color: "#666", fontWeight: 600 }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => changeUserStatus(selectedUser?.status || "")}
+                    variant="contained"
+                    color={isCurrentlySuspended ? "success" : "warning"}
+                    sx={{
+                      borderRadius: "0.5rem",
+                      px: 3,
+                      fontWeight: 700,
+                      boxShadow: "none",
+                      "&:hover": { boxShadow: "none" },
+                    }}
+                  >
+                    {isCurrentlySuspended ? "ACTIVATE" : "SUSPEND"}
+                  </Button>
+                </DialogActions>
+              </>
+            );
+          })()}
         </Dialog>
       </Box>
     </AdminLayout>

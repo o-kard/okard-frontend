@@ -7,11 +7,13 @@ import {
   Button,
   TextField,
   Typography,
+  Box,
 } from "@mui/material";
 
 interface EditRequestModalProps {
   open: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
   campaignId: string;
   clerkId: string;
   proposedChanges?: any;
@@ -20,6 +22,7 @@ interface EditRequestModalProps {
 export default function EditRequestModal({
   open,
   onClose,
+  onSuccess,
   campaignId,
   clerkId,
   proposedChanges,
@@ -29,13 +32,44 @@ export default function EditRequestModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  if (!proposedChanges) return null;
+
+  // Check if there's actually anything to propose
+  const hasCategory = !!proposedChanges.category;
+  const hasGoal = proposedChanges.goal_amount !== undefined;
+  const hasEndDate = !!proposedChanges.effective_end_date;
+  const hasHeader = !!proposedChanges.campaign_header;
+  const hasDescription = !!proposedChanges.campaign_description;
+  const hasRewards =
+    proposedChanges.rewards_payload &&
+    proposedChanges.rewards_payload.some((r: any) => r.isEdited || !r.id);
+
+  if (
+    !hasCategory &&
+    !hasGoal &&
+    !hasEndDate &&
+    !hasHeader &&
+    !hasDescription &&
+    !hasRewards
+  ) {
+    return null;
+  }
+
   const handleSubmit = async () => {
-    if (!description.trim()) return;
+    if (!description.trim()) {
+      setError("Please describe the changes you are proposing.");
+      return;
+    }
     setLoading(true);
     setError(null);
 
     try {
-      const finalProposed = JSON.parse(JSON.stringify(proposedChanges || {}));
+      const finalProposed = { ...proposedChanges };
+      if (proposedChanges?.rewards_payload) {
+        finalProposed.rewards_payload = JSON.parse(
+          JSON.stringify(proposedChanges.rewards_payload),
+        );
+      }
 
       if (proposedChanges?.files_map && finalProposed.rewards_payload) {
         const uploadPromises = Object.entries(proposedChanges.files_map).map(
@@ -47,10 +81,11 @@ export default function EditRequestModal({
             const fd = new FormData();
             fd.append("file", fileObj);
             fd.append("campaign_id", campaignId);
-            fd.append("clerk_id", clerkId);
+            fd.append("ref_type", "edit_request");
+            // fd.append("clerk_id", clerkId);
 
             const res = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/api/image/upload`,
+              `${process.env.NEXT_PUBLIC_API_URL}/api/media/upload`,
               {
                 method: "POST",
                 body: fd,
@@ -105,6 +140,7 @@ export default function EditRequestModal({
       onClose();
       setDescription("");
       alert("Edit request submitted successfully!");
+      onSuccess?.();
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -120,6 +156,71 @@ export default function EditRequestModal({
           Describe what you want to change. Top 11 contributors will vote on
           this request.
         </Typography>
+
+        {proposedChanges && (
+          <Box
+            sx={{
+              mb: 3,
+              p: 2,
+              bgcolor: "grey.100",
+              borderRadius: 1,
+              border: "1px solid",
+              borderColor: "grey.300",
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: "bold" }}>
+              Proposed Changes:
+            </Typography>
+            {proposedChanges.category && (
+              <Typography variant="body2" sx={{ display: "block", textTransform: "capitalize" }}>
+                • <strong>Category:</strong> {proposedChanges.category}
+              </Typography>
+            )}
+            {proposedChanges.goal_amount !== undefined && (
+              <Typography variant="body2" sx={{ display: "block" }}>
+                • <strong>Goal Amount:</strong> {proposedChanges.goal_amount}
+              </Typography>
+            )}
+            {proposedChanges.effective_end_date && (
+              <Typography variant="body2" sx={{ display: "block" }}>
+                • <strong>End Date:</strong>{" "}
+                {new Date(proposedChanges.effective_end_date).toLocaleString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                  timeZoneName: "short",
+                })}
+              </Typography>
+            )}
+            {proposedChanges.rewards_payload &&
+              proposedChanges.rewards_payload.filter(
+                (r: any) => r.isEdited || !r.id,
+              ).length > 0 && (
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+                    • Rewards:
+                  </Typography>
+                  {proposedChanges.rewards_payload
+                    .filter((r: any) => r.isEdited || !r.id)
+                    .map((r: any, idx: number) => (
+                      <Typography
+                        key={idx}
+                        variant="caption"
+                        sx={{ display: "block", ml: 2, color: "text.secondary" }}
+                      >
+                        - <strong>{r.reward_header || "Untitled Reward"}</strong> (
+                        {r.reward_amount} THB)
+                        {r.reward_description && ` - ${r.reward_description.substring(0, 50)}${r.reward_description.length > 50 ? "..." : ""}`}
+                      </Typography>
+                    ))}
+                </Box>
+              )}
+          </Box>
+        )}
+
         <TextField
           autoFocus
           margin="dense"
@@ -147,12 +248,31 @@ export default function EditRequestModal({
             inputLabel: {
               shrink: true,
             },
+            htmlInput: {
+              min: (() => {
+                const localNow = new Date();
+                const year = localNow.getFullYear();
+                const month = String(localNow.getMonth() + 1).padStart(2, "0");
+                const day = String(localNow.getDate()).padStart(2, "0");
+                const hours = String(localNow.getHours()).padStart(2, "0");
+                const minutes = String(localNow.getMinutes()).padStart(2, "0");
+                return `${year}-${month}-${day}T${hours}:${minutes}`;
+              })(),
+            },
           }}
         />
         {error && (
-          <Typography color="error" variant="caption">
-            {error}
-          </Typography>
+          <Box
+            sx={{
+              mt: 2,
+              p: 1.5,
+              bgcolor: "error.light",
+              color: "error.contrastText",
+              borderRadius: 1,
+            }}
+          >
+            <Typography variant="body2">{error}</Typography>
+          </Box>
         )}
       </DialogContent>
       <DialogActions>

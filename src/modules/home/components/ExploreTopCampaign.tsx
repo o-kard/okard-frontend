@@ -8,19 +8,33 @@ import Button from "@mui/material/Button";
 import ArrowCircleRightOutlinedIcon from "@mui/icons-material/ArrowCircleRightOutlined";
 import { CampaignSummary } from "@/modules/campaign/types/campaign";
 import { getTopPledgedCampaigns } from "../api/api";
+import { useUser, useAuth } from "@clerk/nextjs";
 
 export default function ExploreTopCampaign() {
+  const { user } = useUser();
+  const { getToken } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<string>("art");
   const [campaigns, setCampaigns] = useState<CampaignSummary[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
+    const fetchData = async () => {
+      setLoading(true);
+      const token = await getToken();
 
-    getTopPledgedCampaigns({ category: selectedCategory })
-      .then((res) => setCampaigns(res ?? []))
-      .finally(() => setLoading(false));
-  }, [selectedCategory]);
+      try {
+        const res = await getTopPledgedCampaigns({
+          category: selectedCategory,
+          token: token || undefined,
+        });
+        setCampaigns(res ?? []);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [selectedCategory, getToken]);
 
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
