@@ -12,13 +12,21 @@ import {
   Stack,
   Alert,
   InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress,
+  TextField as MuiTextField,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { Controller, SubmitHandler, useForm, useFieldArray } from "react-hook-form";
 import { useCountryOptions } from "@/hooks/useCountryOptions";
+import { useAddEmailAddress } from "@/hooks/useAddEmailAddress";
 import { SectionCard } from "@/components/ui/SectionCard";
+import { validateUsername } from "@/utils/validation";
 import { Trash2, Plus, User as UserIcon, Calendar, Globe, Mail, Phone, MapPin, Link2 } from "lucide-react";
 import { SocialLink } from "@/modules/creator/types/creator";
 import { socialPlatforms } from "@/utils/constants";
@@ -53,6 +61,7 @@ type Props = {
   onSubmit?: (fd: FormData) => Promise<void> | void;
   onSuccess?: () => void;
   onCancel?: () => void;
+  usernameError?: string | null;
 };
 
 // Edit Profile (updates Clerk + backend)
@@ -61,7 +70,9 @@ export default function EditPanel({
   onSubmit,
   onSuccess,
   onCancel,
+  usernameError,
 }: Props) {
+  const { user } = useUser();
   const {
     control,
     register,
@@ -106,6 +117,12 @@ export default function EditPanel({
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
+
+  const [verificationOpen, setVerificationOpen] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [pendingValues, setPendingValues] = useState<FormValues | null>(null);
+
+  const { prepareEmail, verifyEmail, cancelPendingEmail, submitting: emailSubmitting, error: emailError } = useAddEmailAddress();
 
   const { countryOptions, countryLoading, countryError } = useCountryOptions();
 
@@ -175,6 +192,23 @@ export default function EditPanel({
         }
       }
 
+      // Email Verification Check
+      const desiredEmail = (values.user.email ?? "").trim();
+
+      // Use the 'user' from useUser() called in the component scope
+      if (desiredEmail && user && user.primaryEmailAddress?.emailAddress !== desiredEmail) {
+        const prepared = await prepareEmail(desiredEmail);
+        if (prepared) {
+          setPendingValues(values);
+          setVerificationOpen(true);
+          setSubmitting(false);
+          return; // Pause submission, wait for Dialog
+        } else {
+          setSubmitting(false);
+          return; // Hook set the error state
+        }
+      }
+
       const fd = new FormData();
 
       const payload = {
@@ -216,6 +250,23 @@ export default function EditPanel({
     }
   };
 
+  const handleVerifyCode = async () => {
+    const success = await verifyEmail(verificationCode);
+    if (success) {
+      setVerificationOpen(false);
+      setVerificationCode("");
+      if (pendingValues) {
+        handleFormSubmit(pendingValues);
+      }
+    }
+  };
+
+  const handleCancelVerification = async () => {
+    await cancelPendingEmail();
+    setVerificationOpen(false);
+    setVerificationCode("");
+  };
+
   const hasEmail = !!initial?.email;
 
   return (
@@ -232,10 +283,14 @@ export default function EditPanel({
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12 }}>
                   <TextField
-                    label="Username (Clerk)"
                     fullWidth
-                    slotProps={{ inputLabel: { shrink: true } }}
-                    {...register("user.username", { required: true })}
+                    label="Username"
+                    {...register("user.username", {
+                      required: "Username is required",
+                      validate: (v) => validateUsername(v) || true,
+                    })}
+                    error={!!errors.user?.username}
+                    helperText={errors.user?.username?.message}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -548,10 +603,10 @@ export default function EditPanel({
 
         </Grid>
 
-        {error && (
+        {(error || usernameError) && (
           <Box sx={{ mt: 3 }}>
             <Alert severity="error" sx={{ borderRadius: 2 }}>
-              {error}
+              {usernameError || error}
             </Alert>
           </Box>
         )}
@@ -571,6 +626,41 @@ export default function EditPanel({
           </Button>
         </Box>
       </form>
+
+      {/* Verification Dialog */}
+      <Dialog open={verificationOpen} onClose={handleCancelVerification} maxWidth="xs" fullWidth sx={{ borderRadius: 2 }}>
+        <DialogTitle sx={{ fontWeight: 700 }}>Verify Email</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
+            Enter the 6-digit code sent to <strong>{watch("user.email")}</strong>
+          </Typography>
+          <MuiTextField
+            fullWidth
+            variant="outlined"
+            size="small"
+            value={verificationCode}
+            onChange={(e) => setVerificationCode(e.target.value)}
+            placeholder="123456"
+            slotProps={{ htmlInput: { maxLength: 6, style: { textAlign: 'center', letterSpacing: '0.5rem', fontWeight: 700, fontSize: '1.2rem' } } }}
+          />
+          {emailError && (
+            <Alert severity="error" sx={{ mt: 2, borderRadius: 1.5 }}>
+              {emailError}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2, pt: 0 }}>
+          <Button onClick={handleCancelVerification} color="inherit">Cancel</Button>
+          <Button
+            onClick={handleVerifyCode}
+            variant="contained"
+            disabled={emailSubmitting || verificationCode.length < 6}
+            sx={{ bgcolor: "#0f172a", color: "#fff", "&:hover": { bgcolor: "#1e293b" } }}
+          >
+            {emailSubmitting ? <CircularProgress size={20} color="inherit" /> : "Verify & Submit"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

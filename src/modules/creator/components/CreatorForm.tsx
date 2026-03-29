@@ -50,6 +50,9 @@ import { User } from "@/modules/user/types/user";
 import { useCountryOptions } from "@/hooks/useCountryOptions";
 import { useUser } from "@clerk/nextjs";
 import { socialPlatforms } from "@/utils/constants";
+import { useAddEmailAddress } from "@/hooks/useAddEmailAddress";
+import { validateUsername } from "@/utils/validation";
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField as MuiTextField } from "@mui/material";
 
 // --- Types ---
 type FormValues = {
@@ -81,6 +84,7 @@ type Props = {
   onSuccess?: (pendingAvatar?: { file?: File; clear?: boolean } | null) => void;
   onCancel?: () => void;
   imageUrl?: string | null;
+  usernameError?: string | null;
 };
 
 export default function CreatorRegisterForm({
@@ -89,6 +93,7 @@ export default function CreatorRegisterForm({
   onCancel,
   initial,
   imageUrl,
+  usernameError,
 }: Props) {
   const {
     register,
@@ -132,6 +137,18 @@ export default function CreatorRegisterForm({
     file?: File;
     clear?: boolean;
   } | null>(null);
+
+  const { 
+    prepareEmail, 
+    verifyEmail, 
+    cancelPendingEmail, 
+    error: emailError, 
+    setError: setEmailError, 
+    submitting: emailSubmitting 
+  } = useAddEmailAddress();
+  const [verificationOpen, setVerificationOpen] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [pendingValues, setPendingValues] = useState<FormValues | null>(null);
 
   const bioValue = watch("creator.bio") || "";
   const maxBioLength = 500;
@@ -225,6 +242,7 @@ export default function CreatorRegisterForm({
 
   const handleFormSubmit: SubmitHandler<FormValues> = async (values) => {
     setSubmitting(true);
+    setEmailError(null);
     try {
       const filteredLinks = socialLinks.filter(
         (link) => link.url.trim() !== "",
@@ -241,6 +259,22 @@ export default function CreatorRegisterForm({
         setIdCardError(true);
         setSubmitting(false);
         return;
+      }
+
+      // Email Verification Check
+      const desiredEmail = (values.user.email ?? "").trim();
+      if (desiredEmail && user && user.primaryEmailAddress?.emailAddress !== desiredEmail) {
+        // Only trigger if not already verified as primary
+        const prepared = await prepareEmail(desiredEmail);
+        if (prepared) {
+          setPendingValues(values);
+          setVerificationOpen(true);
+          setSubmitting(false);
+          return; // Pause submission, wait for Dialog
+        } else {
+          setSubmitting(false);
+          return; // Hook set the error state
+        }
       }
 
       // Create FormData
@@ -287,6 +321,23 @@ export default function CreatorRegisterForm({
     }
   };
 
+  const handleVerifyCode = async () => {
+    const success = await verifyEmail(verificationCode);
+    if (success) {
+      setVerificationOpen(false);
+      setVerificationCode("");
+      if (pendingValues) {
+        handleFormSubmit(pendingValues);
+      }
+    }
+  };
+
+  const handleCancelVerification = async () => {
+    await cancelPendingEmail();
+    setVerificationOpen(false);
+    setVerificationCode("");
+  };
+
   const getPlatformIcon = (platform: string) => {
     const found = socialPlatforms.find((p) => p.value === platform);
     return found?.icon || Globe;
@@ -327,6 +378,14 @@ export default function CreatorRegisterForm({
             verification process.
           </Typography>
         </Box>
+
+        {/* General Form Errors */}
+        {emailError && !verificationOpen && (
+          <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+            <AlertTitle>Error</AlertTitle>
+            {emailError}
+          </Alert>
+        )}
 
         {/* Form Paper */}
         <Paper
@@ -477,7 +536,10 @@ export default function CreatorRegisterForm({
                           placeholder="username"
                           variant="outlined"
                           size="small"
-                          {...register("user.username", { required: "Username is required" })}
+                          {...register("user.username", { 
+                            required: "Username is required",
+                            validate: (v) => validateUsername(v) || true,
+                          })}
                           error={!!errors.user?.username}
                           helperText={errors.user?.username?.message}
                           sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
@@ -1079,6 +1141,14 @@ export default function CreatorRegisterForm({
                 </Alert>
               </Grid>
 
+              {usernameError && (
+                <Grid size={{ xs: 12 }}>
+                  <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                    {usernameError}
+                  </Alert>
+                </Grid>
+              )}
+
               {/* --- Actions --- */}
               <Grid size={{ xs: 12 }}>
                 <Stack
@@ -1130,6 +1200,41 @@ export default function CreatorRegisterForm({
             </Grid>
           </form>
         </Paper>
+
+        {/* Verification Dialog */}
+        <Dialog open={verificationOpen} onClose={handleCancelVerification} maxWidth="xs" fullWidth sx={{ borderRadius: 2 }}>
+          <DialogTitle sx={{ fontWeight: 700 }}>Verify Email</DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
+              Enter the 6-digit code sent to <strong>{watch("user.email")}</strong>
+            </Typography>
+            <MuiTextField
+              fullWidth
+              variant="outlined"
+              size="small"
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(e.target.value)}
+              placeholder="123456"
+              slotProps={{ htmlInput: { maxLength: 6, style: { textAlign: 'center', letterSpacing: '0.5rem', fontWeight: 700, fontSize: '1.2rem' } } }}
+            />
+            {(emailError || usernameError) && (
+              <Alert severity="error" sx={{ mt: 2, borderRadius: 1.5 }}>
+                {usernameError || emailError}
+              </Alert>
+            )}
+          </DialogContent>
+          <DialogActions sx={{ p: 2, pt: 0 }}>
+            <Button onClick={handleCancelVerification} color="inherit">Cancel</Button>
+            <Button 
+              onClick={handleVerifyCode} 
+              variant="contained" 
+              disabled={emailSubmitting || verificationCode.length < 6}
+              sx={{ bgcolor: "#0f172a", color: "#fff", "&:hover": { bgcolor: "#1e293b" } }}
+            >
+              {emailSubmitting ? <CircularProgress size={20} color="inherit" /> : "Verify & Submit"}
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         <Typography
           variant="caption"
