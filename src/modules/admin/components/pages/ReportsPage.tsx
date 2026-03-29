@@ -45,6 +45,7 @@ import {
 import { listUsers } from "@/modules/user/api/api";
 import { fetchCampaigns } from "@/modules/campaign/api/api";
 import { ReportStatus } from "@/modules/report/types/report";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 const statusColors: Record<string, string> = {
   pending: "#ff8000",
@@ -459,7 +460,16 @@ export default function ReportsPage() {
                         }}
                         sx={{ color: "#12C998" }}
                       >
-                        <Badge badgeContent={r.files.length} color="primary">
+                        <Badge
+                          badgeContent={r.files.length}
+                          color="secondary"
+                          sx={{
+                            "& .MuiBadge-badge": {
+                              bgcolor: "#F472B6",
+                              color: "white",
+                            },
+                          }}
+                        >
                           <FilePresentIcon fontSize="small" />
                         </Badge>
                       </IconButton>
@@ -514,24 +524,59 @@ export default function ReportsPage() {
           onClose={() => setViewerOpen(false)}
           maxWidth="md"
           fullWidth
+          PaperProps={{
+            style: {
+              borderRadius: "1rem",
+            },
+          }}
         >
-          <DialogTitle sx={{ fontWeight: 700 }}>
+          <DialogTitle
+            sx={{
+              fontWeight: 800,
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+              color: "#222222",
+            }}
+          >
+            <Box
+              sx={{
+                p: 1,
+                bgcolor: "rgba(18, 201, 152, 0.1)",
+                borderRadius: "0.75rem",
+                display: "flex",
+                color: "#12C998",
+              }}
+            >
+              <FilePresentIcon />
+            </Box>
             Attachments for {selectedReport?.project}
           </DialogTitle>
-          <DialogContent dividers>
-            <Stack spacing={2}>
+          <DialogContent dividers sx={{ bgcolor: "#f8fafc", py: 3 }}>
+            <Stack spacing={2.5}>
               {selectedReport?.files.map((file: any, i: number) => {
                 const isImage = file.media_type.startsWith("image/");
                 const isPdf = file.media_type === "application/pdf";
-                const url = file.path.startsWith("http")
-                  ? file.path
-                  : `${process.env.NEXT_PUBLIC_API_URL}${file.path}`;
+                const url = resolveMediaUrl(file.path);
 
                 return (
-                  <Paper
+                  <Box
                     key={i}
-                    variant="outlined"
-                    sx={{ p: 2, display: "flex", alignItems: "center", gap: 2 }}
+                    sx={{
+                      p: 2.5,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 3,
+                      bgcolor: "#ffffff",
+                      borderRadius: "1rem",
+                      border: "1px solid rgba(0, 0, 0, 0.1)",
+                      boxShadow: "0 2px 10px rgba(0, 0, 0, 0.03)",
+                      transition: "transform 0.2s ease",
+                      "&:hover": {
+                        transform: "translateY(-2px)",
+                        borderColor: "rgba(18, 201, 152, 0.4)",
+                      },
+                    }}
                   >
                     {isImage ? (
                       <Box
@@ -539,50 +584,119 @@ export default function ReportsPage() {
                         src={url}
                         alt={file.orig_name}
                         sx={{
-                          width: 80,
-                          height: 80,
+                          width: 100,
+                          height: 100,
                           objectFit: "cover",
-                          borderRadius: 1,
+                          borderRadius: "0.75rem",
+                          border: "2px solid #f1f5f9",
                         }}
                       />
                     ) : isPdf ? (
                       <Avatar
-                        sx={{ bgcolor: "#ff5252", width: 48, height: 48 }}
+                        sx={{
+                          bgcolor: "rgba(255, 82, 82, 0.1)",
+                          color: "#ff5252",
+                          width: 64,
+                          height: 64,
+                          borderRadius: "0.75rem",
+                        }}
                         variant="rounded"
                       >
-                        <PictureAsPdfIcon />
+                        <PictureAsPdfIcon sx={{ fontSize: 32 }} />
                       </Avatar>
                     ) : (
                       <Avatar
-                        sx={{ bgcolor: "#666", width: 48, height: 48 }}
+                        sx={{
+                          bgcolor: "rgba(100, 116, 139, 0.1)",
+                          color: "#64748b",
+                          width: 64,
+                          height: 64,
+                          borderRadius: "0.75rem",
+                        }}
                         variant="rounded"
                       >
-                        <FilePresentIcon />
+                        <FilePresentIcon sx={{ fontSize: 32 }} />
                       </Avatar>
                     )}
                     <Box sx={{ flex: 1 }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ fontWeight: 700, color: "#222222" }}
+                      >
                         {file.orig_name}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {(file.file_size / 1024).toFixed(2)} KB
-                      </Typography>
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        alignItems="center"
+                        sx={{ mt: 0.5 }}
+                      >
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: "#64748b",
+                            fontWeight: 500,
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          {file.media_type || "File"}
+                        </Typography>
+                        {file.file_size && (
+                          <>
+                            <Box
+                              sx={{
+                                width: 3,
+                                height: 3,
+                                bgcolor: "#cbd5e1",
+                                borderRadius: "50%",
+                              }}
+                            />
+                            <Typography
+                              variant="caption"
+                              sx={{ color: "#64748b", fontWeight: 500 }}
+                            >
+                              {(file.file_size / 1024).toFixed(1)} KB
+                            </Typography>
+                          </>
+                        )}
+                      </Stack>
                     </Box>
                     <Button
-                      variant="outlined"
-                      size="small"
+                      variant="contained"
+                      size="medium"
                       startIcon={<VisibilityIcon />}
                       onClick={() => window.open(url, "_blank")}
+                      sx={{
+                        borderRadius: "0.75rem",
+                        bgcolor: "#12C998",
+                        fontWeight: 700,
+                        px: 3,
+                        "&:hover": {
+                          bgcolor: "#0ea87e",
+                          boxShadow: "0 4px 12px rgba(18, 201, 152, 0.3)",
+                        },
+                        boxShadow: "none",
+                      }}
                     >
-                      View
+                      VIEW
                     </Button>
-                  </Paper>
+                  </Box>
                 );
               })}
             </Stack>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setViewerOpen(false)}>Close</Button>
+          <DialogActions sx={{ p: 2.5, bgcolor: "#ffffff" }}>
+            <Button
+              onClick={() => setViewerOpen(false)}
+              sx={{
+                fontWeight: 700,
+                color: "#64748b",
+                px: 3,
+                "&:hover": { bgcolor: "rgba(0,0,0,0.03)" },
+              }}
+            >
+              CLOSE
+            </Button>
           </DialogActions>
         </Dialog>
       </Box>
