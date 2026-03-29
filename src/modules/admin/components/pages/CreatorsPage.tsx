@@ -29,6 +29,12 @@ import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
+import FilePresentIcon from "@mui/icons-material/FilePresent";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import Badge from "@mui/material/Badge";
+import Tooltip from "@mui/material/Tooltip";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 const statusColors: Record<string, string> = {
   active: "#1de9b6",
@@ -125,6 +131,8 @@ export default function CreatorsPage() {
   const [creators, setCreators] = useState<any[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [selectedCreator, setSelectedCreator] = useState<any>(null);
 
   useEffect(() => {
     async function loadCreators() {
@@ -147,6 +155,7 @@ export default function CreatorsPage() {
             role: user.role || "-",
             campaign_number,
             status: user.status || "active",
+            creator: user.creator,
           };
         });
         setCreators(creatorsData);
@@ -358,6 +367,18 @@ export default function CreatorsPage() {
                   Status
                 </TableCell>
                 <TableCell
+                  align="center"
+                  sx={{
+                    fontWeight: 600,
+                    color: "#666666",
+                    textTransform: "uppercase",
+                    fontSize: "0.8rem",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  Attachments
+                </TableCell>
+                <TableCell
                   align="right"
                   sx={{
                     fontWeight: 600,
@@ -470,6 +491,37 @@ export default function CreatorsPage() {
                       size="small"
                     />
                   </TableCell>
+                  <TableCell align="center">
+                    {c.creator?.verification_docs &&
+                    c.creator.verification_docs.length > 0 ? (
+                      <Tooltip title="View Verification Documents">
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCreator(c);
+                            setViewerOpen(true);
+                          }}
+                          sx={{ color: "#12C998" }}
+                        >
+                          <Badge
+                            badgeContent={c.creator.verification_docs.length}
+                            color="secondary"
+                            sx={{
+                              "& .MuiBadge-badge": {
+                                bgcolor: "#F472B6",
+                                color: "white",
+                              },
+                            }}
+                          >
+                            <FilePresentIcon fontSize="small" />
+                          </Badge>
+                        </IconButton>
+                      </Tooltip>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
                   <TableCell align="right">
                     <ActionMenu
                       userId={c.id}
@@ -566,6 +618,198 @@ export default function CreatorsPage() {
               </>
             );
           })()}
+        </Dialog>
+
+        {/* Verification File Viewer Dialog */}
+        <Dialog
+          open={viewerOpen}
+          onClose={() => setViewerOpen(false)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            style: {
+              borderRadius: "1rem",
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              fontWeight: 800,
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+              color: "#222222",
+            }}
+          >
+            <Box
+              sx={{
+                p: 1,
+                bgcolor: "rgba(18, 201, 152, 0.1)",
+                borderRadius: "0.75rem",
+                display: "flex",
+                color: "#12C998",
+              }}
+            >
+              <FilePresentIcon />
+            </Box>
+            Verification Documents: {selectedCreator?.username}
+          </DialogTitle>
+          <DialogContent dividers sx={{ bgcolor: "#f8fafc", py: 3 }}>
+            <Stack spacing={2.5}>
+              {selectedCreator?.creator?.verification_docs?.map(
+                (file: any, i: number) => {
+                  const isImage =
+                    file.mime_type?.startsWith("image/") ||
+                    /\.(jpg|jpeg|png|webp)$/i.test(file.file_path);
+                  const isPdf =
+                    file.mime_type === "application/pdf" ||
+                    file.file_path.endsWith(".pdf");
+                  const url = resolveMediaUrl(file.file_path);
+
+                  const displayName = file.type
+                    ? file.type.replace(/_/g, " ").toUpperCase()
+                    : "DOCUMENT";
+
+                  return (
+                    <Box
+                      key={i}
+                      sx={{
+                        p: 2.5,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 3,
+                        bgcolor: "#ffffff",
+                        borderRadius: "1rem",
+                        border: "1px solid rgba(0, 0, 0, 0.1)",
+                        boxShadow: "0 2px 10px rgba(0, 0, 0, 0.03)",
+                        transition: "transform 0.2s ease",
+                        "&:hover": {
+                          transform: "translateY(-2px)",
+                          borderColor: "rgba(18, 201, 152, 0.4)",
+                        },
+                      }}
+                    >
+                      {isImage ? (
+                        <Box
+                          component="img"
+                          src={url}
+                          alt={displayName}
+                          sx={{
+                            width: 100,
+                            height: 100,
+                            objectFit: "cover",
+                            borderRadius: "0.75rem",
+                            border: "2px solid #f1f5f9",
+                          }}
+                        />
+                      ) : isPdf ? (
+                        <Avatar
+                          sx={{
+                            bgcolor: "rgba(255, 82, 82, 0.1)",
+                            color: "#ff5252",
+                            width: 64,
+                            height: 64,
+                            borderRadius: "0.75rem",
+                          }}
+                          variant="rounded"
+                        >
+                          <PictureAsPdfIcon sx={{ fontSize: 32 }} />
+                        </Avatar>
+                      ) : (
+                        <Avatar
+                          sx={{
+                            bgcolor: "rgba(100, 116, 139, 0.1)",
+                            color: "#64748b",
+                            width: 64,
+                            height: 64,
+                            borderRadius: "0.75rem",
+                          }}
+                          variant="rounded"
+                        >
+                          <FilePresentIcon sx={{ fontSize: 32 }} />
+                        </Avatar>
+                      )}
+                      <Box sx={{ flex: 1 }}>
+                        <Typography
+                          variant="subtitle1"
+                          sx={{ fontWeight: 700, color: "#222222" }}
+                        >
+                          {displayName}
+                        </Typography>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          alignItems="center"
+                          sx={{ mt: 0.5 }}
+                        >
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: "#64748b",
+                              fontWeight: 500,
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            {file.mime_type || "File"}
+                          </Typography>
+                          {file.file_size && (
+                            <>
+                              <Box
+                                sx={{
+                                  width: 3,
+                                  height: 3,
+                                  bgcolor: "#cbd5e1",
+                                  borderRadius: "50%",
+                                }}
+                              />
+                              <Typography
+                                variant="caption"
+                                sx={{ color: "#64748b", fontWeight: 500 }}
+                              >
+                                {(file.file_size / 1024).toFixed(1)} KB
+                              </Typography>
+                            </>
+                          )}
+                        </Stack>
+                      </Box>
+                      <Button
+                        variant="contained"
+                        size="medium"
+                        startIcon={<VisibilityIcon />}
+                        onClick={() => window.open(url, "_blank")}
+                        sx={{
+                          borderRadius: "0.75rem",
+                          bgcolor: "#12C998",
+                          fontWeight: 700,
+                          px: 3,
+                          "&:hover": {
+                            bgcolor: "#0ea87e",
+                            boxShadow: "0 4px 12px rgba(18, 201, 152, 0.3)",
+                          },
+                          boxShadow: "none",
+                        }}
+                      >
+                        VIEW
+                      </Button>
+                    </Box>
+                  );
+                },
+              )}
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{ p: 2.5, bgcolor: "#ffffff" }}>
+            <Button
+              onClick={() => setViewerOpen(false)}
+              sx={{
+                fontWeight: 700,
+                color: "#64748b",
+                px: 3,
+                "&:hover": { bgcolor: "rgba(0,0,0,0.03)" },
+              }}
+            >
+              CLOSE
+            </Button>
+          </DialogActions>
         </Dialog>
       </Box>
     </AdminLayout>

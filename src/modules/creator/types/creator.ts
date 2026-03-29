@@ -9,6 +9,19 @@ export interface SocialLink {
     url: string;
 }
 
+export interface CreatorVerificationDoc {
+    id: string;
+    creator_id: string;
+    type: string;
+    file_path: string;
+    storage_provider: string;
+    mime_type: string | null;
+    file_size: number | null;
+    uploaded_at: string;
+    verified_at: string | null;
+    verified_by: string | null;
+}
+
 export interface Creator {
     id: string;
     user_id: string;
@@ -23,6 +36,7 @@ export interface Creator {
     rejection_reason: string | null;
     created_at: string;
     updated_at: string;
+    verification_docs: CreatorVerificationDoc[];
 }
 
 export interface CreatorFormData {
