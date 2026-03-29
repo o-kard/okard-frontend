@@ -71,7 +71,7 @@ export default function ContributionsPanel({ contributions, loading }: Contribut
         ) : filteredContributions.length > 0 ? (
           <ContributorList contributions={filteredContributions} />
         ) : (
-          <Paper sx={{ p: 4, textAlign: "center", borderRadius: 3, bgcolor: "#fff" }} elevation={0}>
+          <Paper sx={{ p: 4, textAlign: "center", borderRadius: 3, bgcolor: "#fff", boxShadow: "none" }} elevation={0}>
             <Typography color="text.secondary">No contributions found.</Typography>
           </Paper>
         )}

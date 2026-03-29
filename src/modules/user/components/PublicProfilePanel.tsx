@@ -575,7 +575,7 @@ export default function PublicProfilePanel({
                 ) : filteredCampaigns.length > 0 ? (
                   <CampaignList campaigns={filteredCampaigns} />
                 ) : (
-                  <Paper sx={{ p: 4, textAlign: "center", borderRadius: 3 }}>
+                  <Paper sx={{ p: 4, textAlign: "center", borderRadius: 3, bgcolor: "#fff", boxShadow: "none" }} elevation={0}>
                     <Typography color="text.secondary">
                       No campaigns found.
                     </Typography>
@@ -637,7 +637,7 @@ export default function PublicProfilePanel({
                 ) : filteredContributions.length > 0 ? (
                   <ContributorList contributions={filteredContributions} />
                 ) : (
-                  <Paper sx={{ p: 4, textAlign: "center", borderRadius: 3 }}>
+                  <Paper sx={{ p: 4, textAlign: "center", borderRadius: 3, bgcolor: "#fff", boxShadow: "none" }} elevation={0}>
                     <Typography color="text.secondary">
                       No contributions found.
                     </Typography>

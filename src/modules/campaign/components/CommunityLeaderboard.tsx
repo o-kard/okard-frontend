@@ -135,13 +135,18 @@ export default function CommunityLeaderboard({
                 <Typography variant="body1" fontWeight={500}>
                   {item.country}
                 </Typography>
-                <Typography
-                  variant="body1"
-                  fontWeight={600}
-                  sx={{ color: "#18C59B" }}
-                >
-                  {item.supporter.toLocaleString()}
-                </Typography>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Typography
+                    variant="body1"
+                    fontWeight={600}
+                    sx={{ color: "#18C59B" }}
+                  >
+                    {item.supporter.toLocaleString()}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    ({item.total_amount.toLocaleString()} USD)
+                  </Typography>
+                </Stack>
               </Box>
             ))}
           </Stack>

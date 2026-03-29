@@ -36,6 +36,7 @@ export interface AIPrediction {
 export interface CountrySupporterStat {
   country: string;
   supporter: number;
+  total_amount: number;
 }
 
 export interface CampaignCommunity {
