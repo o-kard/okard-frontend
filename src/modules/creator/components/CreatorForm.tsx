@@ -565,7 +565,19 @@ export default function CreatorRegisterForm({
                           {...register("user.email")}
                           error={!!errors.user?.email}
                           helperText={errors.user?.email?.message}
-                          sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              borderRadius: 1.5,
+                              backgroundColor: "#f1f5f9",
+                              "&.Mui-disabled": {
+                                backgroundColor: "#f1f5f9",
+                                "& fieldset": { borderColor: "divider" },
+                              },
+                            },
+                            "& .MuiInputBase-input.Mui-disabled": {
+                              WebkitTextFillColor: "#64748b",
+                            },
+                          }}
                         />
                       </Box>
 
