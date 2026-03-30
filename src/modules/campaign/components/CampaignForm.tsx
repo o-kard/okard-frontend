@@ -413,7 +413,7 @@ export default function CampaignForm({
     const newFiles = Array.from(e.target.files || []);
     if (newFiles.length === 0) return;
 
-    setVideoError(null);
+    // setVideoError(null); // Removed: should not clear video error when images are uploaded
     clearErrors("campaign_media");
 
     const invalidType = newFiles.find(
@@ -455,10 +455,12 @@ export default function CampaignForm({
   };
 
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    setVideoError(null);
+    const target = e.target; // Capture target to clear later
+    const file = target.files?.[0];
     if (!file) return;
 
-    setVideoError(null);
+    target.value = ""; // Clear early so same invalid file can be re-selected
     // Use manual error for campaign_media if video belongs there conceptually or just set local error
     if (!ALLOWED_VIDEO_TYPES.includes(file.type)) {
       setVideoError(
@@ -526,7 +528,7 @@ export default function CampaignForm({
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const f = (e.target.files && e.target.files[0]) || null;
-    setVideoError(null);
+    // setVideoError(null); // Removed: should not clear video error when information images are uploaded
     clearErrors(`informations.${idx}.file` as const);
 
     if (f) {
@@ -604,7 +606,7 @@ export default function CampaignForm({
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const f = (e.target.files && e.target.files[0]) || null;
-    setVideoError(null);
+    // setVideoError(null); // Removed: should not clear video error when reward images are uploaded
     clearErrors(`rewards.${idx}.file` as const);
 
     if (f) {
