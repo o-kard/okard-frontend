@@ -9,7 +9,6 @@ import { useEffect, useRef, useState } from "react";
 import { useRequireUserInDb } from "@/hooks/useRequireUserDb";
 import { getUser } from "@/modules/user/api/api";
 import { User } from "@/modules/user/types/user";
-import { useUpdateUsername } from "@/hooks/useUpdateUsername";
 import { useAddEmailAddress } from "@/hooks/useAddEmailAddress";
 import { Alert, Box } from "@mui/material";
 
@@ -19,7 +18,6 @@ export default function CreatorRegisterPage() {
   const haveUserDb = useRequireUserInDb();
   const { getToken } = useAuth();
   const { user, isLoaded } = useUser();
-  const { updateUsername, error: usernameError } = useUpdateUsername();
   const { cancelPendingEmail } = useAddEmailAddress();
   const initialUsernameRef = useRef<string | null>(null);
 
@@ -40,32 +38,7 @@ export default function CreatorRegisterPage() {
     console.log("Bank Statement:", fd.get("bank_statement"));
 
     // Check for username update
-    const rawData = fd.get("data");
-    if (rawData) {
-      try {
-        const data = JSON.parse(String(rawData));
-        const userData = data.user;
-        const newUsername = userData.username ? String(userData.username).trim() : null;
-
-        const initialUsername = initialUsernameRef.current;
-        if (user && newUsername && initialUsername !== undefined) {
-          if (newUsername !== initialUsername) {
-            const updated = await updateUsername(newUsername);
-            if (!updated) {
-              throw new Error(usernameError || "Failed to update username");
-            }
-            initialUsernameRef.current = newUsername;
-          }
-        }
-      } catch (e) {
-        if (
-          (e as Error).message === "Failed to update username" ||
-          (e as Error).message === "Failed to add/verify email"
-        ) {
-          throw e;
-        }
-      }
-    }
+    // Username and profile image updates to Clerk are now handled by the backend upon admin verification
 
     try {
       const token = await getToken();
@@ -85,16 +58,6 @@ export default function CreatorRegisterPage() {
     if (!user) return;
 
     try {
-      // Sync profile image to Clerk
-      if (pendingAvatar?.file) {
-        console.log("Setting Clerk profile image...");
-        await user.setProfileImage({ file: pendingAvatar.file });
-      }
-      if (pendingAvatar?.clear) {
-        console.log("Clearing Clerk profile image...");
-        await user.setProfileImage({ file: null });
-      }
-
       // Reload user data
       await user.reload();
 
@@ -142,7 +105,6 @@ export default function CreatorRegisterPage() {
           onSubmit={handleSubmit}
           onSuccess={handleSuccess}
           initial={profile}
-          usernameError={usernameError}
           // isUserHaveImage={user?.hasImage}
           imageUrl={user?.hasImage ? user?.imageUrl : null}
         />
