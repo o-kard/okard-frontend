@@ -164,6 +164,11 @@ function SortableThumb({
   );
 }
 
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/mpeg", "video/quicktime", "video/webm"];
+
 export const categoryOptions = [
   { value: "art", label: "Art" },
   { value: "comics", label: "Comics" },
@@ -403,15 +408,20 @@ export default function CampaignForm({
     if (newFiles.length === 0) return;
 
     setImageSizeError(null);
-    const oversized = newFiles.filter((f) => f.size > 5 * 1024 * 1024);
-    if (oversized.length > 0) {
-      setImageSizeError(
-        `Some images exceed the 5MB limit: ${oversized.map((f) => f.name).join(", ")}`,
-      );
+    clearErrors("campaign_media");
+
+    const invalidType = newFiles.find((f) => !ALLOWED_IMAGE_TYPES.includes(f.type));
+    if (invalidType) {
+      setError("campaign_media", { type: "manual", message: `Invalid image type: ${invalidType.name}. Only JPEG, PNG, and WEBP are allowed.` });
       return;
     }
 
-    clearErrors("campaign_media");
+    const oversized = newFiles.filter((f) => f.size > MAX_IMAGE_SIZE);
+    if (oversized.length > 0) {
+      setError("campaign_media", { type: "manual", message: `Some images exceed the 5MB limit: ${oversized.map((f) => f.name).join(", ")}` });
+      return;
+    }
+
     setCampaignMedia((currentMedia) => {
       const newItems = newFiles.map((f, i) => ({
         id: `${f.name}-${i}-${crypto.randomUUID()}`,
@@ -435,7 +445,13 @@ export default function CampaignForm({
     if (!file) return;
 
     setImageSizeError(null);
-    if (file.size > 50 * 1024 * 1024) {
+    // Use manual error for campaign_media if video belongs there conceptually or just set local error
+    if (!ALLOWED_VIDEO_TYPES.includes(file.type)) {
+      setImageSizeError(`Invalid video type: ${file.name}. Only MP4, MOV, and WEBM are allowed.`);
+      return;
+    }
+
+    if (file.size > MAX_VIDEO_SIZE) {
       setImageSizeError(`Video exceeds the 50MB limit: ${file.name}`);
       return;
     }
@@ -494,11 +510,19 @@ export default function CampaignForm({
   ) => {
     const f = (e.target.files && e.target.files[0]) || null;
     setImageSizeError(null);
-    if (f && f.size > 5 * 1024 * 1024) {
-      setImageSizeError(`Information image #${idx + 1} exceeds the 5MB limit.`);
-      return;
-    }
     clearErrors(`informations.${idx}.file` as const);
+
+    if (f) {
+      if (!ALLOWED_IMAGE_TYPES.includes(f.type)) {
+        setError(`informations.${idx}.file` as const, { type: "manual", message: `Invalid image type. Only JPEG, PNG, and WEBP are allowed.` });
+        return;
+      }
+      if (f.size > MAX_IMAGE_SIZE) {
+        setError(`informations.${idx}.file` as const, { type: "manual", message: `Information image exceeds the 5MB limit.` });
+        return;
+      }
+    }
+
     setValue(`informations.${idx}.file`, f);
     if (informationPreviews[idx]) URL.revokeObjectURL(informationPreviews[idx]);
     setInformationPreviews((s) => ({
@@ -558,11 +582,19 @@ export default function CampaignForm({
   ) => {
     const f = (e.target.files && e.target.files[0]) || null;
     setImageSizeError(null);
-    if (f && f.size > 5 * 1024 * 1024) {
-      setImageSizeError(`Reward image #${idx + 1} exceeds the 5MB limit.`);
-      return;
-    }
     clearErrors(`rewards.${idx}.file` as const);
+
+    if (f) {
+      if (!ALLOWED_IMAGE_TYPES.includes(f.type)) {
+        setError(`rewards.${idx}.file` as const, { type: "manual", message: `Invalid image type. Only JPEG, PNG, and WEBP are allowed.` });
+        return;
+      }
+      if (f.size > MAX_IMAGE_SIZE) {
+        setError(`rewards.${idx}.file` as const, { type: "manual", message: `Reward image exceeds the 5MB limit.` });
+        return;
+      }
+    }
+
     setValue(`rewards.${idx}.file`, f);
     if (rewardPreviews[idx]) URL.revokeObjectURL(rewardPreviews[idx]);
     setRewardPreviews((s) => ({
@@ -807,6 +839,11 @@ export default function CampaignForm({
   const handleFormSubmit: SubmitHandler<FormValues> = async (values) => {
     let hasError = false;
     let firstErrorId = "";
+
+    if (imageSizeError) {
+      hasError = true;
+      if (!firstErrorId) firstErrorId = "campaign-media-section";
+    }
 
     if (campaignMedia.length === 0) {
       setError("campaign_media", { type: "manual", message: "Please upload at least one campaign image." });
