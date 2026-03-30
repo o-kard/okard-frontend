@@ -158,6 +158,7 @@ export default function ReportsPage() {
           project: campaign
             ? campaign.campaign_header
             : "Unknown Campaign (or Global)",
+          header: report.header || "-",
           reporter: user ? user.username : "Unknown User",
           reason:
             report.type + (report.description ? `: ${report.description}` : ""),
@@ -198,6 +199,7 @@ export default function ReportsPage() {
   const filtered = reports.filter(
     (r) =>
       r.project.toLowerCase().includes(search.toLowerCase()) ||
+      r.header.toLowerCase().includes(search.toLowerCase()) ||
       r.reporter.toLowerCase().includes(search.toLowerCase()) ||
       r.reason.toLowerCase().includes(search.toLowerCase()),
   );
@@ -322,6 +324,17 @@ export default function ReportsPage() {
                   Project
                 </TableCell>
                 <TableCell
+                  sx={{
+                    fontWeight: 600,
+                    color: "#666666",
+                    textTransform: "uppercase",
+                    fontSize: "0.8rem",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  Header
+                </TableCell>
+                <TableCell
                   align="center"
                   sx={{
                     fontWeight: 600,
@@ -426,6 +439,17 @@ export default function ReportsPage() {
                         {r.project}
                       </Typography>
                     </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Typography
+                      sx={{
+                        fontWeight: 600,
+                        color: "#64748b",
+                        fontSize: "0.9rem",
+                      }}
+                    >
+                      {r.header}
+                    </Typography>
                   </TableCell>
                   <TableCell align="center" sx={{ color: "#666666" }}>
                     {r.reporter}
@@ -550,7 +574,19 @@ export default function ReportsPage() {
             >
               <FilePresentIcon />
             </Box>
-            Attachments for {selectedReport?.project}
+            <Box sx={{ display: "flex", flexDirection: "column" }}>
+              <Typography variant="h6" sx={{ fontWeight: 800, color: "#222222" }}>
+                Attachments for {selectedReport?.project}
+              </Typography>
+              {selectedReport?.header && (
+                <Typography
+                  variant="caption"
+                  sx={{ color: "#64748b", fontWeight: 600, textTransform: "uppercase" }}
+                >
+                  {selectedReport.header}
+                </Typography>
+              )}
+            </Box>
           </DialogTitle>
           <DialogContent dividers sx={{ bgcolor: "#f8fafc", py: 3 }}>
             <Stack spacing={2.5}>
