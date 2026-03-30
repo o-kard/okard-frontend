@@ -139,14 +139,18 @@ export default function ClientNavbar({ isHome = false }: { isHome?: boolean }) {
     async function load() {
       try {
         const data: Campaign[] = await getAllCampaigns();
-        console.log(data);
-        const ongoing = data.filter((c) => {
+        const filtered = data.filter((c) => {
           const isExpired = c.effective_end_date
             ? new Date(c.effective_end_date.replace(" ", "T")) < new Date()
             : false;
-          return c.state === "published" || (c.state === "success" && !isExpired);
+          
+          if (c.state === "published" && !isExpired) return true;
+          if (c.state === "success" && !isExpired) return true;
+          return false;
         });
-        setPopularCampaigns(ongoing.slice(0, 2));
+
+        const sorted = filtered.sort((a, b) => (b.current_amount || 0) - (a.current_amount || 0));
+        setPopularCampaigns(sorted.slice(0, 2));
       } catch (err) {
         console.error("Failed to load campaigns:", err);
       }
