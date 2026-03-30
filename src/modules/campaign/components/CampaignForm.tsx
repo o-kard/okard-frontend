@@ -1758,17 +1758,6 @@ export default function CampaignForm({
                     </FormHelperText>
                   )}
 
-                  {videoError && (
-                    <Typography
-                      color="error"
-                      variant="caption"
-                      display="block"
-                      sx={{ mt: 1, fontWeight: 700 }}
-                    >
-                      {videoError}
-                    </Typography>
-                  )}
-
                   {rewardPreviews[idx] && (
                     <Box sx={{ mt: 1 }}>
                       <img
