@@ -558,7 +558,6 @@ export default function CreatorRegisterForm({
                         <TextField
                           id="email"
                           fullWidth
-                          placeholder="email@example.com"
                           variant="outlined"
                           size="small"
                           type="email"
