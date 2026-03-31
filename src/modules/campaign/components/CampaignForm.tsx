@@ -164,6 +164,16 @@ function SortableThumb({
   );
 }
 
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_VIDEO_TYPES = [
+  "video/mp4",
+  "video/mpeg",
+  "video/quicktime",
+  "video/webm",
+];
+
 export const categoryOptions = [
   { value: "art", label: "Art" },
   { value: "comics", label: "Comics" },
@@ -283,7 +293,7 @@ export default function CampaignForm({
   const [campaignVideo, setCampaignVideo] = useState<CampaignMediaItem | null>(
     null,
   );
-  const [imageSizeError, setImageSizeError] = useState<string | null>(null);
+  const [videoError, setVideoError] = useState<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor));
 
   const values = watch();
@@ -295,7 +305,8 @@ export default function CampaignForm({
     if (values.campaign_header !== editItem.campaign_header) return true;
     if (values.campaign_description !== editItem.campaign_description)
       return true;
-    if (Number(values.goal_amount) !== Number(editItem.goal_amount)) return true;
+    if (Number(values.goal_amount) !== Number(editItem.goal_amount))
+      return true;
     if (values.category !== editItem.category) return true;
     if (values.state !== editItem.state) return true;
 
@@ -402,16 +413,29 @@ export default function CampaignForm({
     const newFiles = Array.from(e.target.files || []);
     if (newFiles.length === 0) return;
 
-    setImageSizeError(null);
-    const oversized = newFiles.filter((f) => f.size > 5 * 1024 * 1024);
-    if (oversized.length > 0) {
-      setImageSizeError(
-        `Some images exceed the 5MB limit: ${oversized.map((f) => f.name).join(", ")}`,
-      );
+    // setVideoError(null); // Removed: should not clear video error when images are uploaded
+    clearErrors("campaign_media");
+
+    const invalidType = newFiles.find(
+      (f) => !ALLOWED_IMAGE_TYPES.includes(f.type),
+    );
+    if (invalidType) {
+      setError("campaign_media", {
+        type: "manual",
+        message: `Invalid image type: ${invalidType.name}. Only JPEG, PNG, and WEBP are allowed.`,
+      });
       return;
     }
 
-    clearErrors("campaign_media");
+    const oversized = newFiles.filter((f) => f.size > MAX_IMAGE_SIZE);
+    if (oversized.length > 0) {
+      setError("campaign_media", {
+        type: "manual",
+        message: `Some images exceed the 5MB limit: ${oversized.map((f) => f.name).join(", ")}`,
+      });
+      return;
+    }
+
     setCampaignMedia((currentMedia) => {
       const newItems = newFiles.map((f, i) => ({
         id: `${f.name}-${i}-${crypto.randomUUID()}`,
@@ -431,12 +455,22 @@ export default function CampaignForm({
   };
 
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    setVideoError(null);
+    const target = e.target; // Capture target to clear later
+    const file = target.files?.[0];
     if (!file) return;
 
-    setImageSizeError(null);
-    if (file.size > 50 * 1024 * 1024) {
-      setImageSizeError(`Video exceeds the 50MB limit: ${file.name}`);
+    target.value = ""; // Clear early so same invalid file can be re-selected
+    // Use manual error for campaign_media if video belongs there conceptually or just set local error
+    if (!ALLOWED_VIDEO_TYPES.includes(file.type)) {
+      setVideoError(
+        `Invalid video type: ${file.name}. Only MP4, MOV, and WEBM are allowed.`,
+      );
+      return;
+    }
+
+    if (file.size > MAX_VIDEO_SIZE) {
+      setVideoError(`Video exceeds the 50MB limit: ${file.name}`);
       return;
     }
 
@@ -453,6 +487,7 @@ export default function CampaignForm({
   const handleRemoveVideo = () => {
     if (campaignVideo?.preview) URL.revokeObjectURL(campaignVideo.preview);
     setCampaignVideo(null);
+    setVideoError(null);
   };
 
   const handleRemoveCampaignMedia = (idToRemove: string) => {
@@ -493,12 +528,26 @@ export default function CampaignForm({
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const f = (e.target.files && e.target.files[0]) || null;
-    setImageSizeError(null);
-    if (f && f.size > 5 * 1024 * 1024) {
-      setImageSizeError(`Information image #${idx + 1} exceeds the 5MB limit.`);
-      return;
-    }
+    // setVideoError(null); // Removed: should not clear video error when information images are uploaded
     clearErrors(`informations.${idx}.file` as const);
+
+    if (f) {
+      if (!ALLOWED_IMAGE_TYPES.includes(f.type)) {
+        setError(`informations.${idx}.file` as const, {
+          type: "manual",
+          message: `Invalid image type. Only JPEG, PNG, and WEBP are allowed.`,
+        });
+        return;
+      }
+      if (f.size > MAX_IMAGE_SIZE) {
+        setError(`informations.${idx}.file` as const, {
+          type: "manual",
+          message: `Information image exceeds the 5MB limit.`,
+        });
+        return;
+      }
+    }
+
     setValue(`informations.${idx}.file`, f);
     if (informationPreviews[idx]) URL.revokeObjectURL(informationPreviews[idx]);
     setInformationPreviews((s) => ({
@@ -557,12 +606,26 @@ export default function CampaignForm({
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const f = (e.target.files && e.target.files[0]) || null;
-    setImageSizeError(null);
-    if (f && f.size > 5 * 1024 * 1024) {
-      setImageSizeError(`Reward image #${idx + 1} exceeds the 5MB limit.`);
-      return;
-    }
+    // setVideoError(null); // Removed: should not clear video error when reward images are uploaded
     clearErrors(`rewards.${idx}.file` as const);
+
+    if (f) {
+      if (!ALLOWED_IMAGE_TYPES.includes(f.type)) {
+        setError(`rewards.${idx}.file` as const, {
+          type: "manual",
+          message: `Invalid image type. Only JPEG, PNG, and WEBP are allowed.`,
+        });
+        return;
+      }
+      if (f.size > MAX_IMAGE_SIZE) {
+        setError(`rewards.${idx}.file` as const, {
+          type: "manual",
+          message: `Reward image exceeds the 5MB limit.`,
+        });
+        return;
+      }
+    }
+
     setValue(`rewards.${idx}.file`, f);
     if (rewardPreviews[idx]) URL.revokeObjectURL(rewardPreviews[idx]);
     setRewardPreviews((s) => ({
@@ -808,20 +871,34 @@ export default function CampaignForm({
     let hasError = false;
     let firstErrorId = "";
 
+    if (videoError) {
+      hasError = true;
+      if (!firstErrorId) firstErrorId = "campaign-media-section";
+    }
+
     if (campaignMedia.length === 0) {
-      setError("campaign_media", { type: "manual", message: "Please upload at least one campaign image." });
+      setError("campaign_media", {
+        type: "manual",
+        message: "Please upload at least one campaign image.",
+      });
       hasError = true;
       if (!firstErrorId) firstErrorId = "campaign-media-section";
     }
 
     if (!values.informations || values.informations.length === 0) {
-      setError("informations", { type: "manual", message: "Please add at least one information item." });
+      setError("informations", {
+        type: "manual",
+        message: "Please add at least one information item.",
+      });
       hasError = true;
       if (!firstErrorId) firstErrorId = "information-section-0";
     }
 
     if (!values.rewards || values.rewards.length === 0) {
-      setError("rewards", { type: "manual", message: "Please add at least one reward." });
+      setError("rewards", {
+        type: "manual",
+        message: "Please add at least one reward.",
+      });
       hasError = true;
       if (!firstErrorId) firstErrorId = "reward-section-0";
     }
@@ -832,7 +909,10 @@ export default function CampaignForm({
       for (let i = 0; i < values.informations.length; i++) {
         const f = (values.informations[i] as any).file as File | undefined;
         if (!f) {
-          setError(`informations.${i}.file` as const, { type: "manual", message: `Please upload an image for information #${i + 1}.` });
+          setError(`informations.${i}.file` as const, {
+            type: "manual",
+            message: `Please upload an image for information #${i + 1}.`,
+          });
           hasError = true;
           if (!firstErrorId) firstErrorId = `information-section-${i}`;
         }
@@ -841,7 +921,10 @@ export default function CampaignForm({
       for (let i = 0; i < values.rewards.length; i++) {
         const f = (values.rewards[i] as any).file as File | undefined;
         if (!f) {
-          setError(`rewards.${i}.file` as const, { type: "manual", message: `Please upload an image for reward #${i + 1}.` });
+          setError(`rewards.${i}.file` as const, {
+            type: "manual",
+            message: `Please upload an image for reward #${i + 1}.`,
+          });
           hasError = true;
           if (!firstErrorId) firstErrorId = `reward-section-${i}`;
         }
@@ -850,7 +933,9 @@ export default function CampaignForm({
 
     if (hasError) {
       if (firstErrorId) {
-        document.getElementById(firstErrorId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document
+          .getElementById(firstErrorId)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
       }
       return;
     }
@@ -1181,11 +1266,7 @@ export default function CampaignForm({
               select
               label="State"
               fullWidth
-              disabled={
-                isInactive ||
-                isSuccess ||
-                isLive
-              }
+              disabled={isInactive || isSuccess || isLive}
               value={field.value ?? ""}
               onChange={field.onChange}
               slotProps={{
@@ -1258,7 +1339,8 @@ export default function CampaignForm({
             }}
             error={!!errors.effective_start_from}
             helperText={
-              errors.effective_start_from?.message || `Local time (${getLocalTz()})`
+              errors.effective_start_from?.message ||
+              `Local time (${getLocalTz()})`
             }
           />
         </Grid>
@@ -1285,7 +1367,9 @@ export default function CampaignForm({
               htmlInput: {
                 min: (() => {
                   const startDate = watch("effective_start_from");
-                  return startDate || toLocalInputValue(new Date().toISOString());
+                  return (
+                    startDate || toLocalInputValue(new Date().toISOString())
+                  );
                 })(),
               },
             }}
@@ -1363,6 +1447,17 @@ export default function CampaignForm({
               />
             </Button>
           )}
+
+          {videoError && (
+            <Typography
+              color="error"
+              variant="caption"
+              display="block"
+              sx={{ mt: 1, fontWeight: 700 }}
+            >
+              {videoError}
+            </Typography>
+          )}
         </Grid>
 
         {/* Image Upload (multiple, reorderable) */}
@@ -1390,17 +1485,6 @@ export default function CampaignForm({
             <FormHelperText error sx={{ mt: 1 }}>
               {errors.campaign_media.message}
             </FormHelperText>
-          )}
-
-          {imageSizeError && (
-            <Typography
-              color="error"
-              variant="caption"
-              display="block"
-              sx={{ mt: 1, fontWeight: 700 }}
-            >
-              {imageSizeError}
-            </Typography>
           )}
 
           {/* Draggable Image Previews */}
@@ -1497,7 +1581,7 @@ export default function CampaignForm({
                     `informations.${idx}.information_description` as const,
                     {
                       required: "Information description is required",
-                    }
+                    },
                   )}
                   error={!!errors.informations?.[idx]?.information_description}
                   helperText={
@@ -1591,7 +1675,6 @@ export default function CampaignForm({
             const hasBackers = Number(field.backup_amount) > 0;
             const isDisabled = isPublishedOrSuccess && hasBackers;
 
-
             return (
               <Grid
                 container
@@ -1630,11 +1713,9 @@ export default function CampaignForm({
                     multiline
                     rows={3}
                     disabled={isInactive || isDisabled}
-                    {...register(`rewards.${idx}.reward_description` as const,
-                      {
-                        required: "Reward description is required",
-                      }
-                    )}
+                    {...register(`rewards.${idx}.reward_description` as const, {
+                      required: "Reward description is required",
+                    })}
                     error={!!errors.rewards?.[idx]?.reward_description}
                     helperText={
                       errors.rewards?.[idx]?.reward_description?.message
@@ -1648,7 +1729,8 @@ export default function CampaignForm({
                     disabled={isInactive || isDisabled}
                     {...register(`rewards.${idx}.reward_amount` as const, {
                       valueAsNumber: true,
-                      validate: (value) => value > 0 || "Reward amount must be greater than 0",
+                      validate: (value) =>
+                        value > 0 || "Reward amount must be greater than 0",
                     })}
                     error={!!errors.rewards?.[idx]?.reward_amount}
                     helperText={errors.rewards?.[idx]?.reward_amount?.message}
@@ -1676,17 +1758,6 @@ export default function CampaignForm({
                     <FormHelperText error sx={{ mt: 1 }}>
                       {errors.rewards[idx]?.file?.message}
                     </FormHelperText>
-                  )}
-
-                  {imageSizeError && (
-                    <Typography
-                      color="error"
-                      variant="caption"
-                      display="block"
-                      sx={{ mt: 1, fontWeight: 700 }}
-                    >
-                      {imageSizeError}
-                    </Typography>
                   )}
 
                   {rewardPreviews[idx] && (

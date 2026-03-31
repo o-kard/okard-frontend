@@ -144,12 +144,12 @@ export default function DashboardComponent() {
           </Typography>
           <PaymentChart data={payments} />
         </Grid>
-        <Grid size={{ xs: 12, md: 12 }}>
+        {/* <Grid size={{ xs: 12, md: 12 }}>
           <Typography variant="h5" mt={4}>
             🔥 Top 5 Trending Campaigns
           </Typography>
           <DashboardTrending data={trending} />
-        </Grid>
+        </Grid> */}
       </Grid>
     </Container>
   );

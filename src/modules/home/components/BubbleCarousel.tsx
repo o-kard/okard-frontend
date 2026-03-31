@@ -7,6 +7,7 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { glowHover } from "../utils/glowHover";
 import { CampaignSummary } from "@/modules/campaign/types/campaign";
 import InfiniteMenu from "./InifiniteMenu";
+import { getTopPledgedCampaigns } from "../api/api";
 
 type Group = {
   category: string;
@@ -24,6 +25,7 @@ export default function BubbleCarousel({ groups }: BubbleCarouselProps) {
   const [isVisible, setIsVisible] = useState(true);
   const [emblaReady, setEmblaReady] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
+  const [dynamicProjects, setDynamicProjects] = useState<CampaignSummary[]>([]);
 
   /** ===== categories ===== */
   const categories = groups.map((g) => g.category);
@@ -34,7 +36,19 @@ export default function BubbleCarousel({ groups }: BubbleCarouselProps) {
   const filteredProjects =
     selectedCategory === "ALL"
       ? allProjects
+      : dynamicProjects.length > 0
+      ? dynamicProjects
       : allProjects.filter((p) => p.category === selectedCategory);
+
+  useEffect(() => {
+    if (selectedCategory !== "ALL") {
+      getTopPledgedCampaigns({ category: selectedCategory, limit: 20 })
+        .then((data) => setDynamicProjects(data))
+        .catch((err) => console.error("Failed to fetch category projects:", err));
+    } else {
+      setDynamicProjects([]);
+    }
+  }, [selectedCategory]);
 
   useEffect(() => {
     const el = sectionRef.current;
